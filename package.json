@@ -16,6 +16,10 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
-    "eslint": "^10.3.0"
+    "@nuxtjs/tailwindcss": "^6.14.0",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^10.3.0",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^4.3.0"
   }
 }
