@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/stores/auth'
+
+if (import.meta.dev) {
+  const auth = useAuthStore()
+  ;(window as unknown as { __donyAuth: ReturnType<typeof useAuthStore> }).__donyAuth = auth
+}
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-center gap-4">
-    <h1 class="font-display text-4xl text-primary">dony PRO</h1>
-    <Button>Bouton shadcn</Button>
-  </div>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
