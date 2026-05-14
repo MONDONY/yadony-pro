@@ -8,6 +8,17 @@ export default defineNuxtConfig({
   },
   ssr: false,
   css: ['~/assets/css/main.css'],
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: '',
+      firebase: {
+        apiKey: '',
+        authDomain: '',
+        projectId: '',
+        appId: '',
+      },
+    },
+  },
   app: {
     head: {
       title: 'dony PRO',

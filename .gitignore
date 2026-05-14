@@ -12,6 +12,9 @@ node_modules
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+.env.staging
 
 # IDE
 .vscode
