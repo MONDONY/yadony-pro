@@ -1,5 +1,16 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: true }
+  compatibilityDate: '2026-05-15',
+  devtools: { enabled: true },
+  modules: ['@nuxt/eslint'],
+  typescript: {
+    strict: true,
+    typeCheck: false,
+  },
+  ssr: false,
+  app: {
+    head: {
+      title: 'dony PRO',
+      htmlAttrs: { lang: 'fr', class: 'dark' },
+    },
+  },
 })
