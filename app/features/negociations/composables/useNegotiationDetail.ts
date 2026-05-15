@@ -70,8 +70,11 @@ export function useNegotiationDetail(threadId: string) {
 
   async function refuseTrip(): Promise<void> {
     actionLoading.value = true
+    error.value = null
     try {
       thread.value = await svc.refuseTrip(threadId)
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Impossible de refuser le trajet.'
     } finally {
       actionLoading.value = false
     }
