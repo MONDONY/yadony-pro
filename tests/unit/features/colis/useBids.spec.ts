@@ -102,12 +102,11 @@ describe('useBids', () => {
     expect(mockListBids).toHaveBeenCalledWith(expect.objectContaining({ tripId: 'trip-99' }))
   })
 
-  it('setSenderSearch updates senderSearch and re-fetches', async () => {
+  it('setSenderSearch updates senderSearch for client-side filtering', async () => {
     const useBids = await importUseBids()
     const { filters, setSenderSearch } = useBids()
-    await setSenderSearch('Alice')
+    setSenderSearch('Alice')
     expect(filters.value.senderSearch).toBe('Alice')
-    expect(mockListBids).toHaveBeenCalledWith(expect.objectContaining({ senderSearch: 'Alice' }))
   })
 
   it('sets error message when fetchBids rejects', async () => {

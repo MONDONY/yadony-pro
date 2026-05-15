@@ -1,12 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockFetchMatchingRequests = vi.fn()
-const mockInviteRequest = vi.fn()
 
 vi.mock('@/features/demandes/services/matchingService', () => ({
   matchingService: () => ({
     fetchMatchingRequests: mockFetchMatchingRequests,
-    inviteRequest: mockInviteRequest,
   }),
 }))
 
@@ -37,7 +35,6 @@ describe('useMatchingRequests', () => {
   beforeEach(() => {
     vi.resetModules()
     mockFetchMatchingRequests.mockReset()
-    mockInviteRequest.mockReset()
   })
 
   it('initial state: requests empty, isLoading false, error null', async () => {
@@ -89,47 +86,4 @@ describe('useMatchingRequests', () => {
     expect(error.value).toBeNull()
   })
 
-  it('inviteRequest sets invitingId during call then resets to null', async () => {
-    let resolve: (v: unknown) => void
-    mockInviteRequest.mockReturnValue(new Promise((r) => (resolve = r)))
-    const useMatchingRequests = await importUseMatchingRequests()
-    const { invitingId, inviteRequest } = useMatchingRequests()
-    const promise = inviteRequest('req-1', 'trip-1')
-    expect(invitingId.value).toBe('req-1')
-    resolve!(undefined)
-    await promise
-    expect(invitingId.value).toBeNull()
-  })
-
-  it('inviteRequest adds requestId to invitedIds on success', async () => {
-    mockInviteRequest.mockResolvedValue(undefined)
-    const useMatchingRequests = await importUseMatchingRequests()
-    const { invitedIds, inviteRequest } = useMatchingRequests()
-    await inviteRequest('req-1', 'trip-1')
-    expect(invitedIds.value.has('req-1')).toBe(true)
-  })
-
-  it('inviteRequest sets error on failure', async () => {
-    mockInviteRequest.mockRejectedValue(new Error('Server error'))
-    const useMatchingRequests = await importUseMatchingRequests()
-    const { error, inviteRequest } = useMatchingRequests()
-    await inviteRequest('req-1', 'trip-42')
-    expect(error.value).toBe("Impossible d'envoyer l'invitation. Veuillez réessayer.")
-  })
-
-  it('inviteRequest does not add to invitedIds when API call fails', async () => {
-    mockInviteRequest.mockRejectedValue(new Error('Server error'))
-    const useMatchingRequests = await importUseMatchingRequests()
-    const { invitedIds, inviteRequest } = useMatchingRequests()
-    await inviteRequest('req-1', 'trip-42')
-    expect(invitedIds.value.has('req-1')).toBe(false)
-  })
-
-  it('inviteRequest resets invitingId to null even when call fails', async () => {
-    mockInviteRequest.mockRejectedValue(new Error('Server error'))
-    const useMatchingRequests = await importUseMatchingRequests()
-    const { invitingId, inviteRequest } = useMatchingRequests()
-    await inviteRequest('req-1', 'trip-42')
-    expect(invitingId.value).toBeNull()
-  })
 })
