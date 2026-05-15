@@ -26,6 +26,7 @@ const route = useRoute()
 const tripId = route.params.id as string
 const activeTab = ref<Tab>((route.query.tab as Tab) || 'overview')
 const showDeleteModal = ref(false)
+const loadingBidId = ref<string | null>(null)
 
 const {
   trip, bids, isLoading, bidsLoading, error,
@@ -40,6 +41,24 @@ onMounted(async () => {
 
 async function onDeleteConfirm() {
   await deleteTrip()
+}
+
+async function onAcceptBid(bidId: string) {
+  loadingBidId.value = bidId
+  try {
+    await acceptBid(bidId)
+  } finally {
+    loadingBidId.value = null
+  }
+}
+
+async function onRejectBid(bidId: string) {
+  loadingBidId.value = bidId
+  try {
+    await rejectBid(bidId)
+  } finally {
+    loadingBidId.value = null
+  }
 }
 
 function onExportCsv() {
@@ -106,8 +125,9 @@ function onExportCsv() {
         v-else-if="activeTab === 'bids'"
         :bids="bids"
         :is-loading="bidsLoading"
-        @accept="acceptBid"
-        @reject="rejectBid"
+        :loading-bid-id="loadingBidId"
+        @accept="onAcceptBid"
+        @reject="onRejectBid"
         @export-csv="onExportCsv"
       />
 

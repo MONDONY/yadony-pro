@@ -8,6 +8,7 @@ import type { TripBid } from '@/features/trajets/types/index'
 const props = defineProps<{
   bids: TripBid[]
   isLoading: boolean
+  loadingBidId?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -77,25 +78,6 @@ const filteredBids = computed(() => {
 
 const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYMENT_ESCROWED').length)
 
-const actionLoading = ref<string | null>(null)
-
-async function onAccept(bidId: string) {
-  actionLoading.value = bidId
-  try {
-    emit('accept', bidId)
-  } finally {
-    actionLoading.value = null
-  }
-}
-
-async function onReject(bidId: string) {
-  actionLoading.value = bidId
-  try {
-    emit('reject', bidId)
-  } finally {
-    actionLoading.value = null
-  }
-}
 </script>
 
 <template>
@@ -221,18 +203,18 @@ async function onReject(bidId: string) {
             <td class="px-4 py-3">
               <div v-if="bid.status === 'PAYMENT_ESCROWED'" class="flex items-center gap-1.5">
                 <button
-                  :disabled="actionLoading === bid.id"
+                  :disabled="props.loadingBidId === bid.id"
                   class="p-1.5 rounded text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
                   :data-test="`accept-${bid.id}`"
-                  @click="onAccept(bid.id)"
+                  @click="emit('accept', bid.id)"
                 >
                   <CheckCircle class="w-4 h-4" />
                 </button>
                 <button
-                  :disabled="actionLoading === bid.id"
+                  :disabled="props.loadingBidId === bid.id"
                   class="p-1.5 rounded text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                   :data-test="`reject-${bid.id}`"
-                  @click="onReject(bid.id)"
+                  @click="emit('reject', bid.id)"
                 >
                   <XCircle class="w-4 h-4" />
                 </button>
@@ -291,19 +273,19 @@ async function onReject(bidId: string) {
         <!-- Actions (only for PAYMENT_ESCROWED) -->
         <div v-if="bid.status === 'PAYMENT_ESCROWED'" class="flex items-center gap-2 pt-1">
           <button
-            :disabled="actionLoading === bid.id"
+            :disabled="props.loadingBidId === bid.id"
             class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn bg-green-500 text-white text-xs font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
             :data-test="`accept-card-${bid.id}`"
-            @click="onAccept(bid.id)"
+            @click="emit('accept', bid.id)"
           >
             <CheckCircle class="w-3.5 h-3.5" />
             Accepter
           </button>
           <button
-            :disabled="actionLoading === bid.id"
+            :disabled="props.loadingBidId === bid.id"
             class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn border border-red-400 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50"
             :data-test="`reject-card-${bid.id}`"
-            @click="onReject(bid.id)"
+            @click="emit('reject', bid.id)"
           >
             <XCircle class="w-3.5 h-3.5" />
             Refuser

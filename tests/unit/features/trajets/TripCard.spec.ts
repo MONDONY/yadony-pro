@@ -32,7 +32,7 @@ const baseTripProps = {
   departureDate: '2026-06-01',
   departureTime: null,
   arrivalTime: null,
-  transportMode: 'AVION' as const,
+  transportMode: 'PLANE' as const,
   pickupPlace: { placeId: 'p1', label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
   dropoffPlace: { placeId: 'p2', label: 'CDG', lat: 49.01, lng: 2.55 },
   availableWeightKg: 20,

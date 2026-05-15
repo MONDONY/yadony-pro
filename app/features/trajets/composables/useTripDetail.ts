@@ -42,6 +42,8 @@ export function useTripDetail(tripId: string) {
     try {
       await svc.deleteAnnouncement(tripId)
       router.push('/trajets')
+    } catch {
+      error.value = 'Impossible de supprimer ce trajet.'
     } finally {
       deleteLoading.value = false
     }

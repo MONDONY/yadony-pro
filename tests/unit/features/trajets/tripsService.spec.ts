@@ -23,7 +23,7 @@ describe('tripsService', () => {
     const { tripsService } = await import('@/features/trajets/services/tripsService')
     const svc = tripsService()
     const result = await svc.listTrips({ filter: 'TOUS' })
-    expect(mockApiFn).toHaveBeenCalledWith('/announcements', { query: {} })
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/my', { query: {} })
     expect(result.content).toEqual([])
   })
 
@@ -32,38 +32,57 @@ describe('tripsService', () => {
     const { tripsService } = await import('@/features/trajets/services/tripsService')
     const svc = tripsService()
     await svc.listTrips({ filter: 'ACTIFS', page: 0, size: 20 })
-    expect(mockApiFn).toHaveBeenCalledWith('/announcements', {
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/my', {
       query: { status: 'ACTIVE', page: '0', size: '20' },
     })
   })
 
   it('createAnnouncement POSTs to /announcements', async () => {
-    const fakeTrip = { id: 'trip-1', status: 'PUBLISHED' }
+    const fakeTrip = {
+      id: 'trip-1', travelerId: 'u1', departureCity: 'Paris', arrivalCity: 'Dakar',
+      departureDate: '2026-06-01', departureTime: null, arrivalTime: null, transportMode: 'PLANE',
+      pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
+      deliveryAddress: { label: 'Aéroport CDG', lat: 49.01, lng: 2.55 },
+      availableKg: 15, totalKg: 15, pricePerKg: 7, status: 'ACTIVE',
+      pendingBidCount: 0, confirmedParcelCount: 0, senderNote: null,
+      acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'],
+      cashAccepted: false, createdAt: '2026-05-01T12:00:00', updatedAt: '2026-05-01T12:00:00',
+    }
     mockApiFn.mockResolvedValue(fakeTrip)
     const { tripsService } = await import('@/features/trajets/services/tripsService')
     const svc = tripsService()
     const payload = {
-      departureCityId: 'paris-id', departureCityLabel: 'Paris', departureLat: 48.85, departureLng: 2.35,
-      arrivalCityId: 'dakar-id', arrivalCityLabel: 'Dakar', arrivalLat: 14.69, arrivalLng: -17.44,
-      departureDate: '2026-06-01', departureTime: null, arrivalTime: null, transportMode: 'AVION' as const,
-      pickupPlaceId: 'p1', pickupPlaceLabel: '12 rue de la Paix', pickupLat: 48.86, pickupLng: 2.33,
-      dropoffPlaceId: 'p2', dropoffPlaceLabel: 'Aéroport CDG', dropoffLat: 49.01, dropoffLng: 2.55,
-      availableWeightKg: 15, pricePerKg: 7, acceptedCategories: ['Vêtements'], refusedCategories: [],
-      senderNote: null, cashAccepted: false, status: 'PUBLISHED' as const,
+      departureCity: 'Paris', arrivalCity: 'Dakar',
+      departureDate: '2026-06-01', departureTime: null, arrivalTime: null, transportMode: 'PLANE' as const,
+      pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
+      deliveryAddress: { label: 'Aéroport CDG', lat: 49.01, lng: 2.55 },
+      availableKg: 15, pricePerKg: 7, description: null,
+      acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'],
     }
     const result = await svc.createAnnouncement(payload)
     expect(mockApiFn).toHaveBeenCalledWith('/announcements', { method: 'POST', body: payload })
-    expect(result).toEqual(fakeTrip)
+    expect(result.id).toBe('trip-1')
+    expect(result.availableWeightKg).toBe(15)
   })
 
   it('getTemplates fetches 10 most recent announcements', async () => {
-    const trips = [{ id: 't1' }, { id: 't2' }]
-    mockApiFn.mockResolvedValue({ content: trips, totalElements: 2, totalPages: 1, number: 0, size: 10 })
+    const minimalTrip = {
+      id: 't1', travelerId: 'u1', departureCity: 'Paris', arrivalCity: 'Dakar',
+      departureDate: '2026-06-01', departureTime: null, arrivalTime: null, transportMode: 'PLANE',
+      pickupAddress: { label: 'Gare du Nord', lat: 48.88, lng: 2.36 },
+      deliveryAddress: { label: 'AIBD', lat: 14.73, lng: -17.49 },
+      availableKg: 10, totalKg: 10, pricePerKg: 8, status: 'ACTIVE',
+      pendingBidCount: 0, confirmedParcelCount: 0, senderNote: null,
+      acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'],
+      cashAccepted: false, createdAt: '2026-05-01T12:00:00', updatedAt: '2026-05-01T12:00:00',
+    }
+    mockApiFn.mockResolvedValue({ content: [minimalTrip], totalElements: 1, totalPages: 1, number: 0, size: 10 })
     const { tripsService } = await import('@/features/trajets/services/tripsService')
     const svc = tripsService()
     const result = await svc.getTemplates()
-    expect(mockApiFn).toHaveBeenCalledWith('/announcements', { query: { size: '10', sort: 'createdAt,desc' } })
-    expect(result).toEqual(trips)
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/my', { query: { size: '10', sort: 'createdAt,desc' } })
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('t1')
   })
 
   it('getAnnouncement fetches GET /announcements/:id', async () => {
