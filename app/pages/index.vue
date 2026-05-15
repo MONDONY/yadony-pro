@@ -1,4 +1,7 @@
+<!-- app/pages/index.vue -->
 <script setup lang="ts">
+import CockpitDashboard from '@/features/cockpit/components/CockpitDashboard.vue'
+
 definePageMeta({
   middleware: ['pro-only'],
   pageTitle: 'Centre de commandes',
@@ -7,7 +10,5 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="space-y-4">
-    <p class="text-text-muted">Phase 3 — KPIs, trajets actifs, actions urgentes.</p>
-  </div>
+  <CockpitDashboard />
 </template>
