@@ -7,7 +7,8 @@ import { useNegotiationDetail } from '@/features/negociations/composables/useNeg
 import NegotiationMessageBubble from '@/features/negociations/components/NegotiationMessageBubble.vue'
 import NegotiationCounterModal from '@/features/negociations/components/NegotiationCounterModal.vue'
 import NegotiationSubmitTripModal from '@/features/negociations/components/NegotiationSubmitTripModal.vue'
-import type { CounterPayload } from '@/features/negociations/types'
+import NegotiationCreateTripModal from '@/features/negociations/components/NegotiationCreateTripModal.vue'
+import type { CounterPayload, CreateDedicatedTripPayload } from '@/features/negociations/types'
 
 definePageMeta({
   middleware: ['pro-only'],
@@ -19,7 +20,7 @@ const route = useRoute()
 const router = useRouter()
 const threadId = route.params.id as string
 
-const { thread, isLoading, actionLoading, error, fetchThread, submitCounter, rejectThread, linkTrip } =
+const { thread, isLoading, actionLoading, error, fetchThread, submitCounter, acceptThread, rejectThread, linkTrip, createDedicatedTrip } =
   useNegotiationDetail(threadId)
 
 onMounted(() => fetchThread())
@@ -44,17 +45,17 @@ const STATUS_CLASS: Record<string, string> = {
   EXPIRED: 'bg-border text-text-muted',
 }
 
-const isMyTurn = computed(() => {
-  if (!thread.value || thread.value.status !== 'OPEN') return false
-  const msgs = thread.value.messages
-  if (msgs.length === 0) return false
-  const last = msgs[msgs.length - 1]
-  return last.fromUserId !== thread.value.travelerId
-})
+// Server-side calculated fields — no local computation
+const isMyTurn = computed(() => thread.value?.isMyTurn ?? false)
+const canAccept = computed(() => thread.value?.canAccept ?? false)
+const canCounter = computed(() => thread.value?.canCounter ?? false)
+const roundsRemaining = computed(() => thread.value?.roundsRemaining ?? 0)
 
 const showCounterModal = ref(false)
 const showSubmitTripModal = ref(false)
 const showRejectConfirm = ref(false)
+const showCreateTripModal = ref(false)
+const showAcceptConfirm = ref(false)
 
 async function onCounter(price: number, body?: string) {
   await submitCounter({ proposedPriceEur: price, body } as CounterPayload)
@@ -71,11 +72,34 @@ async function onLinkTrip(announcementId: string) {
   showSubmitTripModal.value = false
 }
 
+async function onAccept() {
+  await acceptThread()
+  showAcceptConfirm.value = false
+}
+
+async function onCreateDedicatedTrip(payload: CreateDedicatedTripPayload) {
+  await createDedicatedTrip(payload)
+  showCreateTripModal.value = false
+}
+
 const messagesEl = ref<HTMLElement | null>(null)
-watch(() => thread.value?.messages.length, async () => {
-  await nextTick()
+
+function scrollToBottom() {
   if (messagesEl.value) {
     messagesEl.value.scrollTop = messagesEl.value.scrollHeight
+  }
+}
+
+watch(() => thread.value?.messages.length, async () => {
+  await nextTick()
+  scrollToBottom()
+})
+
+// Auto-scroll on initial load
+watch(isLoading, async (val) => {
+  if (!val && thread.value) {
+    await nextTick()
+    scrollToBottom()
   }
 })
 </script>
@@ -155,15 +179,36 @@ watch(() => thread.value?.messages.length, async () => {
       <!-- Zone d'actions -->
       <div class="flex-shrink-0 border-t border-border pt-4 space-y-2">
 
+        <!-- Alerte dernier round -->
+        <div
+          v-if="thread.status === 'OPEN' && roundsRemaining === 0"
+          class="flex items-center gap-2 px-3 py-2 rounded-btn bg-amber-500/10 border border-amber-500/30"
+        >
+          <span class="text-amber-400 text-sm">⚠</span>
+          <p class="text-xs text-amber-400 font-medium">Dernier round atteint — Accepter ou Refuser uniquement</p>
+        </div>
+
         <div v-if="thread.status === 'OPEN' && isMyTurn" class="flex gap-2">
+          <!-- Bouton Accepter (si canAccept) -->
           <button
-            class="flex-1 h-10 rounded-btn border border-border text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+            v-if="canAccept"
+            class="flex-1 h-10 rounded-btn bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+            :disabled="actionLoading"
+            @click="showAcceptConfirm = true"
+          >
+            ✓ Accepter {{ thread.currentPriceEur }} €
+          </button>
+          <!-- Bouton Refuser -->
+          <button
+            class="flex-1 h-10 rounded-btn border border-red-500/40 text-sm text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
             :disabled="actionLoading"
             @click="showRejectConfirm = true"
           >
             Refuser
           </button>
+          <!-- Bouton Contre-proposer (si canCounter) -->
           <button
+            v-if="canCounter"
             class="flex-1 h-10 rounded-btn bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             :disabled="actionLoading"
             @click="showCounterModal = true"
@@ -189,6 +234,13 @@ watch(() => thread.value?.messages.length, async () => {
             @click="showSubmitTripModal = true"
           >
             Lier un trajet actif
+          </button>
+          <button
+            class="w-full h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors disabled:opacity-50"
+            :disabled="actionLoading"
+            @click="showCreateTripModal = true"
+          >
+            Créer un trajet dédié
           </button>
         </div>
 
@@ -228,6 +280,15 @@ watch(() => thread.value?.messages.length, async () => {
       @submit="onLinkTrip"
     />
 
+    <NegotiationCreateTripModal
+      :open="showCreateTripModal"
+      :prefill-date="thread?.travelerTravelDate ?? ''"
+      :prefill-kg="thread?.travelerAvailableKg ?? 1"
+      :is-loading="actionLoading"
+      @close="showCreateTripModal = false"
+      @submit="onCreateDedicatedTrip"
+    />
+
     <!-- Confirm reject -->
     <Teleport to="body">
       <div
@@ -254,6 +315,40 @@ watch(() => thread.value?.messages.length, async () => {
             >
               <span v-if="actionLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               <span v-else>Refuser</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Confirm accept -->
+    <Teleport to="body">
+      <div
+        v-if="showAcceptConfirm"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        @click.self="showAcceptConfirm = false"
+      >
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div class="relative w-full max-w-sm bg-surface border border-border rounded-card shadow-2xl p-6 space-y-4">
+          <h3 class="font-semibold text-text">Accepter cette offre ?</h3>
+          <p class="text-sm text-text-muted">
+            Vous acceptez le prix de <strong class="text-text">{{ thread?.currentPriceEur }} €</strong>.
+          </p>
+          <div class="flex gap-2.5">
+            <button
+              class="flex-1 h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+              @click="showAcceptConfirm = false"
+            >
+              Annuler
+            </button>
+            <button
+              :disabled="actionLoading"
+              class="flex-1 flex items-center justify-center h-10 rounded-btn bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+              data-test="confirm-accept-btn"
+              @click="onAccept"
+            >
+              <span v-if="actionLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span v-else>Confirmer</span>
             </button>
           </div>
         </div>
