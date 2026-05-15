@@ -16,6 +16,9 @@ export function useFirebaseAuth() {
   const api = useApi()
 
   async function sendOtp(phoneNumber: string, recaptchaContainerId: string): Promise<void> {
+    if (!$firebaseAuth) {
+      throw new Error('Firebase Auth non initialisé. Vérifie la configuration Firebase dans .env.development.')
+    }
     if (!recaptchaVerifier) {
       recaptchaVerifier = new RecaptchaVerifier($firebaseAuth, recaptchaContainerId, {
         size: 'invisible',

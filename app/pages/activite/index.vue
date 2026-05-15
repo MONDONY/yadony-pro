@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import ActivityDashboard from '@/features/activite/components/ActivityDashboard.vue'
+
 definePageMeta({
   middleware: ['pro-only'],
   pageTitle: 'Mon Activité',
@@ -7,5 +9,5 @@ definePageMeta({
 </script>
 
 <template>
-  <p class="text-text-muted">Phase 5 — Graphiques, taux de remplissage, export PDF/CSV/DAC7.</p>
+  <ActivityDashboard />
 </template>

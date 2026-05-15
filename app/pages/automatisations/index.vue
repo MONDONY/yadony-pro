@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AutomationsDashboard from '@/features/automations/components/AutomationsDashboard.vue'
+
 definePageMeta({
   middleware: ['pro-only'],
   pageTitle: 'Automatisations',
@@ -7,5 +9,5 @@ definePageMeta({
 </script>
 
 <template>
-  <p class="text-text-muted">Phase 4 — 6 règles toggles + constructeur SI→ALORS + historique.</p>
+  <AutomationsDashboard />
 </template>

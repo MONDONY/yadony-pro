@@ -11,12 +11,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: '',
-      firebase: {
-        apiKey: '',
-        authDomain: '',
-        projectId: '',
-        appId: '',
-      },
+      firebaseApiKey: '',
+      firebaseAuthDomain: '',
+      firebaseProjectId: '',
+      firebaseAppId: '',
     },
   },
   app: {
