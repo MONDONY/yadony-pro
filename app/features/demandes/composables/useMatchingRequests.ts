@@ -1,3 +1,4 @@
+// app/features/demandes/composables/useMatchingRequests.ts
 import { ref } from 'vue'
 import { matchingService } from '@/features/demandes/services/matchingService'
 import type { MatchingRequest } from '@/features/demandes/types/index'
@@ -6,8 +7,6 @@ export function useMatchingRequests() {
   const requests = ref<MatchingRequest[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  const invitingId = ref<string | null>(null)
-  const invitedIds = ref<Set<string>>(new Set())
 
   const svc = matchingService()
 
@@ -23,18 +22,5 @@ export function useMatchingRequests() {
     }
   }
 
-  async function inviteRequest(requestId: string, announcementId: string): Promise<void> {
-    invitingId.value = requestId
-    error.value = null
-    try {
-      await svc.inviteRequest(requestId, announcementId)
-      invitedIds.value = new Set([...invitedIds.value, requestId])
-    } catch {
-      error.value = "Impossible d'envoyer l'invitation. Veuillez réessayer."
-    } finally {
-      invitingId.value = null
-    }
-  }
-
-  return { requests, isLoading, error, invitingId, invitedIds, fetchRequests, inviteRequest }
+  return { requests, isLoading, error, fetchRequests }
 }

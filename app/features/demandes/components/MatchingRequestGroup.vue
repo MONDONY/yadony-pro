@@ -8,12 +8,12 @@ const props = defineProps<{
   tripId: string
   tripCorridor: string
   requests: MatchingRequest[]
-  invitingId: string | null
-  invitedIds: Set<string>
+  negotiatingId: string | null
+  negotiatedIds: Set<string>
 }>()
 
 const emit = defineEmits<{
-  'invite': [requestId: string, announcementId: string]
+  'negotiate': [request: MatchingRequest]
 }>()
 
 const sortedRequests = computed(() =>
@@ -23,7 +23,6 @@ const sortedRequests = computed(() =>
 
 <template>
   <div :data-test="`request-group-${tripId}`" class="space-y-3">
-    <!-- Group header -->
     <div class="flex items-center gap-3">
       <div class="h-px flex-1 bg-border" />
       <div class="flex items-center gap-2 text-xs font-semibold text-text-muted uppercase tracking-wider">
@@ -35,15 +34,14 @@ const sortedRequests = computed(() =>
       <div class="h-px flex-1 bg-border" />
     </div>
 
-    <!-- Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
       <MatchingRequestCard
         v-for="req in sortedRequests"
         :key="req.id"
         :request="req"
-        :is-inviting="invitingId === req.id"
-        :is-invited="invitedIds.has(req.id)"
-        @invite="(reqId, annId) => emit('invite', reqId, annId)"
+        :is-negotiating="negotiatingId === req.id"
+        :has-negotiated="negotiatedIds.has(req.id)"
+        @negotiate="(r) => emit('negotiate', r)"
       />
     </div>
   </div>

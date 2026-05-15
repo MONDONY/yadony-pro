@@ -1,3 +1,4 @@
+<!-- app/features/demandes/components/MatchingRequestCard.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cn } from '@/lib/utils'
@@ -5,12 +6,12 @@ import type { MatchingRequest } from '@/features/demandes/types/index'
 
 const props = defineProps<{
   request: MatchingRequest
-  isInviting: boolean
-  isInvited: boolean
+  isNegotiating: boolean
+  hasNegotiated: boolean
 }>()
 
 const emit = defineEmits<{
-  'invite': [requestId: string, tripId: string]
+  'negotiate': [request: MatchingRequest]
 }>()
 
 const scoreBadgeClass = computed(() => {
@@ -30,7 +31,6 @@ const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.r
     <!-- Header: avatar + infos expéditeur + score -->
     <div class="flex items-start justify-between gap-3">
       <div class="flex items-center gap-3">
-        <!-- Avatar initiales -->
         <div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
           <span class="text-sm font-bold text-primary">{{ request.senderInitials }}</span>
         </div>
@@ -82,28 +82,28 @@ const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.r
     <!-- Action -->
     <div class="flex justify-end">
       <button
-        v-if="isInvited"
-        :data-test="`invited-badge-${request.id}`"
+        v-if="hasNegotiated"
+        :data-test="`negotiated-badge-${request.id}`"
         class="h-8 px-3 rounded-btn text-xs font-semibold text-green-400 bg-green-500/15 cursor-default"
         type="button"
         disabled
       >
-        ✓ Invité
+        ✓ Proposition envoyée
       </button>
       <button
         v-else
-        :data-test="`invite-btn-${request.id}`"
-        :disabled="isInviting"
+        :data-test="`negotiate-btn-${request.id}`"
+        :disabled="isNegotiating"
         :class="cn(
           'h-8 px-4 rounded-btn text-xs font-semibold transition-colors',
-          isInviting
+          isNegotiating
             ? 'bg-border text-text-muted cursor-not-allowed'
-            : 'bg-primary text-white hover:bg-primary-hover',
+            : 'bg-primary text-white hover:bg-primary/90',
         )"
         type="button"
-        @click="emit('invite', request.id, request.tripId)"
+        @click="emit('negotiate', request)"
       >
-        {{ isInviting ? 'Envoi…' : 'Inviter sur mon trajet' }}
+        {{ isNegotiating ? 'Ouverture…' : 'Négocier' }}
       </button>
     </div>
   </div>

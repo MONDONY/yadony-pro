@@ -1,18 +1,15 @@
 <!-- app/features/demandes/components/MatchingDashboard.vue -->
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useMatchingRequests } from '@/features/demandes/composables/useMatchingRequests'
 import MatchingRequestGroup from '@/features/demandes/components/MatchingRequestGroup.vue'
+import NegotiationStartModal from '@/features/negociations/components/NegotiationStartModal.vue'
 import type { MatchingRequest } from '@/features/demandes/types/index'
 
-const { requests, isLoading, error, invitingId, invitedIds, fetchRequests, inviteRequest } =
-  useMatchingRequests()
+const { requests, isLoading, error, fetchRequests } = useMatchingRequests()
 
-onMounted(() => {
-  fetchRequests()
-})
+onMounted(() => { fetchRequests() })
 
-// Grouper par tripId, conserver l'ordre de premier apparition
 const groups = computed(() => {
   const map = new Map<string, { tripId: string; tripCorridor: string; requests: MatchingRequest[] }>()
   for (const req of requests.value) {
@@ -23,16 +20,25 @@ const groups = computed(() => {
   }
   return [...map.values()]
 })
+
+const negotiatingRequest = ref<MatchingRequest | null>(null)
+const negotiatingId = ref<string | null>(null)
+const negotiatedIds = ref<Set<string>>(new Set())
+
+function openNegotiateModal(request: MatchingRequest) {
+  negotiatingId.value = request.id
+  negotiatingRequest.value = request
+}
+
+function closeModal() {
+  negotiatingRequest.value = null
+  negotiatingId.value = null
+}
 </script>
 
 <template>
   <div class="space-y-8">
-
-    <!-- Error state -->
-    <div
-      v-if="error && !isLoading"
-      class="flex flex-col items-center justify-center py-16 text-center"
-    >
+    <div v-if="error && !isLoading" class="flex flex-col items-center justify-center py-16 text-center">
       <p class="text-red-400 font-medium">{{ error }}</p>
       <button
         class="mt-4 px-4 py-2 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
@@ -43,25 +49,15 @@ const groups = computed(() => {
       </button>
     </div>
 
-    <!-- Loading skeleton -->
     <div v-else-if="isLoading" class="space-y-6">
-      <div
-        v-for="g in 2"
-        :key="g"
-        class="space-y-3"
-      >
+      <div v-for="g in 2" :key="g" class="space-y-3">
         <div class="h-4 bg-surface border border-border rounded w-48 animate-pulse" />
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          <div
-            v-for="i in 3"
-            :key="i"
-            class="h-48 bg-surface border border-border rounded-card animate-pulse"
-          />
+          <div v-for="i in 3" :key="i" class="h-48 bg-surface border border-border rounded-card animate-pulse" />
         </div>
       </div>
     </div>
 
-    <!-- Empty state -->
     <div
       v-else-if="groups.length === 0"
       class="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border rounded-card"
@@ -72,7 +68,6 @@ const groups = computed(() => {
       </p>
     </div>
 
-    <!-- Groups -->
     <div v-else class="space-y-8">
       <MatchingRequestGroup
         v-for="group in groups"
@@ -80,11 +75,15 @@ const groups = computed(() => {
         :trip-id="group.tripId"
         :trip-corridor="group.tripCorridor"
         :requests="group.requests"
-        :inviting-id="invitingId"
-        :invited-ids="invitedIds"
-        @invite="(reqId, annId) => inviteRequest(reqId, annId)"
+        :negotiating-id="negotiatingId"
+        :negotiated-ids="negotiatedIds"
+        @negotiate="openNegotiateModal"
       />
     </div>
 
+    <NegotiationStartModal
+      :request="negotiatingRequest"
+      @close="closeModal"
+    />
   </div>
 </template>
