@@ -29,16 +29,27 @@ const initials = computed(() =>
       </NuxtLink>
     </div>
 
-    <!-- User -->
-    <div class="px-4 py-4 border-b border-border flex items-center gap-3">
-      <Avatar>
-        <AvatarFallback class="bg-primary text-white text-sm">{{ initials }}</AvatarFallback>
-      </Avatar>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-medium truncate">{{ auth.user?.displayName }}</p>
-        <span class="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">PRO</span>
+    <!-- User — ClientOnly évite le mismatch d'hydratation (auth non dispo côté SSR) -->
+    <ClientOnly>
+      <div class="px-4 py-4 border-b border-border flex items-center gap-3">
+        <Avatar>
+          <AvatarFallback class="bg-primary text-white text-sm">{{ initials }}</AvatarFallback>
+        </Avatar>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium truncate">{{ auth.user?.displayName }}</p>
+          <span class="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">PRO</span>
+        </div>
       </div>
-    </div>
+      <template #fallback>
+        <div class="px-4 py-4 border-b border-border flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-primary/20 animate-pulse" />
+          <div class="flex-1 space-y-1">
+            <div class="h-3 bg-border rounded w-24 animate-pulse" />
+            <div class="h-3 bg-border rounded w-8 animate-pulse" />
+          </div>
+        </div>
+      </template>
+    </ClientOnly>
 
     <!-- Nav -->
     <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
