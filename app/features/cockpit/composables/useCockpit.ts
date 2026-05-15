@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { cockpitService } from '@/features/cockpit/services/cockpitService'
 import { bidsService } from '@/features/colis/services/bidsService'
-import type { Analytics, CalendarStats, UrgentAction, KpiData } from '@/features/cockpit/types/index'
+import type { Analytics, CalendarStats, UrgentAction, KpiData, AnalyticsKpi } from '@/features/cockpit/types/index'
 import type { Bid } from '@/features/colis/types/index'
 
 const FOUR_HOURS_MS = 4 * 60 * 60 * 1000
@@ -94,13 +94,15 @@ export function useCockpit() {
         : "Aucune automatisation déclenchée aujourd'hui.",
     })
 
-    // Green: earnings summary
-    const monthRevenue = analytics.value?.revenueNetCurrentMonth ?? 0
+    // Green: earnings summary — value already formatted by backend (e.g. "15.00 €")
+    const revenueKpi = analytics.value?.kpis?.find((k: AnalyticsKpi) => k.id === 'revenue')
+    const revenueStr = revenueKpi?.value ?? '0.00 €'
+    const hasRevenue = !revenueStr.startsWith('0.00')
     actions.push({
       id: 'earnings',
       severity: 'green',
-      label: `${monthRevenue.toFixed(2)} € de revenus nets ce mois`,
-      detail: monthRevenue > 0 ? 'Bon travail ! Continuez ainsi.' : 'Aucun virement reçu ce mois.',
+      label: `${revenueStr} de revenus nets ce mois`,
+      detail: hasRevenue ? 'Bon travail ! Continuez ainsi.' : 'Aucun virement reçu ce mois.',
     })
 
     return actions
@@ -109,39 +111,40 @@ export function useCockpit() {
   const kpis = computed<KpiData[]>(() => {
     const a = analytics.value
     const c = calendarStats.value
-    return [
-      {
-        id: 'revenue',
-        label: 'Revenus nets ce mois',
-        value: a ? `${a.revenueNetCurrentMonth.toFixed(2)} €` : '—',
-        trend: 'neutral',
-      },
-      {
-        id: 'trips',
-        label: 'Trajets actifs / total',
-        value: c ? `${c.activeTripsCount} / ${c.totalTripsThisMonth}` : '—',
-        subLabel: 'ce mois',
-      },
-      {
-        id: 'colis',
-        label: 'Colis gérés',
-        value: a ? String(a.colisGeres) : '—',
-        subLabel: 'confirmés + en attente',
-      },
-      {
-        id: 'actions',
-        label: 'Actions requises',
-        value: a ? String(a.actionsRequises) : '—',
-        subLabel: 'bids + capacité',
-        trend: a && a.actionsRequises > 0 ? 'up' : 'neutral',
-      },
-      {
-        id: 'rating',
-        label: 'Note moyenne',
-        value: a ? `${a.averageRating.toFixed(1)} / 5` : '—',
-        trend: a && a.averageRating >= 4.5 ? 'up' : a && a.averageRating < 4 ? 'down' : 'neutral',
-      },
-    ]
+    const result: KpiData[] = []
+
+    // KPIs from backend analytics (revenue, parcels, acceptance, rating…)
+    if (a) {
+      for (const k of a.kpis) {
+        result.push({
+          id: k.id,
+          label: k.label,
+          value: k.value,
+          trend: (k.trend === 'up' || k.trend === 'down') ? k.trend : 'neutral',
+          trendValue: k.trendValue ?? undefined,
+        })
+      }
+    }
+
+    // Trajets actifs / total from calendar stats
+    result.push({
+      id: 'trips',
+      label: 'Trajets actifs / total',
+      value: c ? `${c.activeTripsCount} / ${c.totalTripsThisMonth}` : '—',
+      subLabel: 'ce mois',
+    })
+
+    // Actions requises = nombre de bids PENDING
+    const actionsCount = pendingBids.value.length
+    result.push({
+      id: 'actions',
+      label: 'Actions requises',
+      value: a || c ? String(actionsCount) : '—',
+      subLabel: 'bids en attente',
+      trend: actionsCount > 0 ? 'up' : 'neutral',
+    })
+
+    return result
   })
 
   return {

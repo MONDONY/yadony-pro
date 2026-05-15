@@ -2,11 +2,17 @@
 
 export type UrgentActionSeverity = 'red' | 'orange' | 'blue' | 'green'
 
+export interface AnalyticsKpi {
+  id: string
+  label: string
+  value: string
+  trend?: string | null
+  trendValue?: string | null
+}
+
 export interface Analytics {
-  revenueNetCurrentMonth: number
-  averageRating: number
-  colisGeres: number
-  actionsRequises: number
+  period: string
+  kpis: AnalyticsKpi[]
 }
 
 export interface CalendarStats {
