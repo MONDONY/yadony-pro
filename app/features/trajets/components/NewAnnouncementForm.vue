@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ChevronDown, LayoutTemplate } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
 import { useTrips } from '@/features/trajets/composables/useTrips'
+import { configService } from '@/features/trajets/services/configService'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
 import TransportModeChips from '@/features/trajets/components/TransportModeChips.vue'
 import WeightSlider from '@/features/trajets/components/WeightSlider.vue'
@@ -17,12 +18,14 @@ const emit = defineEmits<{
 
 const { form, netPrice, validate, submit, applyTemplate } = useAnnouncementForm()
 const { fetchTemplates } = useTrips()
+const { fetchContentCategories } = configService()
 
 const errors = ref<Record<string, string>>({})
 const isSubmitting = ref(false)
 const templates = ref<Trip[]>([])
 const showTemplates = ref(false)
 const selectedTemplateId = ref<string | null>(null)
+const acceptedPresets = ref<string[]>([])
 
 const today = new Date()
 const minDate = computed(() => {
@@ -36,11 +39,15 @@ const maxDate = computed(() => {
   return d.toISOString().split('T')[0]
 })
 
-const ACCEPTED_PRESETS = ['Vêtements', 'Médicaments', 'Alim. sèche', 'Hi-fi', 'Documents', 'Téléphone', 'Cosmétiques']
 const REFUSED_PRESETS: string[] = []
 
 onMounted(async () => {
-  templates.value = await fetchTemplates()
+  const [fetchedTemplates, fetchedCategories] = await Promise.all([
+    fetchTemplates(),
+    fetchContentCategories(),
+  ])
+  templates.value = fetchedTemplates
+  acceptedPresets.value = fetchedCategories
 })
 
 function onSelectTemplate(trip: Trip) {
@@ -218,7 +225,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <label class="block text-sm font-medium text-text mb-3">Ce que j'accepte</label>
         <ContentTagChips
           v-model="form.acceptedCategories"
-          :presets="ACCEPTED_PRESETS"
+          :presets="acceptedPresets"
           placeholder="Ajouter une catégorie…"
         />
       </div>

@@ -12,6 +12,7 @@ export function useCockpit() {
   const analytics = ref<Analytics | null>(null)
   const calendarStats = ref<CalendarStats | null>(null)
   const pendingBids = ref<Bid[]>([])
+  const automationCount = ref<number>(0)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -22,14 +23,16 @@ export function useCockpit() {
     isLoading.value = true
     error.value = null
     try {
-      const [analyticsResult, calendarResult, bidsResult] = await Promise.all([
+      const [analyticsResult, calendarResult, bidsResult, automationCountResult] = await Promise.all([
         cockpit.fetchAnalytics(),
         cockpit.fetchCalendar(),
         bids.listBids({ statusFilter: 'PENDING' }),
+        cockpit.fetchAutomationTodayCount(),
       ])
       analytics.value = analyticsResult
       calendarStats.value = calendarResult
       pendingBids.value = bidsResult.content
+      automationCount.value = automationCountResult
     } catch {
       error.value = 'Impossible de charger le tableau de bord. Veuillez réessayer.'
     } finally {
@@ -80,12 +83,15 @@ export function useCockpit() {
       })
     }
 
-    // Blue: automated actions (static for now)
+    // Blue: automated actions today
+    const n = automationCount.value
     actions.push({
       id: 'automations',
       severity: 'blue',
-      label: "0 actions automatiques ce jour",
-      detail: "Aucune automatisation déclenchée aujourd'hui.",
+      label: `${n} action${n !== 1 ? 's' : ''} automatique${n !== 1 ? 's' : ''} ce jour`,
+      detail: n > 0
+        ? `${n} automatisation${n > 1 ? 's' : ''} déclenchée${n > 1 ? 's' : ''} aujourd'hui.`
+        : "Aucune automatisation déclenchée aujourd'hui.",
     })
 
     // Green: earnings summary

@@ -5,19 +5,23 @@ import { ArrowRight } from 'lucide-vue-next'
 import KpiCard from '@/features/cockpit/components/KpiCard.vue'
 import UrgentActionItem from '@/features/cockpit/components/UrgentActionItem.vue'
 import TripCard from '@/features/trajets/components/TripCard.vue'
+import MatchingRequestCard from '@/features/demandes/components/MatchingRequestCard.vue'
 import { useCockpit } from '@/features/cockpit/composables/useCockpit'
 import { useTrips } from '@/features/trajets/composables/useTrips'
+import { useMatchingRequests } from '@/features/demandes/composables/useMatchingRequests'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const { kpis, urgentActions, isLoading, error, fetchAll } = useCockpit()
 const { trips, fetchTrips } = useTrips()
+const { requests, invitingId, invitedIds, fetchRequests, inviteRequest } = useMatchingRequests()
 
 onMounted(async () => {
-  await Promise.all([fetchAll(), fetchTrips()])
+  await Promise.all([fetchAll(), fetchTrips(), fetchRequests()])
 })
 
 const activeTrips = computed(() => trips.value.filter((t) => t.status === 'ACTIVE').slice(0, 3))
+const previewRequests = computed(() => requests.value.slice(0, 2))
 
 function onVoirBids(id: string) {
   router.push(`/trajets/${id}?tab=bids`)
@@ -111,13 +115,18 @@ function onModifier(id: string) {
             Voir toutes les demandes <ArrowRight class="w-3.5 h-3.5" />
           </NuxtLink>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-surface border border-dashed border-border rounded-card p-5 flex items-center justify-center min-h-[80px]">
-            <span class="text-sm text-text-muted">Aperçu des demandes à venir…</span>
-          </div>
-          <div class="bg-surface border border-dashed border-border rounded-card p-5 flex items-center justify-center min-h-[80px]">
-            <span class="text-sm text-text-muted">Aperçu des demandes à venir…</span>
-          </div>
+        <div v-if="previewRequests.length === 0 && !isLoading" class="text-sm text-text-muted py-4">
+          Aucune demande compatible pour le moment.
+        </div>
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MatchingRequestCard
+            v-for="request in previewRequests"
+            :key="request.id"
+            :request="request"
+            :is-inviting="invitingId === request.id"
+            :is-invited="invitedIds.has(request.id)"
+            @invite="(requestId, tripId) => inviteRequest(requestId, tripId)"
+          />
         </div>
       </section>
 

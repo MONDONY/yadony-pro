@@ -13,5 +13,10 @@ export function cockpitService() {
     return api<CalendarStats>('/travelers/me/calendar')
   }
 
-  return { fetchAnalytics, fetchCalendar }
+  async function fetchAutomationTodayCount(): Promise<number> {
+    const result = await api<{ count: number }>('/travelers/me/automation-history/today-count')
+    return result.count
+  }
+
+  return { fetchAnalytics, fetchCalendar, fetchAutomationTodayCount }
 }
