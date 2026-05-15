@@ -6,8 +6,8 @@ export default defineNuxtConfig({
     strict: true,
     typeCheck: false,
   },
-  ssr: false,
-  css: ['~/assets/css/main.css'],
+  ssr: true,
+  css: ['~~/assets/css/main.css'],
   runtimeConfig: {
     public: {
       apiBaseUrl: '',
