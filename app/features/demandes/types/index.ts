@@ -2,6 +2,8 @@ export interface MatchingRequest {
   id: string
   tripId: string
   tripCorridor: string
+  tripDepartureDate: string
+  tripAvailableKg: number
   senderName: string
   senderInitials: string
   senderRating: number
