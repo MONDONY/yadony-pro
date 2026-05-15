@@ -1,7 +1,7 @@
 // app/features/negociations/composables/useNegotiationDetail.ts
 import { ref } from 'vue'
 import { negotiationService } from '@/features/negociations/services/negotiationService'
-import type { NegotiationThread, CounterPayload } from '@/features/negociations/types'
+import type { NegotiationThread, CounterPayload, CreateDedicatedTripPayload } from '@/features/negociations/types'
 
 export function useNegotiationDetail(threadId: string) {
   const thread = ref<NegotiationThread | null>(null)
@@ -50,5 +50,23 @@ export function useNegotiationDetail(threadId: string) {
     }
   }
 
-  return { thread, isLoading, actionLoading, error, fetchThread, submitCounter, rejectThread, linkTrip }
+  async function acceptThread(body?: string): Promise<void> {
+    actionLoading.value = true
+    try {
+      thread.value = await svc.accept(threadId, body)
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  async function createDedicatedTrip(payload: CreateDedicatedTripPayload): Promise<void> {
+    actionLoading.value = true
+    try {
+      thread.value = await svc.createDedicatedTrip(threadId, payload)
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  return { thread, isLoading, actionLoading, error, fetchThread, submitCounter, rejectThread, linkTrip, acceptThread, createDedicatedTrip }
 }

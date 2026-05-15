@@ -1,5 +1,5 @@
 import { useApi } from '@/composables/useApi'
-import type { NegotiationThread, StartNegotiationPayload, CounterPayload } from '../types'
+import type { NegotiationThread, StartNegotiationPayload, CounterPayload, CreateDedicatedTripPayload } from '../types'
 
 export function negotiationService() {
   const api = useApi()
@@ -34,5 +34,19 @@ export function negotiationService() {
     })
   }
 
-  return { startNegotiation, listMine, getById, counter, reject, submitTrip }
+  async function accept(id: string, body?: string): Promise<NegotiationThread> {
+    return api<NegotiationThread>(`/negotiations/${id}/accept`, {
+      method: 'POST',
+      body: { body: body ?? null },
+    })
+  }
+
+  async function createDedicatedTrip(id: string, payload: CreateDedicatedTripPayload): Promise<NegotiationThread> {
+    return api<NegotiationThread>(`/negotiations/${id}/create-dedicated-trip`, {
+      method: 'POST',
+      body: payload,
+    })
+  }
+
+  return { startNegotiation, listMine, getById, counter, reject, submitTrip, accept, createDedicatedTrip }
 }

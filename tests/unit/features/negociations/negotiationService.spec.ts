@@ -126,4 +126,42 @@ describe('negotiationService', () => {
     })
     expect(result.status).toBe('AWAITING_PAYMENT')
   })
+
+  it('accept POSTs to /negotiations/:id/accept with body', async () => {
+    const acceptedThread = { ...fakeThread, status: 'ACCEPTED' }
+    mockApiFn.mockResolvedValue(acceptedThread)
+    const { negotiationService } = await import('@/features/negociations/services/negotiationService')
+    const svc = negotiationService()
+    const result = await svc.accept('thread-1', 'J\'accepte votre offre')
+    expect(mockApiFn).toHaveBeenCalledWith('/negotiations/thread-1/accept', {
+      method: 'POST',
+      body: { body: 'J\'accepte votre offre' },
+    })
+    expect(result.status).toBe('ACCEPTED')
+  })
+
+  it('accept sends null body when none provided', async () => {
+    mockApiFn.mockResolvedValue({ ...fakeThread, status: 'ACCEPTED' })
+    const { negotiationService } = await import('@/features/negociations/services/negotiationService')
+    const svc = negotiationService()
+    await svc.accept('thread-1')
+    expect(mockApiFn).toHaveBeenCalledWith('/negotiations/thread-1/accept', {
+      method: 'POST',
+      body: { body: null },
+    })
+  })
+
+  it('createDedicatedTrip POSTs to /negotiations/:id/create-dedicated-trip', async () => {
+    const awaitingTripThread = { ...fakeThread, status: 'AWAITING_TRIP' }
+    mockApiFn.mockResolvedValue(awaitingTripThread)
+    const { negotiationService } = await import('@/features/negociations/services/negotiationService')
+    const svc = negotiationService()
+    const payload = { departureDate: '2026-06-01', availableKg: 20, body: 'Trajet dédié confirmé' }
+    const result = await svc.createDedicatedTrip('thread-1', payload)
+    expect(mockApiFn).toHaveBeenCalledWith('/negotiations/thread-1/create-dedicated-trip', {
+      method: 'POST',
+      body: payload,
+    })
+    expect(result.status).toBe('AWAITING_TRIP')
+  })
 })

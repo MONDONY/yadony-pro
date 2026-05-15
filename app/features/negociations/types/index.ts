@@ -41,6 +41,11 @@ export interface NegotiationThread {
   arrivalCity: string
   weightKg: number
   senderName: string
+  // Champs calculés par le backend selon le callerId
+  isMyTurn: boolean
+  canAccept: boolean
+  canCounter: boolean
+  roundsRemaining: number
 }
 
 export interface StartNegotiationPayload {
@@ -54,5 +59,11 @@ export interface StartNegotiationPayload {
 
 export interface CounterPayload {
   proposedPriceEur: number
+  body?: string
+}
+
+export interface CreateDedicatedTripPayload {
+  departureDate: string   // format ISO 'YYYY-MM-DD'
+  availableKg: number
   body?: string
 }
