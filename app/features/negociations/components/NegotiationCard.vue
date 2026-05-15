@@ -50,12 +50,7 @@ const isTerminal = computed(() =>
   ['REJECTED', 'AUTO_REJECTED', 'EXPIRED'].includes(props.thread.status),
 )
 
-const isMyTurn = computed(() => {
-  if (props.thread.status !== 'OPEN') return false
-  const msgs = props.thread.messages
-  if (msgs.length === 0) return false
-  return msgs[msgs.length - 1].fromUserId !== props.thread.travelerId
-})
+const isMyTurn = computed(() => props.thread.isMyTurn)
 
 const senderInitials = computed(() => {
   const parts = props.thread.senderName.split(' ')
