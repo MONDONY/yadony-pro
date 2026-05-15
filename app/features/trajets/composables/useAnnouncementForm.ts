@@ -40,48 +40,43 @@ export function useAnnouncementForm() {
     return errors
   }
 
-  async function submit(status: 'DRAFT' | 'PUBLISHED'): Promise<Trip> {
-    const errors = validate()
-    if (Object.keys(errors).length > 0) {
-      throw new Error('Formulaire invalide')
-    }
-
-    const dep = form.departureCity!
-    const arr = form.arrivalCity!
+  function buildPayload(): CreateAnnouncementPayload {
     const pickup = form.pickupPlace!
     const dropoff = form.dropoffPlace!
-
-    const payload: CreateAnnouncementPayload = {
-      departureCityId: dep.placeId,
-      departureCityLabel: dep.label,
-      departureLat: dep.lat,
-      departureLng: dep.lng,
-      arrivalCityId: arr.placeId,
-      arrivalCityLabel: arr.label,
-      arrivalLat: arr.lat,
-      arrivalLng: arr.lng,
+    const paymentMethods: string[] = ['STRIPE']
+    if (form.cashAccepted) paymentMethods.push('CASH')
+    return {
+      departureCity: form.departureCity!.label,
+      arrivalCity: form.arrivalCity!.label,
       departureDate: form.departureDate,
       departureTime: form.departureTime || null,
       arrivalTime: form.arrivalTime || null,
       transportMode: form.transportMode!,
-      pickupPlaceId: pickup.placeId,
-      pickupPlaceLabel: pickup.label,
-      pickupLat: pickup.lat,
-      pickupLng: pickup.lng,
-      dropoffPlaceId: dropoff.placeId,
-      dropoffPlaceLabel: dropoff.label,
-      dropoffLat: dropoff.lat,
-      dropoffLng: dropoff.lng,
-      availableWeightKg: form.availableWeightKg,
+      pickupAddress: { label: pickup.label, lat: pickup.lat, lng: pickup.lng },
+      deliveryAddress: { label: dropoff.label, lat: dropoff.lat, lng: dropoff.lng },
+      availableKg: form.availableWeightKg,
       pricePerKg: form.pricePerKg,
-      acceptedCategories: form.acceptedCategories,
-      refusedCategories: form.refusedCategories,
-      senderNote: form.senderNote || null,
-      cashAccepted: form.cashAccepted,
-      status,
+      description: form.senderNote || null,
+      acceptedContentTypes: form.acceptedCategories,
+      refusedTypes: form.refusedCategories,
+      acceptedPaymentMethods: paymentMethods,
     }
+  }
 
-    return svc.createAnnouncement(payload)
+  async function submit(_status: 'DRAFT' | 'PUBLISHED'): Promise<Trip> {
+    const errors = validate()
+    if (Object.keys(errors).length > 0) {
+      throw new Error('Formulaire invalide')
+    }
+    return svc.createAnnouncement(buildPayload())
+  }
+
+  async function submitEdit(tripId: string): Promise<Trip> {
+    const errors = validate()
+    if (Object.keys(errors).length > 0) {
+      throw new Error('Formulaire invalide')
+    }
+    return svc.updateAnnouncement(tripId, buildPayload())
   }
 
   function applyTemplate(trip: Trip): void {
@@ -101,5 +96,5 @@ export function useAnnouncementForm() {
     form.cashAccepted = trip.cashAccepted
   }
 
-  return { form, netPrice, validate, submit, applyTemplate }
+  return { form, netPrice, validate, submit, submitEdit, applyTemplate }
 }

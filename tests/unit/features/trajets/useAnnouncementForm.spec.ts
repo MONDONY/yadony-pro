@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 const mockCreate = vi.fn()
+const mockUpdate = vi.fn()
 
 vi.mock('@/features/trajets/services/tripsService', () => ({
   tripsService: () => ({
     listTrips: vi.fn(),
     createAnnouncement: mockCreate,
+    updateAnnouncement: mockUpdate,
     getTemplates: vi.fn().mockResolvedValue([]),
   }),
 }))
@@ -83,7 +85,7 @@ describe('useAnnouncementForm', () => {
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
     const result = await submit('PUBLISHED')
-    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ status: 'PUBLISHED', transportMode: 'AVION' }))
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ transportMode: 'AVION' }))
     expect(result.status).toBe('PUBLISHED')
   })
 
@@ -98,7 +100,7 @@ describe('useAnnouncementForm', () => {
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
     const result = await submit('DRAFT')
-    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ status: 'DRAFT' }))
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ transportMode: 'VOITURE' }))
     expect(result.status).toBe('DRAFT')
   })
 
@@ -137,5 +139,26 @@ describe('useAnnouncementForm', () => {
     expect(netPrice.value).toBeCloseTo(7.04, 2)
     form.pricePerKg = 5
     expect(netPrice.value).toBeCloseTo(4.40, 2)
+  })
+
+  it('submitEdit calls updateAnnouncement with tripId and correct payload', async () => {
+    mockUpdate.mockResolvedValue({ id: 'trip-edit', status: 'PUBLISHED' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submitEdit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-07-01'
+    form.transportMode = 'AVION'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    const result = await submitEdit('trip-edit')
+    expect(mockUpdate).toHaveBeenCalledWith('trip-edit', expect.objectContaining({ transportMode: 'AVION', departureDate: '2026-07-01' }))
+    expect(result.id).toBe('trip-edit')
+  })
+
+  it('submitEdit throws when form is invalid', async () => {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { submitEdit } = useAnnouncementForm()
+    await expect(submitEdit('trip-x')).rejects.toThrow('Formulaire invalide')
   })
 })

@@ -99,6 +99,7 @@ export interface ValidationErrors {
   dropoffPlace?: string
   availableWeightKg?: string
   pricePerKg?: string
+  global?: string
 }
 
 export interface TripBid {
