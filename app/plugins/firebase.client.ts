@@ -1,42 +1,64 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
-import { getAuth, type Auth } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, type Auth } from 'firebase/auth'
+import { useAuthStore, type AuthUser } from '@/stores/auth'
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin(async () => {
   const config = useRuntimeConfig()
-
   const pub = config.public as Record<string, string>
+
   const firebaseConfig = {
-    apiKey: pub.firebaseApiKey || '',
-    authDomain: pub.firebaseAuthDomain || '',
-    projectId: pub.firebaseProjectId || '',
-    appId: pub.firebaseAppId || '',
+    apiKey: pub.firebaseApiKey,
+    authDomain: pub.firebaseAuthDomain,
+    projectId: pub.firebaseProjectId,
+    appId: pub.firebaseAppId,
   }
 
-  let app: FirebaseApp
-  let auth: Auth
+  const app: FirebaseApp = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig)
+  const auth: Auth = getAuth(app)
+  const authStore = useAuthStore()
 
-  try {
-    app = getApps().length
-      ? getApps()[0]!
-      : initializeApp(firebaseConfig)
-    auth = getAuth(app)
-  } catch (e) {
-    // Firebase initialization failure (e.g., invalid key in test environments)
-    // is non-fatal — auth operations will fail gracefully when called.
-    console.warn('[firebase.client] init error:', e)
-    // Provide stub objects so consumers don't crash on access
-    return {
-      provide: {
-        firebaseApp: null as unknown as FirebaseApp,
-        firebaseAuth: null as unknown as Auth,
-      },
+  // Await Firebase's initial auth-state check — it reads its IndexedDB storage
+  // and calls back with the restored user (or null). Nuxt blocks route middleware
+  // until all async plugins resolve, so auth.global.ts always sees the right state.
+  await new Promise<void>((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      unsubscribe()
+
+      if (firebaseUser && !authStore.isAuthenticated) {
+        try {
+          const idToken = await firebaseUser.getIdToken()
+          const user = await $fetch<AuthUser>(`${pub.apiBaseUrl}/auth/me`, {
+            headers: { Authorization: `Bearer ${idToken}` },
+          }).catch(() => null)
+
+          if (user) {
+            authStore.setSession(idToken, user)
+          } else {
+            // Backend rejected the token (account deleted, etc.) — clean up
+            await auth.signOut()
+          }
+        } catch {
+          authStore.clear()
+        }
+      }
+
+      resolve()
+    })
+  })
+
+  // Ongoing listener: keep the token fresh when Firebase rotates it,
+  // and clear the store if the user signs out from another tab
+  onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      const freshToken = await firebaseUser.getIdToken()
+      if (authStore.idToken && freshToken !== authStore.idToken) {
+        authStore.idToken = freshToken
+      }
+    } else if (authStore.isAuthenticated) {
+      authStore.clear()
+      navigateTo('/login')
     }
-  }
+  })
 
-  return {
-    provide: {
-      firebaseApp: app,
-      firebaseAuth: auth,
-    },
-  }
+  return { provide: { firebaseApp: app, firebaseAuth: auth } }
 })
