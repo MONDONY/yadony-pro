@@ -84,7 +84,7 @@ function closeModal() {
     <NegotiationStartModal
       :request="negotiatingRequest"
       @close="closeModal"
-      @success="(id) => negotiatedIds.value = new Set([...negotiatedIds.value, id])"
+      @success="(id) => negotiatedIds.add(id)"
     />
   </div>
 </template>

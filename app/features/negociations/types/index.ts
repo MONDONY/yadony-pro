@@ -40,6 +40,7 @@ export interface NegotiationThread {
   departureCity: string
   arrivalCity: string
   weightKg: number
+  senderName: string
 }
 
 export interface StartNegotiationPayload {

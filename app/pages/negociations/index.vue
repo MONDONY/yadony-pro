@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { MessageSquareDot } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { MessageSquareDot, RefreshCw } from 'lucide-vue-next'
 import { useNegotiations } from '@/features/negociations/composables/useNegotiations'
 import NegotiationCard from '@/features/negociations/components/NegotiationCard.vue'
 
@@ -14,16 +14,62 @@ const { threads, isLoading, error, fetchAll } = useNegotiations()
 
 onMounted(() => fetchAll())
 
-const activeThreads = computed(() =>
-  threads.value.filter(t => ['OPEN', 'AWAITING_TRIP', 'AWAITING_PAYMENT'].includes(t.status)),
-)
-const pastThreads = computed(() =>
-  threads.value.filter(t => !['OPEN', 'AWAITING_TRIP', 'AWAITING_PAYMENT'].includes(t.status)),
-)
+type Tab = 'all' | 'active' | 'done'
+const activeTab = ref<Tab>('all')
+
+const ACTIVE_STATUSES = ['OPEN', 'AWAITING_TRIP', 'AWAITING_PAYMENT', 'ACCEPTED']
+const DONE_STATUSES = ['REJECTED', 'AUTO_REJECTED', 'EXPIRED']
+
+const activeCount = computed(() => threads.value.filter(t => ACTIVE_STATUSES.includes(t.status)).length)
+const doneCount = computed(() => threads.value.filter(t => DONE_STATUSES.includes(t.status)).length)
+
+const visibleThreads = computed(() => {
+  if (activeTab.value === 'active') return threads.value.filter(t => ACTIVE_STATUSES.includes(t.status))
+  if (activeTab.value === 'done') return threads.value.filter(t => DONE_STATUSES.includes(t.status))
+  return threads.value
+})
+
+const TABS: { key: Tab; label: string; count?: () => number }[] = [
+  { key: 'all', label: 'Toutes' },
+  { key: 'active', label: 'En cours', count: () => activeCount.value },
+  { key: 'done', label: 'Terminées', count: () => doneCount.value },
+]
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
+    <!-- Tabs + Refresh -->
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex gap-1 bg-surface border border-border rounded-btn p-0.5">
+        <button
+          v-for="tab in TABS"
+          :key="tab.key"
+          class="relative px-3 py-1.5 text-xs font-semibold rounded-[6px] transition-colors"
+          :class="activeTab === tab.key
+            ? 'bg-primary text-white shadow-sm'
+            : 'text-text-muted hover:text-text'"
+          @click="activeTab = tab.key"
+        >
+          {{ tab.label }}
+          <span
+            v-if="tab.count && tab.count() > 0"
+            class="ml-1.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-extrabold rounded-full"
+            :class="activeTab === tab.key ? 'bg-white/20' : 'bg-border text-text-muted'"
+          >
+            {{ tab.count() }}
+          </span>
+        </button>
+      </div>
+      <button
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-btn border border-border text-xs text-text-muted hover:text-text transition-colors"
+        :class="{ 'opacity-50 pointer-events-none': isLoading }"
+        @click="fetchAll()"
+      >
+        <RefreshCw class="w-3 h-3" :class="{ 'animate-spin': isLoading }" />
+        Actualiser
+      </button>
+    </div>
+
     <!-- Loading -->
     <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div v-for="i in 4" :key="i" class="h-36 bg-surface border border-border rounded-card animate-pulse" />
@@ -40,30 +86,15 @@ const pastThreads = computed(() =>
       </button>
     </div>
 
+    <!-- List -->
     <template v-else>
-      <!-- Actives -->
-      <div v-if="activeThreads.length > 0" class="space-y-3">
-        <h2 class="text-sm font-semibold text-text-muted uppercase tracking-wider">
-          En cours ({{ activeThreads.length }})
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <NegotiationCard v-for="t in activeThreads" :key="t.id" :thread="t" />
-        </div>
-      </div>
-
-      <!-- Passées -->
-      <div v-if="pastThreads.length > 0" class="space-y-3">
-        <h2 class="text-sm font-semibold text-text-muted uppercase tracking-wider">
-          Terminées ({{ pastThreads.length }})
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <NegotiationCard v-for="t in pastThreads" :key="t.id" :thread="t" />
-        </div>
+      <div v-if="visibleThreads.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <NegotiationCard v-for="t in visibleThreads" :key="t.id" :thread="t" />
       </div>
 
       <!-- Empty -->
       <div
-        v-if="threads.length === 0"
+        v-else
         class="flex flex-col items-center justify-center py-24 border border-dashed border-border rounded-card text-center"
       >
         <MessageSquareDot class="w-10 h-10 text-text-muted mb-3" />

@@ -55,9 +55,10 @@ async function submit() {
       travelerAnnouncementId: props.request.tripId,
       body: message.value.trim() || undefined,
     })
-    emit('success', props.request.id)
+    const requestId = props.request.id
+    emit('success', requestId)
     emit('close')
-    router.push(`/negociations/${thread.id}`)
+    await router.push(`/negociations/${thread.id}`)
   } catch {
     errorMsg.value = 'Impossible de démarrer la négociation. Réessayez.'
   } finally {
