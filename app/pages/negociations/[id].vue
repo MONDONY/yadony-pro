@@ -8,6 +8,8 @@ import NegotiationMessageBubble from '@/features/negociations/components/Negotia
 import NegotiationCounterModal from '@/features/negociations/components/NegotiationCounterModal.vue'
 import NegotiationSubmitTripModal from '@/features/negociations/components/NegotiationSubmitTripModal.vue'
 import NegotiationCreateTripModal from '@/features/negociations/components/NegotiationCreateTripModal.vue'
+import NegotiationLinkedTripBanner from '@/features/negociations/components/NegotiationLinkedTripBanner.vue'
+import NegotiationTripDetailModal from '@/features/negociations/components/NegotiationTripDetailModal.vue'
 import type { CounterPayload, CreateDedicatedTripPayload } from '@/features/negociations/types'
 
 definePageMeta({
@@ -20,7 +22,7 @@ const route = useRoute()
 const router = useRouter()
 const threadId = route.params.id as string
 
-const { thread, isLoading, actionLoading, error, fetchThread, submitCounter, acceptThread, rejectThread, linkTrip, createDedicatedTrip } =
+const { thread, isLoading, actionLoading, error, fetchThread, submitCounter, acceptThread, rejectThread, linkTrip, createDedicatedTrip, refuseTrip } =
   useNegotiationDetail(threadId)
 
 onMounted(() => fetchThread())
@@ -56,6 +58,7 @@ const showSubmitTripModal = ref(false)
 const showRejectConfirm = ref(false)
 const showCreateTripModal = ref(false)
 const showAcceptConfirm = ref(false)
+const showTripDetailModal = ref(false)
 
 async function onCounter(price: number, body?: string) {
   await submitCounter({ proposedPriceEur: price, body } as CounterPayload)
@@ -176,6 +179,14 @@ watch(isLoading, async (val) => {
         </p>
       </div>
 
+      <!-- Bandeau trajet lié -->
+      <div v-if="thread?.linkedTrip && thread?.status === 'AWAITING_PAYMENT'" class="px-4 py-2">
+        <NegotiationLinkedTripBanner
+          :trip="thread.linkedTrip"
+          @click="showTripDetailModal = true"
+        />
+      </div>
+
       <!-- Zone d'actions -->
       <div class="flex-shrink-0 border-t border-border pt-4 space-y-2">
 
@@ -287,6 +298,13 @@ watch(isLoading, async (val) => {
       :is-loading="actionLoading"
       @close="showCreateTripModal = false"
       @submit="onCreateDedicatedTrip"
+    />
+
+    <NegotiationTripDetailModal
+      v-if="thread?.linkedTrip"
+      :open="showTripDetailModal"
+      :trip="thread.linkedTrip"
+      @close="showTripDetailModal = false"
     />
 
     <!-- Confirm reject -->
