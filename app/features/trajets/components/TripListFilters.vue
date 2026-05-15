@@ -12,9 +12,10 @@ const emit = defineEmits<{ 'update:modelValue': [value: TripFilter] }>()
 const filters: Array<{ key: TripFilter; label: string }> = [
   { key: 'TOUS', label: 'Tous' },
   { key: 'ACTIFS', label: 'Actifs' },
-  { key: 'A_VENIR', label: 'À venir' },
+  { key: 'COMPLETS', label: 'Complets' },
+  { key: 'EN_COURS', label: 'En cours' },
   { key: 'TERMINES', label: 'Terminés' },
-  { key: 'ARCHIVES', label: 'Archivés' },
+  { key: 'ANNULES', label: 'Annulés' },
 ]
 </script>
 

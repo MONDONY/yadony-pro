@@ -31,7 +31,7 @@ const loadingBidId = ref<string | null>(null)
 const {
   trip, bids, isLoading, bidsLoading, error,
   deleteLoading, kpis,
-  fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, exportBidsCsv,
+  fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, confirmDelivery, exportBidsCsv,
 } = useTripDetail(tripId)
 
 onMounted(async () => {
@@ -56,6 +56,15 @@ async function onRejectBid(bidId: string) {
   loadingBidId.value = bidId
   try {
     await rejectBid(bidId)
+  } finally {
+    loadingBidId.value = null
+  }
+}
+
+async function onConfirmDelivery(bidId: string, code: string) {
+  loadingBidId.value = bidId
+  try {
+    await confirmDelivery(bidId, code)
   } finally {
     loadingBidId.value = null
   }
@@ -128,6 +137,7 @@ function onExportCsv() {
         :loading-bid-id="loadingBidId"
         @accept="onAcceptBid"
         @reject="onRejectBid"
+        @confirm-delivery="onConfirmDelivery"
         @export-csv="onExportCsv"
       />
 

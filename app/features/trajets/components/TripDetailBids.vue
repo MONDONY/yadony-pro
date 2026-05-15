@@ -1,7 +1,7 @@
 <!-- app/features/trajets/components/TripDetailBids.vue -->
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { CheckCircle, XCircle, Download, List, Table2 } from 'lucide-vue-next'
+import { ref, computed, watch } from 'vue'
+import { CheckCircle, XCircle, Download, List, Table2, PackageCheck } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import type { TripBid } from '@/features/trajets/types/index'
 
@@ -14,8 +14,33 @@ const props = defineProps<{
 const emit = defineEmits<{
   'accept': [bidId: string]
   'reject': [bidId: string]
+  'confirm-delivery': [bidId: string, code: string]
   'export-csv': []
 }>()
+
+const confirmingBid = ref<TripBid | null>(null)
+const confirmCode = ref('')
+
+function openConfirmModal(bid: TripBid) {
+  confirmingBid.value = bid
+  confirmCode.value = ''
+}
+
+function closeConfirmModal() {
+  confirmingBid.value = null
+  confirmCode.value = ''
+}
+
+function submitConfirmDelivery() {
+  if (!confirmingBid.value || confirmCode.value.length !== 6) return
+  emit('confirm-delivery', confirmingBid.value.id, confirmCode.value)
+}
+
+watch(() => props.loadingBidId, (newVal, oldVal) => {
+  if (oldVal === confirmingBid.value?.id && newVal === null) {
+    closeConfirmModal()
+  }
+})
 
 type BidViewMode = 'cards' | 'table'
 const viewMode = ref<BidViewMode>('cards')
@@ -219,6 +244,17 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
                   <XCircle class="w-4 h-4" />
                 </button>
               </div>
+              <div v-else-if="bid.status === 'IN_TRANSIT'">
+                <button
+                  :disabled="props.loadingBidId === bid.id"
+                  class="flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium text-indigo-400 border border-indigo-400/30 hover:bg-indigo-500/10 transition-colors disabled:opacity-50"
+                  :data-test="`confirm-delivery-${bid.id}`"
+                  @click="openConfirmModal(bid)"
+                >
+                  <PackageCheck class="w-3.5 h-3.5" />
+                  Livraison
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -270,7 +306,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
           Contenu : {{ bid.contentDescription }}
         </p>
 
-        <!-- Actions (only for PAYMENT_ESCROWED) -->
+        <!-- Actions PAYMENT_ESCROWED -->
         <div v-if="bid.status === 'PAYMENT_ESCROWED'" class="flex items-center gap-2 pt-1">
           <button
             :disabled="props.loadingBidId === bid.id"
@@ -291,6 +327,19 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
             Refuser
           </button>
         </div>
+
+        <!-- Action IN_TRANSIT : confirmer la livraison -->
+        <div v-else-if="bid.status === 'IN_TRANSIT'" class="pt-1">
+          <button
+            :disabled="props.loadingBidId === bid.id"
+            class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn border border-indigo-400/50 text-indigo-400 text-xs font-medium hover:bg-indigo-500/10 transition-colors disabled:opacity-50"
+            :data-test="`confirm-delivery-card-${bid.id}`"
+            @click="openConfirmModal(bid)"
+          >
+            <PackageCheck class="w-3.5 h-3.5" />
+            Confirmer la livraison
+          </button>
+        </div>
       </div>
     </div>
 
@@ -299,4 +348,76 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
       {{ filteredBids.length }} colis affichés · {{ props.bids.length }} au total
     </p>
   </div>
+
+  <!-- Modale confirmation de livraison -->
+  <Teleport to="body">
+    <div
+      v-if="confirmingBid"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      @click.self="closeConfirmModal"
+    >
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div class="relative w-full max-w-sm bg-surface border border-border rounded-card shadow-2xl p-6 space-y-5">
+
+        <!-- Header -->
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <PackageCheck class="w-5 h-5 text-indigo-400" />
+            </div>
+            <div>
+              <h3 class="font-semibold text-text text-sm">Confirmer la livraison</h3>
+              <p class="text-xs text-text-muted mt-0.5">Colis de {{ confirmingBid.senderName }}</p>
+            </div>
+          </div>
+          <button
+            class="text-text-muted hover:text-text transition-colors p-1"
+            @click="closeConfirmModal"
+          >
+            <XCircle class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- Instruction -->
+        <p class="text-xs text-text-muted leading-relaxed">
+          Entrez le code à 6 chiffres que l'expéditeur vous a communiqué pour valider la remise du colis au destinataire.
+        </p>
+
+        <!-- Code input -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-text-muted">Code de confirmation</label>
+          <input
+            v-model="confirmCode"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="000000"
+            data-test="confirm-delivery-code-input"
+            class="w-full h-12 px-4 rounded-btn bg-bg border border-border text-text text-center text-lg font-mono tracking-[0.4em] placeholder:text-text-muted/40 focus:outline-none focus:border-primary transition-colors"
+            @keyup.enter="submitConfirmDelivery"
+          />
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-2.5 pt-1">
+          <button
+            class="flex-1 h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+            @click="closeConfirmModal"
+          >
+            Annuler
+          </button>
+          <button
+            :disabled="confirmCode.length !== 6 || props.loadingBidId === confirmingBid.id"
+            class="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-btn bg-indigo-500 text-white text-sm font-medium hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            data-test="confirm-delivery-submit"
+            @click="submitConfirmDelivery"
+          >
+            <span v-if="props.loadingBidId === confirmingBid.id" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <CheckCircle v-else class="w-4 h-4" />
+            Confirmer
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>

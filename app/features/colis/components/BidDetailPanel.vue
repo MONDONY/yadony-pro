@@ -17,15 +17,21 @@ const emit = defineEmits<{
 }>()
 
 const statusLabel: Record<BidStatus, string> = {
+  AWAITING_PAYMENT: 'Paiement attendu',
   PENDING: 'En attente',
+  PAYMENT_ESCROWED: 'Paiement sécurisé',
   ACCEPTED: 'Accepté',
-  REFUSED: 'Refusé',
+  HANDED_OVER: 'Remis',
   IN_TRANSIT: 'En transit',
-  DELIVERED: 'Livré',
-  DISPUTE: 'Litige',
+  REJECTED: 'Refusé',
+  CANCELLED: 'Annulé',
+  COMPLETED: 'Livré',
+  NO_SHOW: 'Absent',
+  PARCEL_REFUSED: 'Colis refusé',
+  EXPIRED: 'Expiré',
 }
 
-const paymentLabel: Record<string, string> = {
+const paymentLabel: Record<Bid['paymentStatus'], string> = {
   PENDING: 'En attente de paiement',
   ESCROWED: 'Paiement sécurisé (escrow)',
   RELEASED: 'Virement effectué',
@@ -188,7 +194,7 @@ function formatHistoryDate(iso: string): string {
 
       <!-- Sticky footer actions -->
       <div
-        v-if="bid.status === 'PENDING'"
+        v-if="bid.status === 'PAYMENT_ESCROWED'"
         class="flex-shrink-0 px-6 py-4 border-t border-border flex items-center gap-3"
       >
         <button

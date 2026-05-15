@@ -1,5 +1,5 @@
 // app/features/colis/composables/useBids.ts
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { bidsService } from '@/features/colis/services/bidsService'
 import type { Bid, BidFilter, BidFiltersState } from '@/features/colis/types/index'
 
@@ -14,8 +14,6 @@ export function useBids() {
     statusFilter: 'TOUS',
     tripId: null,
     senderSearch: '',
-    dateFrom: null,
-    dateTo: null,
   })
 
   const svc = bidsService()
@@ -27,9 +25,6 @@ export function useBids() {
       const page = await svc.listBids({
         statusFilter: filters.value.statusFilter,
         tripId: filters.value.tripId,
-        senderSearch: filters.value.senderSearch || undefined,
-        dateFrom: filters.value.dateFrom,
-        dateTo: filters.value.dateTo,
       })
       bids.value = page.content
       totalElements.value = page.totalElements
@@ -50,16 +45,15 @@ export function useBids() {
     await fetchBids()
   }
 
-  async function setSenderSearch(search: string): Promise<void> {
+  function setSenderSearch(search: string): void {
     filters.value.senderSearch = search
-    await fetchBids()
   }
 
-  async function setDateRange(from: string | null, to: string | null): Promise<void> {
-    filters.value.dateFrom = from
-    filters.value.dateTo = to
-    await fetchBids()
-  }
+  const filteredBids = computed(() => {
+    const search = filters.value.senderSearch.trim().toLowerCase()
+    if (!search) return bids.value
+    return bids.value.filter((b) => b.sender.name.toLowerCase().includes(search))
+  })
 
   function toggleSelection(id: string): void {
     const idx = selectedIds.value.indexOf(id)
@@ -71,7 +65,7 @@ export function useBids() {
   }
 
   function selectAll(): void {
-    selectedIds.value = bids.value.map((b) => b.id)
+    selectedIds.value = filteredBids.value.map((b) => b.id)
   }
 
   function clearSelection(): void {
@@ -110,7 +104,7 @@ export function useBids() {
   }
 
   return {
-    bids,
+    bids: filteredBids,
     isLoading,
     error,
     totalElements,
@@ -120,7 +114,6 @@ export function useBids() {
     setStatusFilter,
     setTripFilter,
     setSenderSearch,
-    setDateRange,
     toggleSelection,
     selectAll,
     clearSelection,

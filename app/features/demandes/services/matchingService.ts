@@ -5,13 +5,11 @@ export function matchingService() {
   const api = useApi()
 
   async function fetchMatchingRequests(): Promise<MatchingRequest[]> {
-    return api.get('/travelers/me/matching-requests')
+    return api<MatchingRequest[]>('/travelers/me/matching-requests', {})
   }
 
   async function inviteRequest(requestId: string, announcementId: string): Promise<void> {
-    await api.post('/travelers/me/invite', {
-      body: { requestId, announcementId },
-    })
+    await api<void>('/travelers/me/invite', { method: 'POST', body: { requestId, announcementId } })
   }
 
   return { fetchMatchingRequests, inviteRequest }

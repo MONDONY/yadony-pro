@@ -61,6 +61,12 @@ export function useTripDetail(tripId: string) {
     await fetchTrip()
   }
 
+  async function confirmDelivery(bidId: string, code: string): Promise<void> {
+    await svc.confirmDelivery(bidId, code)
+    await fetchBids()
+    await fetchTrip()
+  }
+
   const kpis = computed<TripKpis>(() => {
     const t = trip.value
     if (!t) return { fillRatePct: 0, grossRevenueEuros: 0, commissionEuros: 0, netRevenueEuros: 0, revenuePerKg: 0 }
@@ -110,6 +116,7 @@ export function useTripDetail(tripId: string) {
     deleteTrip,
     acceptBid,
     rejectBid,
+    confirmDelivery,
     exportBidsCsv,
   }
 }

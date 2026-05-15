@@ -190,7 +190,11 @@ export function tripsService() {
     await api<void>(`/bids/${bidId}/reject`, { method: 'PUT' })
   }
 
-  return { listTrips, createAnnouncement, getTemplates, getAnnouncement, updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid }
+  async function confirmDelivery(bidId: string, code: string): Promise<void> {
+    await api<void>(`/tracking/${bidId}/confirm-delivery`, { method: 'POST', body: { confirmationCode: code } })
+  }
+
+  return { listTrips, createAnnouncement, getTemplates, getAnnouncement, updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid, confirmDelivery }
 }
 
 function filterToStatus(filter: TripFilter): string {

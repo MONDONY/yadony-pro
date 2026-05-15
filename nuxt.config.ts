@@ -8,6 +8,11 @@ export default defineNuxtConfig({
   },
   ssr: true,
   css: ['~~/assets/css/main.css'],
+  vite: {
+    optimizeDeps: {
+      include: ['firebase/app', 'firebase/auth', 'clsx', 'tailwind-merge', 'class-variance-authority', 'radix-vue', 'lucide-vue-next'],
+    },
+  },
   runtimeConfig: {
     public: {
       apiBaseUrl: '',

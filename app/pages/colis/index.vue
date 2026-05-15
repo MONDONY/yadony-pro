@@ -26,7 +26,6 @@ const {
   setStatusFilter,
   setTripFilter,
   setSenderSearch,
-  setDateRange,
   toggleSelection,
   selectAll,
   clearSelection,
@@ -88,8 +87,6 @@ function onExportCsv() {
       @update:status-filter="setStatusFilter"
       @update:trip-id="setTripFilter"
       @update:sender-search="setSenderSearch"
-      @update:date-from="(v) => setDateRange(v, filters.dateTo)"
-      @update:date-to="(v) => setDateRange(filters.dateFrom, v)"
     />
 
     <!-- Bulk actions bar -->

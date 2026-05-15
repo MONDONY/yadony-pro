@@ -13,18 +13,16 @@ const emit = defineEmits<{
   'update:statusFilter': [value: BidFilter]
   'update:tripId': [value: string | null]
   'update:senderSearch': [value: string]
-  'update:dateFrom': [value: string | null]
-  'update:dateTo': [value: string | null]
 }>()
 
 const statusFilters: Array<{ key: BidFilter; label: string }> = [
   { key: 'TOUS', label: 'Tous' },
-  { key: 'PENDING', label: 'En attente' },
+  { key: 'PAYMENT_ESCROWED', label: 'À traiter' },
   { key: 'ACCEPTED', label: 'Acceptés' },
   { key: 'IN_TRANSIT', label: 'En transit' },
-  { key: 'DELIVERED', label: 'Livrés' },
-  { key: 'REFUSED', label: 'Refusés' },
-  { key: 'DISPUTE', label: 'Litiges' },
+  { key: 'COMPLETED', label: 'Livrés' },
+  { key: 'REJECTED', label: 'Refusés' },
+  { key: 'CANCELLED', label: 'Annulés' },
 ]
 </script>
 
@@ -50,7 +48,7 @@ const statusFilters: Array<{ key: BidFilter; label: string }> = [
       </button>
     </div>
 
-    <!-- Second row: trip selector + date range + sender search -->
+    <!-- Second row: trip selector + sender search -->
     <div class="flex flex-wrap items-center gap-3">
       <!-- Trip dropdown -->
       <select
@@ -69,27 +67,7 @@ const statusFilters: Array<{ key: BidFilter; label: string }> = [
         </option>
       </select>
 
-      <!-- Date from -->
-      <input
-        type="date"
-        data-test="filter-date-from"
-        :value="modelValue.dateFrom ?? ''"
-        class="h-9 px-3 rounded-btn bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
-        placeholder="Depuis"
-        @change="emit('update:dateFrom', ($event.target as HTMLInputElement).value || null)"
-      />
-
-      <!-- Date to -->
-      <input
-        type="date"
-        data-test="filter-date-to"
-        :value="modelValue.dateTo ?? ''"
-        class="h-9 px-3 rounded-btn bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
-        placeholder="Jusqu'au"
-        @change="emit('update:dateTo', ($event.target as HTMLInputElement).value || null)"
-      />
-
-      <!-- Sender search -->
+      <!-- Sender search (client-side filter) -->
       <div class="relative flex-1 min-w-[200px]">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
         <input
