@@ -12,6 +12,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'close': []
+  'success': [requestId: string]
 }>()
 
 const router = useRouter()
@@ -54,6 +55,7 @@ async function submit() {
       travelerAnnouncementId: props.request.tripId,
       body: message.value.trim() || undefined,
     })
+    emit('success', props.request.id)
     emit('close')
     router.push(`/negociations/${thread.id}`)
   } catch {
