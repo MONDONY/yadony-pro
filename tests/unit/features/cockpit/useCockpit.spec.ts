@@ -155,4 +155,107 @@ describe('useCockpit', () => {
     await fetchAll()
     expect(kpis.value).toHaveLength(5)
   })
+
+  it('kpis returns placeholder dashes before fetchAll is called', async () => {
+    const useCockpit = await importUseCockpit()
+    const { kpis } = useCockpit()
+    // analytics and calendarStats are null → all values should be '—'
+    expect(kpis.value.every((k) => k.value === '—')).toBe(true)
+  })
+
+  it('urgentActions uses plural label for multiple expiring bids', async () => {
+    const in2h = new Date(Date.now() + 2 * 3600 * 1000).toISOString()
+    const ago25h = new Date(Date.now() - 25 * 3600 * 1000).toISOString()
+    const bid1 = { ...fakePendingBid, id: 'b1', expiresAt: in2h, createdAt: ago25h }
+    const bid2 = { ...fakePendingBid, id: 'b2', expiresAt: in2h, createdAt: ago25h }
+    mockListBids.mockResolvedValue({ content: [bid1, bid2], totalElements: 2, totalPages: 1, number: 0, size: 50 })
+    const useCockpit = await importUseCockpit()
+    const { urgentActions, fetchAll } = useCockpit()
+    await fetchAll()
+    const redAction = urgentActions.value.find((a) => a.severity === 'red')
+    expect(redAction?.label).toContain('2 bids')
+  })
+
+  it('urgentActions uses plural label for multiple stale bids', async () => {
+    const ago25h = new Date(Date.now() - 25 * 3600 * 1000).toISOString()
+    const bid1 = { ...fakePendingBid, id: 'b1', expiresAt: null, createdAt: ago25h }
+    const bid2 = { ...fakePendingBid, id: 'b2', expiresAt: null, createdAt: ago25h }
+    mockListBids.mockResolvedValue({ content: [bid1, bid2], totalElements: 2, totalPages: 1, number: 0, size: 50 })
+    const useCockpit = await importUseCockpit()
+    const { urgentActions, fetchAll } = useCockpit()
+    await fetchAll()
+    const orangeAction = urgentActions.value.find((a) => a.severity === 'orange')
+    expect(orangeAction?.label).toContain('2 bids')
+  })
+
+  it('green action detail says "Bon travail" when revenue > 0', async () => {
+    // fakeAnalytics has revenueNetCurrentMonth: 420.5
+    const useCockpit = await importUseCockpit()
+    const { urgentActions, fetchAll } = useCockpit()
+    await fetchAll()
+    const greenAction = urgentActions.value.find((a) => a.severity === 'green')
+    expect(greenAction?.detail).toContain('Bon travail')
+  })
+
+  it('green action detail says no virement when revenue is 0', async () => {
+    mockFetchAnalytics.mockResolvedValue({ ...fakeAnalytics, revenueNetCurrentMonth: 0 })
+    const useCockpit = await importUseCockpit()
+    const { urgentActions, fetchAll } = useCockpit()
+    await fetchAll()
+    const greenAction = urgentActions.value.find((a) => a.severity === 'green')
+    expect(greenAction?.detail).toContain('Aucun virement')
+  })
+
+  it('kpis actions trend is up when actionsRequises > 0', async () => {
+    // fakeAnalytics has actionsRequises: 3
+    const useCockpit = await importUseCockpit()
+    const { kpis, fetchAll } = useCockpit()
+    await fetchAll()
+    const actionKpi = kpis.value.find((k) => k.id === 'actions')
+    expect(actionKpi?.trend).toBe('up')
+  })
+
+  it('kpis actions trend is neutral when actionsRequises is 0', async () => {
+    mockFetchAnalytics.mockResolvedValue({ ...fakeAnalytics, actionsRequises: 0 })
+    const useCockpit = await importUseCockpit()
+    const { kpis, fetchAll } = useCockpit()
+    await fetchAll()
+    const actionKpi = kpis.value.find((k) => k.id === 'actions')
+    expect(actionKpi?.trend).toBe('neutral')
+  })
+
+  it('kpis rating trend is up when averageRating >= 4.5', async () => {
+    // fakeAnalytics has averageRating: 4.8
+    const useCockpit = await importUseCockpit()
+    const { kpis, fetchAll } = useCockpit()
+    await fetchAll()
+    const ratingKpi = kpis.value.find((k) => k.id === 'rating')
+    expect(ratingKpi?.trend).toBe('up')
+  })
+
+  it('kpis rating trend is down when averageRating < 4', async () => {
+    mockFetchAnalytics.mockResolvedValue({ ...fakeAnalytics, averageRating: 3.5 })
+    const useCockpit = await importUseCockpit()
+    const { kpis, fetchAll } = useCockpit()
+    await fetchAll()
+    const ratingKpi = kpis.value.find((k) => k.id === 'rating')
+    expect(ratingKpi?.trend).toBe('down')
+  })
+
+  it('kpis rating trend is neutral when 4 <= averageRating < 4.5', async () => {
+    mockFetchAnalytics.mockResolvedValue({ ...fakeAnalytics, averageRating: 4.2 })
+    const useCockpit = await importUseCockpit()
+    const { kpis, fetchAll } = useCockpit()
+    await fetchAll()
+    const ratingKpi = kpis.value.find((k) => k.id === 'rating')
+    expect(ratingKpi?.trend).toBe('neutral')
+  })
+
+  it('kpis shows calendarStats values when data is loaded', async () => {
+    const useCockpit = await importUseCockpit()
+    const { kpis, fetchAll } = useCockpit()
+    await fetchAll()
+    const tripsKpi = kpis.value.find((k) => k.id === 'trips')
+    expect(tripsKpi?.value).toBe('2 / 5')
+  })
 })
