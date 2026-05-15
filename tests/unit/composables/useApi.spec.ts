@@ -57,4 +57,40 @@ describe('useApi', () => {
     capturedOpts!.onRequest(ctx)
     expect(ctx.options.headers.Authorization).toBeUndefined()
   })
+
+  it('onResponseError calls auth.clear and navigates to /login on 401', async () => {
+    const navigateToMock = vi.mocked(navigateTo)
+    const auth = useAuthStore()
+    auth.setSession('token', {
+      id: 'u', phoneNumber: '+33', displayName: 'X',
+      isProAccount: true, roles: ['ROLE_TRAVELER'], avatarUrl: null,
+    })
+    const { useApi } = await import('@/composables/useApi')
+    useApi()
+    capturedOpts!.onResponseError({ response: { status: 401 } } as { response: { status: number } })
+    expect(auth.isAuthenticated).toBe(false)
+    expect(navigateToMock).toHaveBeenCalledWith('/login')
+  })
+
+  it('onResponseError does nothing on non-401 status', async () => {
+    const navigateToMock = vi.mocked(navigateTo)
+    navigateToMock.mockClear()
+    const auth = useAuthStore()
+    auth.setSession('token', {
+      id: 'u', phoneNumber: '+33', displayName: 'X',
+      isProAccount: true, roles: ['ROLE_TRAVELER'], avatarUrl: null,
+    })
+    const { useApi } = await import('@/composables/useApi')
+    useApi()
+    capturedOpts!.onResponseError({ response: { status: 403 } } as { response: { status: number } })
+    expect(auth.isAuthenticated).toBe(true)
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
+  it('returns the same cached instance on second call', async () => {
+    const { useApi } = await import('@/composables/useApi')
+    const first = useApi()
+    const second = useApi()
+    expect(first).toBe(second)
+  })
 })
