@@ -1,6 +1,6 @@
 <!-- app/features/negociations/components/NegotiationSubmitTripModal.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { XCircle } from 'lucide-vue-next'
 import { useApi } from '@/composables/useApi'
 
@@ -28,6 +28,7 @@ const loadingTrips = ref(false)
 const selectedId = ref<string | null>(null)
 
 async function loadTrips() {
+  selectedId.value = null
   loadingTrips.value = true
   try {
     const page = await api<{ content: Array<{
@@ -44,8 +45,8 @@ async function loadTrips() {
   }
 }
 
-onMounted(() => {
-  if (props.open) loadTrips()
+watch(() => props.open, (val) => {
+  if (val) loadTrips()
 })
 </script>
 
@@ -54,7 +55,6 @@ onMounted(() => {
     <div
       v-if="open"
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      @vue:mounted="loadTrips"
       @click.self="emit('close')"
     >
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />

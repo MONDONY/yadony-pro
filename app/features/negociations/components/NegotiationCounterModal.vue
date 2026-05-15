@@ -1,6 +1,6 @@
 <!-- app/features/negociations/components/NegotiationCounterModal.vue -->
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { XCircle } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -31,6 +31,10 @@ function submit() {
   if (!canSubmit.value) return
   emit('submit', price.value as number, message.value.trim() || undefined)
 }
+
+watch(() => props.open, (val) => {
+  if (val) onOpen()
+})
 </script>
 
 <template>
