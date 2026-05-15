@@ -19,6 +19,19 @@ export interface NegotiationMessage {
   createdAt: string
 }
 
+export interface LinkedTripSummary {
+  announcementId: string
+  departureCity: string
+  arrivalCity: string
+  departureDate: string | null
+  departureTime: string | null
+  transportMode: string | null
+  pickupAddressLabel: string | null
+  deliveryAddressLabel: string | null
+  availableKg: number
+  description: string | null
+}
+
 export interface NegotiationThread {
   id: string
   packageRequestId: string
@@ -46,6 +59,7 @@ export interface NegotiationThread {
   canAccept: boolean
   canCounter: boolean
   roundsRemaining: number
+  linkedTrip: LinkedTripSummary | null
 }
 
 export interface StartNegotiationPayload {

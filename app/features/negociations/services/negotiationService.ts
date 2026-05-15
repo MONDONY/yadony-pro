@@ -48,5 +48,9 @@ export function negotiationService() {
     })
   }
 
-  return { startNegotiation, listMine, getById, counter, reject, submitTrip, accept, createDedicatedTrip }
+  async function refuseTrip(id: string): Promise<NegotiationThread> {
+    return api<NegotiationThread>(`/negotiations/${id}/refuse-trip`, { method: 'POST' })
+  }
+
+  return { startNegotiation, listMine, getById, counter, reject, submitTrip, accept, createDedicatedTrip, refuseTrip }
 }

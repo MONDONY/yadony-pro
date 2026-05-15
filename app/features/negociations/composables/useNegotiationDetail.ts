@@ -68,5 +68,14 @@ export function useNegotiationDetail(threadId: string) {
     }
   }
 
-  return { thread, isLoading, actionLoading, error, fetchThread, submitCounter, rejectThread, linkTrip, acceptThread, createDedicatedTrip }
+  async function refuseTrip(): Promise<void> {
+    actionLoading.value = true
+    try {
+      thread.value = await svc.refuseTrip(threadId)
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  return { thread, isLoading, actionLoading, error, fetchThread, submitCounter, rejectThread, linkTrip, acceptThread, createDedicatedTrip, refuseTrip }
 }
