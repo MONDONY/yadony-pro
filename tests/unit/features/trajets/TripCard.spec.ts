@@ -93,17 +93,17 @@ describe('TripCard', () => {
     expect(wrapper.text()).toContain('/kg')
   })
 
-  it('emits voir-bids event on click', async () => {
+  it('renders voir-bids link with correct URL', async () => {
     const wrapper = await mountTripCard(baseTripProps)
-    await wrapper.find('[data-test="btn-voir-bids"]').trigger('click')
-    expect(wrapper.emitted('voir-bids')).toBeTruthy()
-    expect(wrapper.emitted('voir-bids')![0]).toEqual(['trip-1'])
+    const link = wrapper.find('[data-test="btn-voir-bids"]')
+    expect(link.exists()).toBe(true)
+    expect(link.attributes('href')).toBe('/trajets/trip-1?tab=bids')
   })
 
-  it('emits modifier event on click', async () => {
+  it('renders modifier link with correct URL', async () => {
     const wrapper = await mountTripCard(baseTripProps)
-    await wrapper.find('[data-test="btn-modifier"]').trigger('click')
-    expect(wrapper.emitted('modifier')).toBeTruthy()
-    expect(wrapper.emitted('modifier')![0]).toEqual(['trip-1'])
+    const link = wrapper.find('[data-test="btn-modifier"]')
+    expect(link.exists()).toBe(true)
+    expect(link.attributes('href')).toBe('/trajets/trip-1/modifier')
   })
 })

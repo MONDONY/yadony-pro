@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { List, CalendarDays, Plus } from 'lucide-vue-next'
 import { useTrips } from '@/features/trajets/composables/useTrips'
 import TripCard from '@/features/trajets/components/TripCard.vue'
@@ -13,20 +12,11 @@ definePageMeta({
   pageSubtitle: 'Liste, calendrier et publication',
 })
 
-const router = useRouter()
 const { trips, activeFilter, viewMode, isLoading, error, setFilter, toggleView, fetchTrips } = useTrips()
 
 onMounted(() => {
   fetchTrips()
 })
-
-function onVoirBids(id: string) {
-  router.push(`/trajets/${id}?tab=bids`)
-}
-
-function onModifier(id: string) {
-  router.push(`/trajets/${id}/modifier`)
-}
 </script>
 
 <template>
@@ -119,8 +109,6 @@ function onModifier(id: string) {
         v-for="trip in trips"
         :key="trip.id"
         v-bind="trip"
-        @voir-bids="onVoirBids"
-        @modifier="onModifier"
       />
     </div>
 
