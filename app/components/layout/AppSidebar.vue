@@ -9,7 +9,6 @@ import {
   Plus,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
-import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/auth'
 import NavItem from './NavItem.vue'
@@ -64,10 +63,14 @@ const initials = computed(() =>
 
     <!-- CTA -->
     <div class="p-3 border-t border-border">
-      <Button class="w-full gap-2">
+      <NuxtLink
+        to="/trajets/nouvelle-annonce"
+        data-test="btn-nouvelle-annonce"
+        class="flex items-center justify-center gap-2 w-full rounded-md bg-primary text-white text-sm font-medium px-4 py-2 hover:bg-primary/90 transition-colors"
+      >
         <Plus class="w-4 h-4" />
         Nouvelle annonce
-      </Button>
+      </NuxtLink>
     </div>
   </aside>
 </template>
