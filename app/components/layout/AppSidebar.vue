@@ -4,6 +4,7 @@ import {
   Plane,
   Package,
   Bot,
+  MessageSquareDot,
   Search,
   BarChart3,
   Plus,
@@ -52,6 +53,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/automatisations" label="Automatisations">
         <template #icon><Bot class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/negociations" label="Négociations">
+        <template #icon><MessageSquareDot class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/demandes" label="Demandes compatibles">
         <template #icon><Search class="w-4 h-4" /></template>
