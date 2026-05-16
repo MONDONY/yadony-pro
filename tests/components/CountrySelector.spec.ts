@@ -117,7 +117,7 @@ describe('CountrySelector', () => {
       props: { modelValue: defaultCountry },
     })
     wrapper.unmount()
-    expect(removeSpy).toHaveBeenCalledWith('click', expect.any(Function))
+    expect(removeSpy).toHaveBeenCalledWith('click', expect.any(Function), true)
     removeSpy.mockRestore()
   })
 })
