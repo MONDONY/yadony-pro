@@ -20,3 +20,25 @@ export interface InvitePayload {
   requestId: string
   announcementId: string
 }
+
+export interface ActiveTrip {
+  tripId: string
+  tripCorridor: string       // "Paris → Dakar"
+  tripDepartureDate: string  // "2026-06-15"
+  tripAvailableKg: number
+  matchCount: number         // nombre de demandes compatibles pour ce trajet
+}
+
+export interface FilterState {
+  maxWeightKg: number | null
+  minBudgetPerKg: number | null
+  contentType: string | null
+  sortBy: 'score' | 'date' | 'price'
+}
+
+export const DEFAULT_FILTER_STATE: FilterState = {
+  maxWeightKg: null,
+  minBudgetPerKg: null,
+  contentType: null,
+  sortBy: 'score',
+}
