@@ -3,6 +3,9 @@
     <LandingNav />
     <main>
       <LandingHero />
+      <LandingAppBridge />
+      <LandingSteps />
+      <LandingTestimonials />
       <!-- sections suivantes -->
     </main>
   </div>
