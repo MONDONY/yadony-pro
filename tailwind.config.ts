@@ -13,17 +13,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg:           'var(--bg)',
-        surface:      'var(--surface)',
+        bg:           'rgb(var(--bg-rgb) / <alpha-value>)',
+        surface:      'rgb(var(--surface-rgb) / <alpha-value>)',
         'surface-el': 'var(--surface-el)',
         'surface-elevated': 'var(--surface-el)',
-        border:       'var(--border)',
+        border:       'rgb(var(--border-rgb) / <alpha-value>)',
         primary: {
-          DEFAULT: 'var(--primary)',
+          DEFAULT: 'rgb(var(--primary-rgb) / <alpha-value>)',
           hover:   'var(--primary-h)',
         },
         accent: {
-          DEFAULT: 'var(--accent)',
+          DEFAULT: 'rgb(var(--accent-rgb) / <alpha-value>)',
           hover:   'var(--accent-h)',
         },
         text: {
@@ -31,9 +31,9 @@ export default {
           muted:   'var(--muted)',
           subtle:  'var(--subtle)',
         },
-        success: 'var(--success)',
-        warning: 'var(--warning)',
-        danger:  'var(--danger)',
+        success: 'rgb(var(--success-rgb) / <alpha-value>)',
+        warning: 'rgb(var(--warning-rgb) / <alpha-value>)',
+        danger:  'rgb(var(--danger-rgb) / <alpha-value>)',
       },
       fontFamily: {
         display: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
@@ -43,7 +43,7 @@ export default {
         card:  '16px',
         btn:   '14px',
         sheet: '24px',
-        sm:    '8px',
+        xs:    '8px',   // was 'sm' — renamed to avoid overriding Tailwind's rounded-sm (2px)
         full:  '999px',
       },
       spacing: {

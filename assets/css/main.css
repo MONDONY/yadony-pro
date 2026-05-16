@@ -6,6 +6,7 @@
 
 /* Light mode (défaut) */
 :root {
+  color-scheme: light;
   --bg:          #FAFAF8;
   --surface:     #FFFFFF;
   --surface-el:  #F2F1ED;
@@ -20,10 +21,20 @@
   --success:     #0E8A5F;
   --warning:     #E8A23B;
   --danger:      #D9342B;
+  /* RGB channels for opacity modifiers */
+  --primary-rgb:  11 95 255;
+  --accent-rgb:   217 106 58;
+  --bg-rgb:       250 250 248;
+  --surface-rgb:  255 255 255;
+  --border-rgb:   232 229 223;
+  --success-rgb:  14 138 95;
+  --warning-rgb:  232 162 59;
+  --danger-rgb:   217 52 43;
 }
 
 /* Dark mode */
 .dark {
+  color-scheme: dark;
   --bg:          #0A0E14;
   --surface:     #161B23;
   --surface-el:  #222932;
@@ -38,6 +49,15 @@
   --success:     #2DA677;
   --warning:     #F0B84A;
   --danger:      #EF5048;
+  /* RGB channels for opacity modifiers */
+  --primary-rgb:  77 138 255;
+  --accent-rgb:   232 134 91;
+  --bg-rgb:       10 14 20;
+  --surface-rgb:  22 27 35;
+  --border-rgb:   45 51 61;
+  --success-rgb:  45 166 119;
+  --warning-rgb:  240 184 74;
+  --danger-rgb:   239 80 72;
 }
 
 html, body, #__nuxt {
@@ -46,7 +66,7 @@ html, body, #__nuxt {
   color: var(--text);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.3s ease, color 0.2s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .font-display {
