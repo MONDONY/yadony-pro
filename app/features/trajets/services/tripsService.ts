@@ -4,11 +4,18 @@ import type {
   TripBid,
   TripPage,
   TripFilter,
+  CorridorOption,
   CreateAnnouncementPayload,
 } from '@/features/trajets/types/index'
 
 export interface ListTripsParams {
   filter?: TripFilter
+  q?: string | null
+  date?: string | null
+  dateFrom?: string | null
+  dateTo?: string | null
+  departure?: string | null
+  arrival?: string | null
   page?: number
   size?: number
 }
@@ -94,7 +101,7 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     pricePerKg: a.pricePerKg,
     acceptedCategories: a.acceptedContentTypes,
     refusedCategories: a.refusedTypes,
-    senderNote: a.senderNote,
+    senderNote: a.senderNote ?? null,
     cashAccepted: a.cashAccepted,
     confirmedParcelCount: a.confirmedParcelCount,
     pendingBidCount: a.pendingBidCount,
@@ -135,9 +142,20 @@ function mapBidResponseToTripBid(b: BackendBidResponse): TripBid {
 export function tripsService() {
   const api = useApi()
 
+  async function getCorridors(): Promise<CorridorOption[]> {
+    const result = await api<Array<{ departure: string; arrival: string }>>('/announcements/my/corridors', {})
+    return result.map((c) => ({ departure: c.departure, arrival: c.arrival }))
+  }
+
   async function listTrips(params: ListTripsParams = {}): Promise<TripPage> {
     const query: Record<string, string> = {}
     if (params.filter && params.filter !== 'TOUS') query.status = filterToStatus(params.filter)
+    if (params.q && params.q.trim()) query.q = params.q.trim()
+    if (params.date) query.date = params.date
+    if (params.dateFrom) query.dateFrom = params.dateFrom
+    if (params.dateTo) query.dateTo = params.dateTo
+    if (params.departure) query.departure = params.departure
+    if (params.arrival) query.arrival = params.arrival
     if (params.page !== undefined) query.page = String(params.page)
     if (params.size !== undefined) query.size = String(params.size)
 
@@ -194,7 +212,7 @@ export function tripsService() {
     await api<void>(`/tracking/${bidId}/confirm-delivery`, { method: 'POST', body: { confirmationCode: code } })
   }
 
-  return { listTrips, createAnnouncement, getTemplates, getAnnouncement, updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid, confirmDelivery }
+  return { listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement, updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid, confirmDelivery }
 }
 
 function filterToStatus(filter: TripFilter): string {

@@ -84,6 +84,8 @@ export interface ListBidsParams {
   statusFilter?: BidFilter
   tripId?: string | null
   q?: string | null
+  page?: number
+  size?: number
 }
 
 export function bidsService() {
@@ -96,6 +98,8 @@ export function bidsService() {
     }
     if (params.tripId) query.tripId = params.tripId
     if (params.q && params.q.trim()) query.q = params.q.trim()
+    if (params.page !== undefined) query.page = String(params.page)
+    if (params.size !== undefined) query.size = String(params.size)
 
     const page = await api<BackendPage>('/travelers/me/bids', { query })
     return {

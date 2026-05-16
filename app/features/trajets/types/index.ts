@@ -4,6 +4,12 @@ export type TripStatus = 'ACTIVE' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CANC
 export type TransportMode = 'PLANE' | 'CAR' | 'TRAIN' | 'BUS' | 'BOAT' | 'OTHER'
 export type TripFilter = 'TOUS' | 'ACTIFS' | 'COMPLETS' | 'EN_COURS' | 'TERMINES' | 'ANNULES'
 export type ViewMode = 'list' | 'calendar'
+export type DateMode = 'none' | 'day' | 'period'
+
+export interface CorridorOption {
+  departure: string
+  arrival: string
+}
 
 export interface PlaceSuggestion {
   placeId: string

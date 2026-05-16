@@ -3,11 +3,15 @@ import { ref, computed } from 'vue'
 import { bidsService } from '@/features/colis/services/bidsService'
 import type { Bid, BidFilter, BidFiltersState } from '@/features/colis/types/index'
 
+const PAGE_SIZE = 20
+
 export function useBids() {
   const bids = ref<Bid[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const totalElements = ref(0)
+  const totalPages = ref(0)
+  const currentPage = ref(0)
   const selectedIds = ref<string[]>([])
 
   const filters = ref<BidFiltersState>({
@@ -28,9 +32,12 @@ export function useBids() {
         statusFilter: filters.value.statusFilter,
         tripId: filters.value.tripId,
         q: filters.value.search || null,
+        page: currentPage.value,
+        size: PAGE_SIZE,
       })
       bids.value = page.content
       totalElements.value = page.totalElements
+      totalPages.value = page.totalPages
     } catch {
       error.value = 'Impossible de charger les colis. Veuillez réessayer.'
     } finally {
@@ -38,18 +45,27 @@ export function useBids() {
     }
   }
 
+  async function goToPage(page: number): Promise<void> {
+    currentPage.value = page
+    clearSelection()
+    await fetchBids()
+  }
+
   async function setStatusFilter(f: BidFilter): Promise<void> {
     filters.value.statusFilter = f
+    currentPage.value = 0
     await fetchBids()
   }
 
   async function setTripFilter(tripId: string | null): Promise<void> {
     filters.value.tripId = tripId
+    currentPage.value = 0
     await fetchBids()
   }
 
   function setSearch(search: string): void {
     filters.value.search = search
+    currentPage.value = 0
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = setTimeout(() => fetchBids(), 350)
   }
@@ -122,9 +138,13 @@ export function useBids() {
     isLoading,
     error,
     totalElements,
+    totalPages,
+    currentPage,
+    pageSize: PAGE_SIZE,
     filters,
     selectedIds,
     fetchBids,
+    goToPage,
     setStatusFilter,
     setTripFilter,
     setSearch,

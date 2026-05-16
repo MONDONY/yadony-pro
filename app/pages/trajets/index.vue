@@ -5,6 +5,7 @@ import { useTrips } from '@/features/trajets/composables/useTrips'
 import TripCard from '@/features/trajets/components/TripCard.vue'
 import TripListFilters from '@/features/trajets/components/TripListFilters.vue'
 import TripCalendar from '@/features/trajets/components/TripCalendar.vue'
+import PaginationControls from '@/components/ui/PaginationControls.vue'
 
 definePageMeta({
   middleware: ['pro-only'],
@@ -12,10 +13,38 @@ definePageMeta({
   pageSubtitle: 'Liste, calendrier et publication',
 })
 
-const { trips, activeFilter, viewMode, isLoading, error, setFilter, toggleView, fetchTrips } = useTrips()
+const {
+  trips,
+  activeFilter,
+  viewMode,
+  search,
+  dateMode,
+  date,
+  dateFrom,
+  dateTo,
+  corridor,
+  corridors,
+  isLoading,
+  error,
+  totalElements,
+  totalPages,
+  currentPage,
+  pageSize,
+  fetchTrips,
+  fetchCorridors,
+  goToPage,
+  setFilter,
+  setSearch,
+  setDateMode,
+  setDate,
+  setDateFrom,
+  setDateTo,
+  setCorridor,
+  toggleView,
+} = useTrips()
 
-onMounted(() => {
-  fetchTrips()
+onMounted(async () => {
+  await Promise.all([fetchTrips(), fetchCorridors()])
 })
 </script>
 
@@ -25,7 +54,20 @@ onMounted(() => {
     <div class="flex items-center gap-3 flex-wrap">
       <TripListFilters
         :model-value="activeFilter"
+        :search="search"
+        :date-mode="dateMode"
+        :date="date"
+        :date-from="dateFrom"
+        :date-to="dateTo"
+        :corridor="corridor"
+        :corridors="corridors"
         @update:model-value="setFilter"
+        @update:search="setSearch"
+        @update:date-mode="setDateMode"
+        @update:date="setDate"
+        @update:date-from="setDateFrom"
+        @update:date-to="setDateTo"
+        @update:corridor="setCorridor"
       />
       <div class="ml-auto flex items-center gap-2">
         <div class="flex items-center gap-1 bg-surface border border-border rounded-btn p-1">
@@ -111,6 +153,16 @@ onMounted(() => {
         v-bind="trip"
       />
     </div>
+
+    <!-- Pagination -->
+    <PaginationControls
+      v-if="!isLoading && !error && totalPages > 1 && viewMode === 'list'"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :total-elements="totalElements"
+      :page-size="pageSize"
+      @go-to-page="goToPage"
+    />
 
   </div>
 </template>
