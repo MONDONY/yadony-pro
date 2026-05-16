@@ -15,8 +15,8 @@ const emit = defineEmits<{
 }>()
 
 const scoreBadgeClass = computed(() => {
-  if (props.request.matchScore >= 90) return 'bg-green-500/15 text-green-400'
-  if (props.request.matchScore >= 70) return 'bg-blue-500/15 text-blue-400'
+  if (props.request.matchScore >= 85) return 'bg-green-500/15 text-green-400'
+  if (props.request.matchScore >= 60) return 'bg-amber-500/15 text-amber-400'
   return 'bg-border text-text-muted'
 })
 
