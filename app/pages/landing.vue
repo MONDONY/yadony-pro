@@ -2,9 +2,8 @@
   <div>
     <LandingNav />
     <main>
-      <section class="min-h-screen flex items-center justify-center pt-16">
-        <p class="text-text-muted text-sm">Hero — en construction</p>
-      </section>
+      <LandingHero />
+      <!-- sections suivantes -->
     </main>
   </div>
 </template>
