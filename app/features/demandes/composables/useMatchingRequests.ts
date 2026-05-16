@@ -1,14 +1,11 @@
-// app/features/demandes/composables/useMatchingRequests.ts
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { matchingService } from '@/features/demandes/services/matchingService'
-import type { MatchingRequest } from '@/features/demandes/types/index'
+import type { MatchingRequest, ActiveTrip } from '@/features/demandes/types/index'
 
 export function useMatchingRequests() {
   const requests = ref<MatchingRequest[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  const invitingId = ref<string | null>(null)
-  const invitedIds = ref<Set<string>>(new Set())
 
   const svc = matchingService()
 
@@ -24,15 +21,24 @@ export function useMatchingRequests() {
     }
   }
 
-  async function inviteRequest(requestId: string, announcementId: string): Promise<void> {
-    invitingId.value = requestId
-    try {
-      await svc.inviteRequest(requestId, announcementId)
-      invitedIds.value = new Set([...invitedIds.value, requestId])
-    } finally {
-      invitingId.value = null
+  const activeTrips = computed<ActiveTrip[]>(() => {
+    const map = new Map<string, ActiveTrip>()
+    for (const r of requests.value) {
+      if (!map.has(r.tripId)) {
+        map.set(r.tripId, {
+          tripId: r.tripId,
+          tripCorridor: r.tripCorridor,
+          tripDepartureDate: r.tripDepartureDate,
+          tripAvailableKg: r.tripAvailableKg,
+          matchCount: 0,
+        })
+      }
+      map.get(r.tripId)!.matchCount++
     }
-  }
+    return [...map.values()]
+  })
 
-  return { requests, isLoading, error, fetchRequests, invitingId, invitedIds, inviteRequest }
+  const hasActiveTrips = computed(() => activeTrips.value.length > 0)
+
+  return { requests, isLoading, error, fetchRequests, activeTrips, hasActiveTrips }
 }
