@@ -25,7 +25,13 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'dony PRO',
-      htmlAttrs: { lang: 'fr', class: 'dark' },
+      htmlAttrs: { lang: 'fr' },
+      script: [
+        {
+          innerHTML: `(function(){var s=localStorage.getItem('dony-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(s===null&&d)){document.documentElement.classList.add('dark');}})();`,
+          type: 'text/javascript',
+        }
+      ],
     },
   },
 })
