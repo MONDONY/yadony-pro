@@ -1,9 +1,13 @@
 <!-- app/features/colis/components/BidDetailPanel.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { X, Star, CheckCircle, XCircle, Mail, Clock } from 'lucide-vue-next'
+import { X, Star, CheckCircle, XCircle, Mail, Clock, Copy, Package, Truck, MapPin } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import type { Bid, BidStatus } from '@/features/colis/types/index'
+
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text).catch(() => {})
+}
 
 const props = defineProps<{
   bid: Bid | null
@@ -155,6 +159,64 @@ function formatHistoryDate(iso: string): string {
               <dd class="text-sm text-text mt-0.5">{{ bid.contentDescription }}</dd>
             </div>
           </dl>
+        </section>
+
+        <!-- Tracking -->
+        <section v-if="bid.trackingNumber || ['ACCEPTED','HANDED_OVER','IN_TRANSIT','COMPLETED'].includes(bid.status)">
+          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Suivi du colis</h3>
+
+          <!-- Numéro de suivi -->
+          <div v-if="bid.trackingNumber" class="flex items-center gap-3 bg-bg border border-border rounded-card px-4 py-3 mb-4">
+            <Package class="w-4 h-4 text-primary shrink-0" />
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-text-muted">Numéro de suivi</p>
+              <p class="font-mono font-bold text-text tracking-widest text-sm mt-0.5">{{ bid.trackingNumber }}</p>
+            </div>
+            <button
+              class="p-1.5 rounded hover:bg-border transition-colors text-text-muted hover:text-primary"
+              title="Copier le numéro"
+              type="button"
+              @click="copyToClipboard(bid.trackingNumber!)"
+            >
+              <Copy class="w-4 h-4" />
+            </button>
+          </div>
+
+          <!-- Timeline statut -->
+          <ol class="relative">
+            <li
+              v-for="(step, i) in [
+                { key: 'ACCEPTED',    label: 'Bid accepté',      icon: CheckCircle },
+                { key: 'HANDED_OVER', label: 'Colis remis',       icon: Package },
+                { key: 'IN_TRANSIT',  label: 'En transit',        icon: Truck },
+                { key: 'COMPLETED',   label: 'Livré',             icon: MapPin },
+              ]"
+              :key="step.key"
+              class="flex items-start gap-3 pb-4 last:pb-0"
+            >
+              <div class="flex flex-col items-center shrink-0">
+                <div :class="cn(
+                  'w-7 h-7 rounded-full flex items-center justify-center border-2',
+                  ['ACCEPTED','HANDED_OVER','IN_TRANSIT','COMPLETED'].indexOf(bid.status) >= i
+                    ? 'bg-primary border-primary text-white'
+                    : 'bg-bg border-border text-text-muted'
+                )">
+                  <component :is="step.icon" class="w-3.5 h-3.5" />
+                </div>
+                <div v-if="i < 3" class="w-0.5 h-4 mt-1" :class="
+                  ['ACCEPTED','HANDED_OVER','IN_TRANSIT','COMPLETED'].indexOf(bid.status) > i
+                    ? 'bg-primary'
+                    : 'bg-border'
+                " />
+              </div>
+              <p :class="cn(
+                'text-sm pt-0.5',
+                ['ACCEPTED','HANDED_OVER','IN_TRANSIT','COMPLETED'].indexOf(bid.status) >= i
+                  ? 'text-text font-medium'
+                  : 'text-text-muted'
+              )">{{ step.label }}</p>
+            </li>
+          </ol>
         </section>
 
         <!-- Payment status -->

@@ -13,8 +13,10 @@ export function useBids() {
   const filters = ref<BidFiltersState>({
     statusFilter: 'TOUS',
     tripId: null,
-    senderSearch: '',
+    search: '',
   })
+
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   const svc = bidsService()
 
@@ -25,6 +27,7 @@ export function useBids() {
       const page = await svc.listBids({
         statusFilter: filters.value.statusFilter,
         tripId: filters.value.tripId,
+        q: filters.value.search || null,
       })
       bids.value = page.content
       totalElements.value = page.totalElements
@@ -45,14 +48,24 @@ export function useBids() {
     await fetchBids()
   }
 
+  function setSearch(search: string): void {
+    filters.value.search = search
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => fetchBids(), 350)
+  }
+
+  // Keep for backwards compat with BidFilters emit
   function setSenderSearch(search: string): void {
-    filters.value.senderSearch = search
+    setSearch(search)
   }
 
   const filteredBids = computed(() => {
-    const search = filters.value.senderSearch.trim().toLowerCase()
-    if (!search) return bids.value
-    return bids.value.filter((b) => b.sender.name.toLowerCase().includes(search))
+    const q = filters.value.search.trim().toLowerCase()
+    if (!q) return bids.value
+    return bids.value.filter((b) =>
+      b.sender.name.toLowerCase().includes(q) ||
+      (b.trackingNumber ?? '').toLowerCase().includes(q),
+    )
   })
 
   function toggleSelection(id: string): void {
@@ -88,10 +101,11 @@ export function useBids() {
 
   function exportCsv(): string {
     const selected = bids.value.filter((b) => selectedIds.value.includes(b.id))
-    const header = 'id,expéditeur,corridor,date départ,poids (kg),statut,revenus (€)'
+    const header = 'id,n°suivi,expéditeur,corridor,date départ,poids (kg),statut,revenus (€)'
     const rows = selected.map((b) =>
       [
         b.id,
+        b.trackingNumber ?? '',
         b.sender.name,
         b.tripCorridor,
         b.tripDepartureDate,
@@ -113,6 +127,7 @@ export function useBids() {
     fetchBids,
     setStatusFilter,
     setTripFilter,
+    setSearch,
     setSenderSearch,
     toggleSelection,
     selectAll,

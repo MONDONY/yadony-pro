@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { LayoutGrid, List } from 'lucide-vue-next'
 import type { FilterState } from '@/features/demandes/types/index'
 import { DEFAULT_FILTER_STATE } from '@/features/demandes/types/index'
 
@@ -7,10 +8,12 @@ const props = defineProps<{
   filters: FilterState
   resultCount: number
   availableContentTypes: string[]
+  viewMode: 'card' | 'list'
 }>()
 
 const emit = defineEmits<{
   'update:filters': [value: FilterState]
+  'update:viewMode': [value: 'card' | 'list']
 }>()
 
 const openPicker = ref<'weight' | 'budget' | 'type' | 'sort' | null>(null)
@@ -62,7 +65,7 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
 </script>
 
 <template>
-  <div ref="containerRef" class="px-4 py-2.5 border-b border-border flex items-center gap-2 overflow-x-auto scrollbar-none">
+  <div ref="containerRef" class="px-4 py-2.5 border-b border-border flex items-center gap-2 flex-wrap">
     <!-- Chip Tous -->
     <button
       data-test="filter-all"
@@ -193,6 +196,26 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
           @click="patch({ sortBy: opt.value })"
         >{{ opt.label }}</button>
       </div>
+    </div>
+
+    <!-- Séparateur + toggle vue -->
+    <div class="ml-auto flex items-center gap-0.5 bg-bg border border-border rounded-btn p-0.5">
+      <button
+        :class="['p-1.5 rounded transition-colors', viewMode === 'card' ? 'bg-surface text-text shadow-sm' : 'text-text-muted hover:text-text']"
+        type="button"
+        aria-label="Vue cartes"
+        @click="emit('update:viewMode', 'card')"
+      >
+        <LayoutGrid class="w-3.5 h-3.5" />
+      </button>
+      <button
+        :class="['p-1.5 rounded transition-colors', viewMode === 'list' ? 'bg-surface text-text shadow-sm' : 'text-text-muted hover:text-text']"
+        type="button"
+        aria-label="Vue liste"
+        @click="emit('update:viewMode', 'list')"
+      >
+        <List class="w-3.5 h-3.5" />
+      </button>
     </div>
   </div>
 </template>

@@ -4,16 +4,50 @@ export interface MatchingRequest {
   tripCorridor: string
   tripDepartureDate: string
   tripAvailableKg: number
+  senderId: string
   senderName: string
   senderInitials: string
+  senderAvatarUrl: string | null
   senderRating: number
   senderTotalSent: number
   weightKg: number
   contentType: string
   budgetPerKg: number
+  packagePhotoUrl: string | null
+  packageDescription?: string
   messageExcerpt: string
   matchScore: number
   requestedAt: string
+}
+
+// ── Profil public expéditeur ──────────────────────────────────────────────────
+
+export interface SenderProfile {
+  userId: string
+  displayName: string
+  avatarUrl: string | null
+  kycVerified: boolean
+  isProAccount: boolean
+  isKiloPro: boolean
+  completedBidsCount: number
+  averageRating: number
+  ratingCount: number
+  memberSince: string
+}
+
+export interface RatingItem {
+  stars: number
+  comment: string | null
+  createdAt: string
+}
+
+export interface SenderRatings {
+  averageRating: number
+  ratingCount: number
+  distribution: Record<string, number>
+  ratings: RatingItem[]
+  page: number
+  totalPages: number
 }
 
 export interface InvitePayload {

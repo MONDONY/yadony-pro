@@ -52,6 +52,8 @@ export interface Bid {
   history: BidHistoryEntry[]
   createdAt: string
   expiresAt: string | null
+  trackingNumber: string | null
+  trackingToken: string | null
 }
 
 export interface BidPage {
@@ -65,5 +67,5 @@ export interface BidPage {
 export interface BidFiltersState {
   statusFilter: BidFilter
   tripId: string | null
-  senderSearch: string
+  search: string
 }

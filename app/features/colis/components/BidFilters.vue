@@ -13,6 +13,7 @@ const emit = defineEmits<{
   'update:statusFilter': [value: BidFilter]
   'update:tripId': [value: string | null]
   'update:senderSearch': [value: string]
+  'update:search': [value: string]
 }>()
 
 const statusFilters: Array<{ key: BidFilter; label: string }> = [
@@ -67,16 +68,16 @@ const statusFilters: Array<{ key: BidFilter; label: string }> = [
         </option>
       </select>
 
-      <!-- Sender search (client-side filter) -->
+      <!-- Unified search: expéditeur ou n° de suivi -->
       <div class="relative flex-1 min-w-[200px]">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
         <input
           type="text"
-          data-test="filter-sender-search"
-          :value="modelValue.senderSearch"
-          placeholder="Rechercher un expéditeur…"
+          data-test="filter-search"
+          :value="modelValue.search"
+          placeholder="Expéditeur ou n° de suivi (DON-…)"
           class="w-full h-9 pl-9 pr-3 rounded-btn bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
-          @input="emit('update:senderSearch', ($event.target as HTMLInputElement).value)"
+          @input="emit('update:search', ($event.target as HTMLInputElement).value)"
         />
       </div>
     </div>

@@ -25,6 +25,7 @@ const {
   fetchBids,
   setStatusFilter,
   setTripFilter,
+  setSearch,
   setSenderSearch,
   toggleSelection,
   selectAll,
@@ -87,6 +88,7 @@ function onExportCsv() {
       @update:status-filter="setStatusFilter"
       @update:trip-id="setTripFilter"
       @update:sender-search="setSenderSearch"
+      @update:search="setSearch"
     />
 
     <!-- Bulk actions bar -->

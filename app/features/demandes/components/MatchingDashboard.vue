@@ -1,11 +1,14 @@
 <!-- app/features/demandes/components/MatchingDashboard.vue -->
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, reactive } from 'vue'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useMatchingRequests } from '@/features/demandes/composables/useMatchingRequests'
 import TripSelector from '@/features/demandes/components/TripSelector.vue'
 import DemandFilters from '@/features/demandes/components/DemandFilters.vue'
 import EmptyStateNoTrip from '@/features/demandes/components/EmptyStateNoTrip.vue'
 import MatchingRequestCard from '@/features/demandes/components/MatchingRequestCard.vue'
+import MatchingRequestRow from '@/features/demandes/components/MatchingRequestRow.vue'
+import RequestDetailModal from '@/features/demandes/components/RequestDetailModal.vue'
 import NegotiationStartModal from '@/features/negociations/components/NegotiationStartModal.vue'
 import CreateTripFromDemandModal from '@/features/demandes/components/CreateTripFromDemandModal.vue'
 import type { MatchingRequest, FilterState } from '@/features/demandes/types/index'
@@ -19,6 +22,8 @@ onMounted(() => { fetchRequests() })
 
 const selectedTripId = ref<string | null>(null)
 const filters = ref<FilterState>({ ...DEFAULT_FILTER_STATE })
+const viewMode = ref<'card' | 'list'>('card')
+const currentPage = ref(1)
 
 // Auto-sélectionner le premier trajet après chargement
 watch(activeTrips, (trips) => {
@@ -66,8 +71,30 @@ const availableContentTypes = computed(() =>
   )],
 )
 
+// ── Pagination ───────────────────────────────────────────────────────────────
+
+const itemsPerPage = computed(() => viewMode.value === 'card' ? 10 : 20)
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredRequests.value.length / itemsPerPage.value)))
+
+const paginatedRequests = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredRequests.value.slice(start, start + itemsPerPage.value)
+})
+
+const paginationLabel = computed(() => {
+  const total = filteredRequests.value.length
+  if (total === 0) return ''
+  const start = (currentPage.value - 1) * itemsPerPage.value + 1
+  const end = Math.min(currentPage.value * itemsPerPage.value, total)
+  return `${start}–${end} sur ${total}`
+})
+
+// Retour page 1 quand les filtres ou le mode changent
+watch([filteredRequests, viewMode], () => { currentPage.value = 1 })
+
 // ── Modals ───────────────────────────────────────────────────────────────────
 
+const detailRequest = ref<MatchingRequest | null>(null)
 const negotiatingRequest = ref<MatchingRequest | null>(null)
 const createTripRequest = ref<MatchingRequest | null>(null)
 const negotiatedIds = reactive(new Set<string>())
@@ -106,19 +133,20 @@ function openNegotiateModal(request: MatchingRequest) {
       <EmptyStateNoTrip v-if="!hasActiveTrips" />
 
       <template v-else>
-        <!-- Sélecteur de trajet -->
-        <TripSelector
-          v-model="selectedTripId"
-          :trips="activeTrips"
-          :total-count="filteredRequests.length"
-        />
-
-        <!-- Filtres -->
-        <DemandFilters
-          v-model:filters="filters"
-          :result-count="filteredRequests.length"
-          :available-content-types="availableContentTypes"
-        />
+        <!-- Sélecteur de trajet + Filtres (sticky) -->
+        <div class="sticky top-0 z-10 bg-surface border-b border-border">
+          <TripSelector
+            v-model="selectedTripId"
+            :trips="activeTrips"
+            :total-count="filteredRequests.length"
+          />
+          <DemandFilters
+            v-model:filters="filters"
+            v-model:view-mode="viewMode"
+            :result-count="filteredRequests.length"
+            :available-content-types="availableContentTypes"
+          />
+        </div>
 
         <!-- Liste vide après filtrage -->
         <div v-if="filteredRequests.length === 0" class="flex flex-col items-center py-16 text-center text-sm text-text-muted">
@@ -128,19 +156,82 @@ function openNegotiateModal(request: MatchingRequest) {
           </button>
         </div>
 
-        <!-- Cards demandes -->
-        <div v-else class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          <MatchingRequestCard
-            v-for="req in filteredRequests"
-            :key="req.id"
-            :request="req"
-            :is-negotiating="negotiatingRequest?.id === req.id"
-            :has-negotiated="negotiatedIds.has(req.id)"
-            @negotiate="openNegotiateModal"
-          />
-        </div>
+        <template v-else>
+          <!-- Vue liste : en-tête colonnes -->
+          <div v-if="viewMode === 'list'" class="flex items-center gap-4 px-4 py-2 border-b border-border bg-bg/50">
+            <div class="w-8 shrink-0" />
+            <div class="w-36 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Expéditeur</div>
+            <div class="w-16 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Poids</div>
+            <div class="w-28 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Type</div>
+            <div class="w-20 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Budget</div>
+            <div class="w-12 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Score</div>
+            <div class="flex-1 text-xs font-semibold text-text-muted uppercase tracking-wide hidden md:block">Message</div>
+            <div class="shrink-0 w-20" />
+          </div>
+
+          <!-- Vue carte -->
+          <div v-if="viewMode === 'card'" class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            <MatchingRequestCard
+              v-for="req in paginatedRequests"
+              :key="req.id"
+              :request="req"
+              :is-negotiating="negotiatingRequest?.id === req.id"
+              :has-negotiated="negotiatedIds.has(req.id)"
+              @negotiate="openNegotiateModal"
+              @view-detail="detailRequest = $event"
+            />
+          </div>
+
+          <!-- Vue liste -->
+          <div v-else>
+            <MatchingRequestRow
+              v-for="req in paginatedRequests"
+              :key="req.id"
+              :request="req"
+              :is-negotiating="negotiatingRequest?.id === req.id"
+              :has-negotiated="negotiatedIds.has(req.id)"
+              @negotiate="openNegotiateModal"
+              @view-detail="detailRequest = $event"
+            />
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="totalPages > 1" class="flex items-center justify-between px-4 py-3 border-t border-border">
+            <span class="text-xs text-text-muted">{{ paginationLabel }}</span>
+            <div class="flex items-center gap-1">
+              <button
+                :disabled="currentPage === 1"
+                class="p-1.5 rounded-btn border border-border text-text-muted hover:text-text transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                type="button"
+                aria-label="Page précédente"
+                @click="currentPage--"
+              >
+                <ChevronLeft class="w-4 h-4" />
+              </button>
+
+              <span class="px-3 text-xs text-text font-medium">{{ currentPage }} / {{ totalPages }}</span>
+
+              <button
+                :disabled="currentPage === totalPages"
+                class="p-1.5 rounded-btn border border-border text-text-muted hover:text-text transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                type="button"
+                aria-label="Page suivante"
+                @click="currentPage++"
+              >
+                <ChevronRight class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </template>
       </template>
     </template>
+
+    <!-- Modal détail demande -->
+    <RequestDetailModal
+      :request="detailRequest"
+      @close="detailRequest = null"
+      @negotiate="openNegotiateModal"
+    />
 
     <!-- Modals -->
     <NegotiationStartModal

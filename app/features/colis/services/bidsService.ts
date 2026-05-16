@@ -18,6 +18,8 @@ interface BackendBidResponse {
   pricePerKg: number
   createdAt: string
   paymentMethod: string | null
+  trackingNumber: string | null
+  trackingToken: string | null
 }
 
 interface BackendPage {
@@ -73,12 +75,15 @@ function mapBackendToBid(b: BackendBidResponse): Bid {
     history: [],
     createdAt: b.createdAt,
     expiresAt: null,
+    trackingNumber: b.trackingNumber ?? null,
+    trackingToken: b.trackingToken ?? null,
   }
 }
 
 export interface ListBidsParams {
   statusFilter?: BidFilter
   tripId?: string | null
+  q?: string | null
 }
 
 export function bidsService() {
@@ -90,6 +95,7 @@ export function bidsService() {
       query.status = params.statusFilter
     }
     if (params.tripId) query.tripId = params.tripId
+    if (params.q && params.q.trim()) query.q = params.q.trim()
 
     const page = await api<BackendPage>('/travelers/me/bids', { query })
     return {

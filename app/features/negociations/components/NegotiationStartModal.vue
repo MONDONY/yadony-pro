@@ -38,12 +38,10 @@ watch(() => props.request, (req) => {
   }
 }, { immediate: true })
 
-function decrement() {
-  if (proposedPrice.value > 1) proposedPrice.value--
-}
-
-function increment() {
-  if (proposedPrice.value < maxPrice.value) proposedPrice.value++
+function onPriceInput(e: Event) {
+  const raw = (e.target as HTMLInputElement).value
+  const n = parseInt(raw, 10)
+  if (!Number.isNaN(n) && n >= 0) proposedPrice.value = n
 }
 
 const priceBarWidth = computed(() => {
@@ -113,7 +111,7 @@ async function submit() {
             </div>
             <div>
               <span class="text-text-muted">Budget exp.</span>
-              <p class="font-semibold text-green-400 mt-0.5">{{ request.budgetPerKg }} €/kg</p>
+              <p class="font-semibold text-green-400 mt-0.5">{{ suggestedPrice }} €</p>
             </div>
           </div>
         </div>
@@ -130,34 +128,33 @@ async function submit() {
         <div class="px-5 py-4 space-y-4">
           <!-- Prix proposé avec contrôles +/- -->
           <div class="space-y-2">
-            <p class="text-xs font-bold text-text-muted uppercase tracking-wide">Mon prix</p>
-            <p class="text-xs text-text-muted">
-              Suggéré : <span class="font-semibold text-text">{{ suggestedPrice }} €</span>
-              ({{ request.budgetPerKg }} €/kg × {{ request.weightKg }} kg)
-            </p>
-            <div class="flex items-center gap-3">
-              <button
-                class="w-9 h-9 rounded-full border border-border flex items-center justify-center text-text-muted hover:text-text hover:border-primary transition-colors text-lg font-light"
-                type="button"
-                :disabled="proposedPrice <= 1"
-                @click="decrement"
-              >−</button>
-              <div class="flex-1 text-center">
-                <p class="text-2xl font-bold text-text" data-test="proposed-price">{{ proposedPrice }} €</p>
-                <p class="text-xs text-text-muted mt-0.5">
-                  soit {{ request.weightKg > 0 ? (proposedPrice / request.weightKg).toFixed(2) : '—' }} €/kg
-                </p>
-              </div>
-              <button
-                class="w-9 h-9 rounded-full border border-border flex items-center justify-center text-text-muted hover:text-text hover:border-primary transition-colors text-lg font-light"
-                type="button"
-                :disabled="proposedPrice >= maxPrice"
-                @click="increment"
-              >+</button>
+            <div class="flex items-baseline justify-between">
+              <p class="text-xs font-bold text-text-muted uppercase tracking-wide">Mon prix total</p>
+              <span class="text-xs text-text-muted">pour {{ request.weightKg }} kg</span>
             </div>
+            <p class="text-xs text-text-muted">
+              Budget expéditeur : <span class="font-semibold text-green-400">{{ suggestedPrice }} €</span>
+              <span class="text-text-muted/70"> ({{ request.budgetPerKg }} €/kg × {{ request.weightKg }} kg)</span>
+            </p>
+            <div class="flex items-center gap-2 bg-bg border border-border rounded-xl px-4 py-3 focus-within:border-primary transition-colors">
+              <input
+                :value="proposedPrice"
+                type="number"
+                min="1"
+                :max="maxPrice"
+                inputmode="numeric"
+                data-test="proposed-price"
+                class="flex-1 text-center text-3xl font-bold text-text bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                @input="onPriceInput"
+              />
+              <span class="text-2xl font-bold text-text-muted shrink-0">€</span>
+            </div>
+            <p class="text-xs text-text-muted text-center -mt-1">
+              soit {{ request.weightKg > 0 ? (proposedPrice / request.weightKg).toFixed(2) : '—' }} €/kg
+            </p>
             <!-- Barre min → max -->
-            <div class="h-1 bg-border rounded-full overflow-hidden">
-              <div class="h-full bg-primary rounded-full transition-all" :style="{ width: priceBarWidth }" />
+            <div class="h-1.5 bg-border rounded-full overflow-hidden">
+              <div class="h-full bg-primary rounded-full transition-all duration-150" :style="{ width: priceBarWidth }" />
             </div>
             <div class="flex justify-between text-xs text-text-muted">
               <span>1 €</span>
