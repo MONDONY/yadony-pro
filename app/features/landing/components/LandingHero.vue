@@ -120,7 +120,7 @@
 
         <!-- Notification flottante (z-index 20) -->
         <div
-          class="absolute bg-surface border border-border rounded-card px-3 py-2 shadow-xl flex items-start gap-2"
+          class="notification-float absolute bg-surface border border-border rounded-card px-3 py-2 shadow-xl flex items-start gap-2"
           style="top:20px;right:10px;z-index:20;max-width:200px;animation:hero-float 3s ease-in-out infinite;"
         >
           <span class="text-base" aria-hidden="true">📦</span>
@@ -173,7 +173,7 @@ const mockTrips = [
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [style*="animation:hero-float"] {
+  .notification-float {
     animation: none !important;
   }
 }
