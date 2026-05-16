@@ -73,6 +73,17 @@ describe('PhoneNumberForm', () => {
     expect(wrapper.text()).toContain('auth/too-many-requests')
   })
 
+  it('active chip has text-primary class', async () => {
+    const wrapper = mount(PhoneNumberForm)
+    const chips = wrapper.findAll('[data-test="country-chip"]')
+    // FR est actif par défaut
+    expect(chips[0].classes()).toContain('text-primary')
+    // Après clic sur SN, SN doit être actif
+    await chips[1].trigger('click')
+    expect(chips[1].classes()).toContain('text-primary')
+    expect(chips[0].classes()).not.toContain('text-primary')
+  })
+
   it('shows generic error when sendOtp rejects without message', async () => {
     sendOtpMock.mockRejectedValueOnce(new Error(''))
     const wrapper = mount(PhoneNumberForm)
@@ -89,7 +100,7 @@ describe('PhoneNumberForm', () => {
     )
     const wrapper = mount(PhoneNumberForm)
     await wrapper.find('input[type="tel"]').setValue('612345678')
-    wrapper.find('form').trigger('submit')
+    await wrapper.find('form').trigger('submit')
     await wrapper.vm.$nextTick()
     const btn = wrapper.find('button[type="submit"]')
     expect(btn.text()).toContain('Envoi en cours')

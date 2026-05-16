@@ -16,6 +16,8 @@ const fullPhone = computed(
   () => `${country.value.dial}${localNumber.value.replace(/[\s\-]/g, '')}`,
 )
 
+const { sendOtp } = useFirebaseAuth()
+
 async function submit() {
   error.value = null
   if (!/^\+\d{8,15}$/.test(fullPhone.value)) {
@@ -24,7 +26,6 @@ async function submit() {
   }
   loading.value = true
   try {
-    const { sendOtp } = useFirebaseAuth()
     await sendOtp(fullPhone.value, 'recaptcha-container')
     emit('sent', fullPhone.value)
   }
