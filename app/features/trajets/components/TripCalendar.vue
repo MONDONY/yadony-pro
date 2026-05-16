@@ -55,11 +55,11 @@ const isToday = (day: number): boolean =>
   currentYear.value === today.getFullYear()
 
 const statusDotColor: Record<string, string> = {
-  DRAFT: 'bg-[#A8A294]',
-  PUBLISHED: 'bg-[#0B5FFF]',
   ACTIVE: 'bg-green-500',
+  FULL: 'bg-[#0B5FFF]',
+  IN_PROGRESS: 'bg-amber-500',
   COMPLETED: 'bg-[#A8A294]',
-  ARCHIVED: 'bg-[#1E2A4A]',
+  CANCELLED: 'bg-[#1E2A4A]',
 }
 </script>
 

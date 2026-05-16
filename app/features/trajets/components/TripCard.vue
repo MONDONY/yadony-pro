@@ -5,10 +5,6 @@ import { cn } from '@/lib/utils'
 import type { Trip, TransportMode } from '@/features/trajets/types/index'
 
 const props = defineProps<Trip>()
-const emit = defineEmits<{
-  'voir-bids': [id: string]
-  'modifier': [id: string]
-}>()
 
 const fillPct = computed(() => {
   if (props.availableWeightKg === 0) return 0
@@ -22,11 +18,12 @@ const barColorClass = computed(() => {
 })
 
 const transportIcon: Record<TransportMode, typeof Plane> = {
-  AVION: Plane,
-  VOITURE: Car,
+  PLANE: Plane,
+  CAR: Car,
+  TRAIN: Plane,
   BUS: Bus,
-  VELO: Bike,
-  A_PIED: Footprints,
+  BOAT: Footprints,
+  OTHER: Footprints,
 }
 
 const modeIcon = computed(() => transportIcon[props.transportMode])
@@ -37,19 +34,19 @@ const formattedDate = computed(() => {
 })
 
 const statusLabel: Record<string, string> = {
-  DRAFT: 'Brouillon',
-  PUBLISHED: 'À venir',
   ACTIVE: 'Actif',
+  FULL: 'Complet',
+  IN_PROGRESS: 'En cours',
   COMPLETED: 'Terminé',
-  ARCHIVED: 'Archivé',
+  CANCELLED: 'Annulé',
 }
 
 const statusBadgeClass: Record<string, string> = {
-  DRAFT: 'bg-[#A8A294]/20 text-[#A8A294]',
-  PUBLISHED: 'bg-[#0B5FFF]/20 text-[#0B5FFF]',
   ACTIVE: 'bg-green-500/20 text-green-400',
+  FULL: 'bg-[#0B5FFF]/20 text-[#0B5FFF]',
+  IN_PROGRESS: 'bg-amber-500/20 text-amber-400',
   COMPLETED: 'bg-[#A8A294]/20 text-[#A8A294]',
-  ARCHIVED: 'bg-[#1E2A4A] text-[#A8A294]',
+  CANCELLED: 'bg-[#1E2A4A] text-[#A8A294]',
 }
 </script>
 
@@ -116,20 +113,20 @@ const statusBadgeClass: Record<string, string> = {
 
     <!-- Actions -->
     <div class="flex items-center gap-2 pt-1">
-      <button
+      <NuxtLink
+        :to="`/trajets/${id}?tab=bids`"
         data-test="btn-voir-bids"
-        class="flex-1 h-8 text-xs font-medium rounded-btn border border-border text-text-muted hover:text-text hover:border-primary/50 transition-colors"
-        @click="emit('voir-bids', id)"
+        class="flex-1 h-8 text-xs font-medium rounded-btn border border-border text-text-muted hover:text-text hover:border-primary/50 transition-colors flex items-center justify-center"
       >
         Voir bids
-      </button>
-      <button
+      </NuxtLink>
+      <NuxtLink
+        :to="`/trajets/${id}/modifier`"
         data-test="btn-modifier"
-        class="flex-1 h-8 text-xs font-medium rounded-btn border border-border text-text-muted hover:text-text hover:border-primary/50 transition-colors"
-        @click="emit('modifier', id)"
+        class="flex-1 h-8 text-xs font-medium rounded-btn border border-border text-text-muted hover:text-text hover:border-primary/50 transition-colors flex items-center justify-center"
       >
         Modifier
-      </button>
+      </NuxtLink>
       <NuxtLink
         :to="`/trajets/${id}`"
         class="flex items-center gap-1 h-8 px-3 text-xs font-medium rounded-btn bg-primary text-white hover:bg-primary-hover transition-colors"

@@ -45,15 +45,15 @@ function goBack() {
     >
       <CheckCircle class="w-16 h-16 text-green-400 mb-4" />
       <h2 class="font-bold text-2xl text-text mb-2">
-        <template v-if="submittedTrip.status === 'PUBLISHED'">Trajet publié !</template>
-        <template v-else>Brouillon enregistré</template>
+        <template v-if="submittedTrip.status === 'ACTIVE'">Trajet publié !</template>
+        <template v-else>Trajet enregistré</template>
       </h2>
       <p class="text-text-muted text-sm mb-6">
-        <template v-if="submittedTrip.status === 'PUBLISHED'">
+        <template v-if="submittedTrip.status === 'ACTIVE'">
           Votre trajet {{ submittedTrip.departureCity.label }} → {{ submittedTrip.arrivalCity.label }} est maintenant visible par les expéditeurs.
         </template>
         <template v-else>
-          Votre brouillon a été sauvegardé. Vous pouvez le publier quand vous êtes prêt.
+          Votre trajet a été enregistré.
         </template>
       </p>
       <div class="flex gap-3">

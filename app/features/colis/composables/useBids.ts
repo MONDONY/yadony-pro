@@ -1,22 +1,26 @@
 // app/features/colis/composables/useBids.ts
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { bidsService } from '@/features/colis/services/bidsService'
 import type { Bid, BidFilter, BidFiltersState } from '@/features/colis/types/index'
+
+const PAGE_SIZE = 20
 
 export function useBids() {
   const bids = ref<Bid[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const totalElements = ref(0)
+  const totalPages = ref(0)
+  const currentPage = ref(0)
   const selectedIds = ref<string[]>([])
 
   const filters = ref<BidFiltersState>({
     statusFilter: 'TOUS',
     tripId: null,
-    senderSearch: '',
-    dateFrom: null,
-    dateTo: null,
+    search: '',
   })
+
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   const svc = bidsService()
 
@@ -27,12 +31,13 @@ export function useBids() {
       const page = await svc.listBids({
         statusFilter: filters.value.statusFilter,
         tripId: filters.value.tripId,
-        senderSearch: filters.value.senderSearch || undefined,
-        dateFrom: filters.value.dateFrom,
-        dateTo: filters.value.dateTo,
+        q: filters.value.search || null,
+        page: currentPage.value,
+        size: PAGE_SIZE,
       })
       bids.value = page.content
       totalElements.value = page.totalElements
+      totalPages.value = page.totalPages
     } catch {
       error.value = 'Impossible de charger les colis. Veuillez réessayer.'
     } finally {
@@ -40,26 +45,44 @@ export function useBids() {
     }
   }
 
+  async function goToPage(page: number): Promise<void> {
+    currentPage.value = page
+    clearSelection()
+    await fetchBids()
+  }
+
   async function setStatusFilter(f: BidFilter): Promise<void> {
     filters.value.statusFilter = f
+    currentPage.value = 0
     await fetchBids()
   }
 
   async function setTripFilter(tripId: string | null): Promise<void> {
     filters.value.tripId = tripId
+    currentPage.value = 0
     await fetchBids()
   }
 
-  async function setSenderSearch(search: string): Promise<void> {
-    filters.value.senderSearch = search
-    await fetchBids()
+  function setSearch(search: string): void {
+    filters.value.search = search
+    currentPage.value = 0
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => fetchBids(), 350)
   }
 
-  async function setDateRange(from: string | null, to: string | null): Promise<void> {
-    filters.value.dateFrom = from
-    filters.value.dateTo = to
-    await fetchBids()
+  // Keep for backwards compat with BidFilters emit
+  function setSenderSearch(search: string): void {
+    setSearch(search)
   }
+
+  const filteredBids = computed(() => {
+    const q = filters.value.search.trim().toLowerCase()
+    if (!q) return bids.value
+    return bids.value.filter((b) =>
+      b.sender.name.toLowerCase().includes(q) ||
+      (b.trackingNumber ?? '').toLowerCase().includes(q),
+    )
+  })
 
   function toggleSelection(id: string): void {
     const idx = selectedIds.value.indexOf(id)
@@ -71,7 +94,7 @@ export function useBids() {
   }
 
   function selectAll(): void {
-    selectedIds.value = bids.value.map((b) => b.id)
+    selectedIds.value = filteredBids.value.map((b) => b.id)
   }
 
   function clearSelection(): void {
@@ -94,10 +117,11 @@ export function useBids() {
 
   function exportCsv(): string {
     const selected = bids.value.filter((b) => selectedIds.value.includes(b.id))
-    const header = 'id,expéditeur,corridor,date départ,poids (kg),statut,revenus (€)'
+    const header = 'id,n°suivi,expéditeur,corridor,date départ,poids (kg),statut,revenus (€)'
     const rows = selected.map((b) =>
       [
         b.id,
+        b.trackingNumber ?? '',
         b.sender.name,
         b.tripCorridor,
         b.tripDepartureDate,
@@ -110,17 +134,21 @@ export function useBids() {
   }
 
   return {
-    bids,
+    bids: filteredBids,
     isLoading,
     error,
     totalElements,
+    totalPages,
+    currentPage,
+    pageSize: PAGE_SIZE,
     filters,
     selectedIds,
     fetchBids,
+    goToPage,
     setStatusFilter,
     setTripFilter,
+    setSearch,
     setSenderSearch,
-    setDateRange,
     toggleSelection,
     selectAll,
     clearSelection,

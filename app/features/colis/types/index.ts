@@ -1,16 +1,37 @@
-export type BidStatus = 'PENDING' | 'ACCEPTED' | 'REFUSED' | 'IN_TRANSIT' | 'DELIVERED' | 'DISPUTE'
-export type BidFilter = 'TOUS' | 'PENDING' | 'ACCEPTED' | 'REFUSED' | 'IN_TRANSIT' | 'DELIVERED' | 'DISPUTE'
+export type BidStatus =
+  | 'AWAITING_PAYMENT'
+  | 'PENDING'
+  | 'PAYMENT_ESCROWED'
+  | 'ACCEPTED'
+  | 'HANDED_OVER'
+  | 'IN_TRANSIT'
+  | 'REJECTED'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'NO_SHOW'
+  | 'PARCEL_REFUSED'
+  | 'EXPIRED'
+
+export type BidFilter =
+  | 'TOUS'
+  | 'PENDING'
+  | 'PAYMENT_ESCROWED'
+  | 'ACCEPTED'
+  | 'IN_TRANSIT'
+  | 'COMPLETED'
+  | 'REJECTED'
+  | 'CANCELLED'
 
 export interface SenderProfile {
   id: string
   name: string
   avatarInitials: string
-  rating: number // 1.0–5.0
+  rating: number
   totalSentParcels: number
 }
 
 export interface BidHistoryEntry {
-  date: string       // ISO datetime
+  date: string
   status: BidStatus
   note: string | null
 }
@@ -19,18 +40,20 @@ export interface Bid {
   id: string
   status: BidStatus
   tripId: string
-  tripCorridor: string        // e.g. "Paris → Dakar"
-  tripDepartureDate: string   // ISO date "2026-06-01"
+  tripCorridor: string
+  tripDepartureDate: string
   sender: SenderProfile
   weightKg: number
   contentDescription: string
   declaredValueEuros: number
-  earningsEuros: number       // after 12% commission
+  earningsEuros: number
   paymentStatus: 'PENDING' | 'ESCROWED' | 'RELEASED' | 'REFUNDED'
   paymentAmountEuros: number
   history: BidHistoryEntry[]
   createdAt: string
   expiresAt: string | null
+  trackingNumber: string | null
+  trackingToken: string | null
 }
 
 export interface BidPage {
@@ -44,7 +67,5 @@ export interface BidPage {
 export interface BidFiltersState {
   statusFilter: BidFilter
   tripId: string | null
-  senderSearch: string
-  dateFrom: string | null
-  dateTo: string | null
+  search: string
 }

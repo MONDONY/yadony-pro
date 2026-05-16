@@ -10,17 +10,25 @@ import WeightSlider from '@/features/trajets/components/WeightSlider.vue'
 import PriceOptionCards from '@/features/trajets/components/PriceOptionCards.vue'
 import ContentTagChips from '@/features/trajets/components/ContentTagChips.vue'
 import { Button } from '@/components/ui/button'
-import type { Trip } from '@/features/trajets/types/index'
+import type { Trip, ValidationErrors } from '@/features/trajets/types/index'
 
 const emit = defineEmits<{
   submitted: [trip: Trip]
 }>()
 
-const { form, netPrice, validate, submit, applyTemplate } = useAnnouncementForm()
+const props = withDefaults(defineProps<{
+  prefill?: Trip
+  editTripId?: string
+}>(), {
+  prefill: undefined,
+  editTripId: undefined,
+})
+
+const { form, netPrice, validate, submit, submitEdit, applyTemplate } = useAnnouncementForm()
 const { fetchTemplates } = useTrips()
 const { fetchContentCategories } = configService()
 
-const errors = ref<Record<string, string>>({})
+const errors = ref<ValidationErrors>({})
 const isSubmitting = ref(false)
 const templates = ref<Trip[]>([])
 const showTemplates = ref(false)
@@ -48,6 +56,9 @@ onMounted(async () => {
   ])
   templates.value = fetchedTemplates
   acceptedPresets.value = fetchedCategories
+  if (props.prefill) {
+    applyTemplate(props.prefill)
+  }
 })
 
 function onSelectTemplate(trip: Trip) {
@@ -63,7 +74,9 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
 
   isSubmitting.value = true
   try {
-    const trip = await submit(status)
+    const trip = props.editTripId
+      ? await submitEdit(props.editTripId)
+      : await submit(status)
     emit('submitted', trip)
   } catch {
     errors.value.global = 'Une erreur est survenue. Veuillez réessayer.'

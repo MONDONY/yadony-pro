@@ -17,12 +17,12 @@ describe('bidsService', () => {
     setActivePinia(createPinia())
   })
 
-  it('listBids calls GET /bids with travelerId=me and no extra params by default', async () => {
+  it('listBids calls GET /travelers/me/bids with empty query by default', async () => {
     mockApiFn.mockResolvedValue({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 50 })
     const { bidsService } = await import('@/features/colis/services/bidsService')
     const svc = bidsService()
     const result = await svc.listBids()
-    expect(mockApiFn).toHaveBeenCalledWith('/bids', { query: { travelerId: 'me' } })
+    expect(mockApiFn).toHaveBeenCalledWith('/travelers/me/bids', { query: {} })
     expect(result.content).toEqual([])
   })
 
@@ -31,8 +31,8 @@ describe('bidsService', () => {
     const { bidsService } = await import('@/features/colis/services/bidsService')
     const svc = bidsService()
     await svc.listBids({ statusFilter: 'PENDING' })
-    expect(mockApiFn).toHaveBeenCalledWith('/bids', {
-      query: { travelerId: 'me', status: 'PENDING' },
+    expect(mockApiFn).toHaveBeenCalledWith('/travelers/me/bids', {
+      query: { status: 'PENDING' },
     })
   })
 
@@ -41,18 +41,8 @@ describe('bidsService', () => {
     const { bidsService } = await import('@/features/colis/services/bidsService')
     const svc = bidsService()
     await svc.listBids({ tripId: 'trip-42' })
-    expect(mockApiFn).toHaveBeenCalledWith('/bids', {
-      query: { travelerId: 'me', tripId: 'trip-42' },
-    })
-  })
-
-  it('listBids appends dateFrom and dateTo when provided', async () => {
-    mockApiFn.mockResolvedValue({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 50 })
-    const { bidsService } = await import('@/features/colis/services/bidsService')
-    const svc = bidsService()
-    await svc.listBids({ dateFrom: '2026-06-01', dateTo: '2026-06-30' })
-    expect(mockApiFn).toHaveBeenCalledWith('/bids', {
-      query: { travelerId: 'me', dateFrom: '2026-06-01', dateTo: '2026-06-30' },
+    expect(mockApiFn).toHaveBeenCalledWith('/travelers/me/bids', {
+      query: { tripId: 'trip-42' },
     })
   })
 

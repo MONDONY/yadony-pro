@@ -8,7 +8,7 @@ export function placesService() {
     query: string,
     sessionToken: string,
   ): Promise<PlaceSuggestion[]> {
-    return api<PlaceSuggestion[]>('/api/v1/addresses/autocomplete', {
+    return api<PlaceSuggestion[]>('/addresses/autocomplete', {
       method: 'POST',
       body: { query, sessionToken },
     })
@@ -18,7 +18,7 @@ export function placesService() {
     placeId: string,
     sessionToken: string,
   ): Promise<PlaceDetails> {
-    return api<PlaceDetails>('/api/v1/addresses/details', {
+    return api<PlaceDetails>('/addresses/details', {
       method: 'POST',
       body: { placeId, sessionToken },
     })

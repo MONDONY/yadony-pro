@@ -5,6 +5,7 @@ import BidFilters from '@/features/colis/components/BidFilters.vue'
 import BidTable from '@/features/colis/components/BidTable.vue'
 import BidDetailPanel from '@/features/colis/components/BidDetailPanel.vue'
 import BulkActions from '@/features/colis/components/BulkActions.vue'
+import PaginationControls from '@/components/ui/PaginationControls.vue'
 import { useBids } from '@/features/colis/composables/useBids'
 import { useBidDetail } from '@/features/colis/composables/useBidDetail'
 import { bidsService } from '@/features/colis/services/bidsService'
@@ -20,13 +21,17 @@ const {
   isLoading,
   error,
   totalElements,
+  totalPages,
+  currentPage,
+  pageSize,
   filters,
   selectedIds,
   fetchBids,
+  goToPage,
   setStatusFilter,
   setTripFilter,
+  setSearch,
   setSenderSearch,
-  setDateRange,
   toggleSelection,
   selectAll,
   clearSelection,
@@ -88,8 +93,7 @@ function onExportCsv() {
       @update:status-filter="setStatusFilter"
       @update:trip-id="setTripFilter"
       @update:sender-search="setSenderSearch"
-      @update:date-from="(v) => setDateRange(v, filters.dateTo)"
-      @update:date-to="(v) => setDateRange(filters.dateFrom, v)"
+      @update:search="setSearch"
     />
 
     <!-- Bulk actions bar -->
@@ -127,10 +131,15 @@ function onExportCsv() {
       @reject="onRejectSingle"
     />
 
-    <!-- Summary -->
-    <p v-if="!isLoading && !error && totalElements > 0" class="text-xs text-text-muted text-right">
-      {{ totalElements }} colis au total
-    </p>
+    <!-- Pagination -->
+    <PaginationControls
+      v-if="!isLoading && !error && totalPages > 1"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :total-elements="totalElements"
+      :page-size="pageSize"
+      @go-to-page="goToPage"
+    />
 
     <!-- Slide-over detail -->
     <BidDetailPanel

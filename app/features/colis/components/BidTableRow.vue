@@ -1,9 +1,13 @@
 <!-- app/features/colis/components/BidTableRow.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Star, CheckCircle, XCircle, Eye } from 'lucide-vue-next'
+import { Star, CheckCircle, XCircle, Eye, Copy } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import type { Bid, BidStatus } from '@/features/colis/types/index'
+
+function copyTracking(trackingNumber: string) {
+  navigator.clipboard.writeText(trackingNumber).catch(() => {})
+}
 
 const props = defineProps<{
   bid: Bid
@@ -18,21 +22,33 @@ const emit = defineEmits<{
 }>()
 
 const statusLabel: Record<BidStatus, string> = {
+  AWAITING_PAYMENT: 'Paiement attendu',
   PENDING: 'En attente',
+  PAYMENT_ESCROWED: 'Paiement sécurisé',
   ACCEPTED: 'Accepté',
-  REFUSED: 'Refusé',
+  HANDED_OVER: 'Remis',
   IN_TRANSIT: 'En transit',
-  DELIVERED: 'Livré',
-  DISPUTE: 'Litige',
+  REJECTED: 'Refusé',
+  CANCELLED: 'Annulé',
+  COMPLETED: 'Livré',
+  NO_SHOW: 'Absent',
+  PARCEL_REFUSED: 'Colis refusé',
+  EXPIRED: 'Expiré',
 }
 
 const statusClass: Record<BidStatus, string> = {
+  AWAITING_PAYMENT: 'bg-amber-500/15 text-amber-300',
   PENDING: 'bg-amber-500/15 text-amber-400',
+  PAYMENT_ESCROWED: 'bg-blue-500/15 text-blue-400',
   ACCEPTED: 'bg-green-500/15 text-green-400',
-  REFUSED: 'bg-red-500/15 text-red-400',
-  IN_TRANSIT: 'bg-blue-500/15 text-blue-400',
-  DELIVERED: 'bg-[#0B5FFF]/15 text-[#0B5FFF]',
-  DISPUTE: 'bg-red-700/20 text-red-300',
+  HANDED_OVER: 'bg-green-600/15 text-green-500',
+  IN_TRANSIT: 'bg-[#0B5FFF]/15 text-[#0B5FFF]',
+  REJECTED: 'bg-red-500/15 text-red-400',
+  CANCELLED: 'bg-[#1E2A4A] text-[#A8A294]',
+  COMPLETED: 'bg-[#0B5FFF]/15 text-[#0B5FFF]',
+  NO_SHOW: 'bg-red-700/20 text-red-300',
+  PARCEL_REFUSED: 'bg-red-700/20 text-red-300',
+  EXPIRED: 'bg-[#1E2A4A] text-[#A8A294]',
 }
 
 const formattedDate = computed(() => {
@@ -82,6 +98,24 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
       </div>
     </td>
 
+    <!-- Tracking number -->
+    <td class="py-3 pr-4">
+      <div v-if="bid.trackingNumber" class="flex items-center gap-1.5">
+        <span class="font-mono text-xs bg-bg border border-border rounded px-1.5 py-0.5 text-text tracking-wider">
+          {{ bid.trackingNumber }}
+        </span>
+        <button
+          class="text-text-muted hover:text-primary transition-colors p-0.5 rounded"
+          :title="`Copier ${bid.trackingNumber}`"
+          type="button"
+          @click.stop="copyTracking(bid.trackingNumber!)"
+        >
+          <Copy class="w-3 h-3" />
+        </button>
+      </div>
+      <span v-else class="text-xs text-text-muted">—</span>
+    </td>
+
     <!-- Corridor -->
     <td class="py-3 pr-4 text-sm text-text-muted whitespace-nowrap">
       {{ bid.tripCorridor }}
@@ -126,7 +160,7 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
           <Eye class="w-4 h-4" />
         </button>
         <button
-          v-if="bid.status === 'PENDING'"
+          v-if="bid.status === 'PAYMENT_ESCROWED'"
           :data-test="`btn-accept-${bid.id}`"
           class="p-1.5 rounded text-green-400 hover:bg-green-500/10 transition-colors"
           aria-label="Accepter"
@@ -135,7 +169,7 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
           <CheckCircle class="w-4 h-4" />
         </button>
         <button
-          v-if="bid.status === 'PENDING'"
+          v-if="bid.status === 'PAYMENT_ESCROWED'"
           :data-test="`btn-reject-${bid.id}`"
           class="p-1.5 rounded text-red-400 hover:bg-red-500/10 transition-colors"
           aria-label="Refuser"

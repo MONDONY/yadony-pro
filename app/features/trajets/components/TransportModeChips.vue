@@ -11,11 +11,12 @@ defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [v: TransportMode] }>()
 
 const modes: Array<{ key: TransportMode; label: string; icon: typeof Plane }> = [
-  { key: 'AVION', label: 'Avion', icon: Plane },
-  { key: 'VOITURE', label: 'Voiture', icon: Car },
+  { key: 'PLANE', label: 'Avion', icon: Plane },
+  { key: 'CAR', label: 'Voiture', icon: Car },
+  { key: 'TRAIN', label: 'Train', icon: Plane },
   { key: 'BUS', label: 'Bus', icon: Bus },
-  { key: 'VELO', label: 'Vélo', icon: Bike },
-  { key: 'A_PIED', label: 'À pied', icon: Footprints },
+  { key: 'BOAT', label: 'Bateau', icon: Footprints },
+  { key: 'OTHER', label: 'Autre', icon: Footprints },
 ]
 </script>
 

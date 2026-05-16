@@ -1,13 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockGet = vi.fn()
-const mockPost = vi.fn()
+const mockApiFn = vi.fn()
 
 vi.mock('@/composables/useApi', () => ({
-  useApi: () => ({
-    get: mockGet,
-    post: mockPost,
-  }),
+  useApi: () => mockApiFn,
 }))
 
 async function importService() {
@@ -18,16 +14,15 @@ async function importService() {
 describe('matchingService', () => {
   beforeEach(() => {
     vi.resetModules()
-    mockGet.mockReset()
-    mockPost.mockReset()
+    mockApiFn.mockReset()
   })
 
   it('fetchMatchingRequests calls GET /travelers/me/matching-requests', async () => {
-    mockGet.mockResolvedValue([])
+    mockApiFn.mockResolvedValue([])
     const matchingService = await importService()
     const svc = matchingService()
     const result = await svc.fetchMatchingRequests()
-    expect(mockGet).toHaveBeenCalledWith('/travelers/me/matching-requests')
+    expect(mockApiFn).toHaveBeenCalledWith('/travelers/me/matching-requests', {})
     expect(result).toEqual([])
   })
 
@@ -35,7 +30,7 @@ describe('matchingService', () => {
     const fakeReqs = [
       { id: 'r1', tripId: 't1', tripCorridor: 'Paris → Dakar', matchScore: 95 },
     ]
-    mockGet.mockResolvedValue(fakeReqs)
+    mockApiFn.mockResolvedValue(fakeReqs)
     const matchingService = await importService()
     const svc = matchingService()
     const result = await svc.fetchMatchingRequests()
@@ -44,24 +39,25 @@ describe('matchingService', () => {
   })
 
   it('inviteRequest calls POST /travelers/me/invite with payload', async () => {
-    mockPost.mockResolvedValue({})
+    mockApiFn.mockResolvedValue(undefined)
     const matchingService = await importService()
     const svc = matchingService()
     await svc.inviteRequest('req-1', 'trip-42')
-    expect(mockPost).toHaveBeenCalledWith('/travelers/me/invite', {
+    expect(mockApiFn).toHaveBeenCalledWith('/travelers/me/invite', {
+      method: 'POST',
       body: { requestId: 'req-1', announcementId: 'trip-42' },
     })
   })
 
   it('inviteRequest resolves without error on success', async () => {
-    mockPost.mockResolvedValue({})
+    mockApiFn.mockResolvedValue(undefined)
     const matchingService = await importService()
     const svc = matchingService()
     await expect(svc.inviteRequest('req-1', 'trip-42')).resolves.toBeUndefined()
   })
 
   it('inviteRequest propagates error on failure', async () => {
-    mockPost.mockRejectedValue(new Error('Server error'))
+    mockApiFn.mockRejectedValue(new Error('Server error'))
     const matchingService = await importService()
     const svc = matchingService()
     await expect(svc.inviteRequest('req-1', 'trip-42')).rejects.toThrow('Server error')

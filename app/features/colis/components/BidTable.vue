@@ -62,6 +62,7 @@ function onSelectAll() {
               />
             </th>
             <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Expéditeur</th>
+            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">N° Suivi</th>
             <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Corridor</th>
             <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Date départ</th>
             <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Poids</th>
