@@ -22,22 +22,6 @@ export default {}
 import { ref, onMounted, onUnmounted } from 'vue'
 import { ChevronDown } from 'lucide-vue-next'
 
-interface Country {
-  code: string
-  flag: string
-  name: string
-  dial: string
-}
-
-const COUNTRIES: Country[] = [
-  { code: 'FR', flag: '🇫🇷', name: 'France',        dial: '+33'  },
-  { code: 'SN', flag: '🇸🇳', name: 'Sénégal',       dial: '+221' },
-  { code: 'CI', flag: '🇨🇮', name: "Côte d'Ivoire", dial: '+225' },
-  { code: 'ML', flag: '🇲🇱', name: 'Mali',          dial: '+223' },
-  { code: 'CM', flag: '🇨🇲', name: 'Cameroun',      dial: '+237' },
-  { code: 'GN', flag: '🇬🇳', name: 'Guinée',        dial: '+224' },
-]
-
 const props = defineProps<{ modelValue: Country }>()
 const emit = defineEmits<{ 'update:modelValue': [country: Country] }>()
 

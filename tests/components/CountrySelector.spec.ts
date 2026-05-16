@@ -97,6 +97,7 @@ describe('CountrySelector', () => {
 
     // Dropdown should still be open (click was inside the container)
     // Note: button.stop prevents toggle, but the handleClickOutside won't close it
+    expect(wrapper.find('ul[role="listbox"]').exists()).toBe(true)
     wrapper.unmount()
   })
 
