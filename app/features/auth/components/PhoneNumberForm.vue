@@ -1,25 +1,32 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { ref, computed } from 'vue'
+import CountrySelector, { type Country, COUNTRIES } from './CountrySelector.vue'
 import { useFirebaseAuth } from '@/features/auth/composables/useFirebaseAuth'
 
+const QUICK_COUNTRIES = COUNTRIES.slice(0, 4) // FR, SN, CI, ML
+
 const emit = defineEmits<{ sent: [phone: string] }>()
-const phone = ref('')
+
+const country = ref<Country>(COUNTRIES[0])
+const localNumber = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
+const fullPhone = computed(
+  () => `${country.value.dial}${localNumber.value.replace(/[\s\-]/g, '')}`,
+)
+
 async function submit() {
   error.value = null
-  if (!/^\+\d{8,15}$/.test(phone.value)) {
-    error.value = 'Format attendu : +33612345678'
+  if (!/^\+\d{8,15}$/.test(fullPhone.value)) {
+    error.value = 'Numéro invalide — ex : 6 12 34 56 78'
     return
   }
   loading.value = true
   try {
     const { sendOtp } = useFirebaseAuth()
-    await sendOtp(phone.value, 'recaptcha-container')
-    emit('sent', phone.value)
+    await sendOtp(fullPhone.value, 'recaptcha-container')
+    emit('sent', fullPhone.value)
   }
   catch (e) {
     error.value = (e as Error).message || 'Erreur envoi OTP'
@@ -31,13 +38,48 @@ async function submit() {
 </script>
 
 <template>
-  <form class="w-full max-w-sm space-y-4" @submit.prevent="submit">
-    <label class="block text-sm font-medium text-text">Numéro de téléphone</label>
-    <Input v-model="phone" type="tel" placeholder="+33612345678" :disabled="loading" />
-    <p v-if="error" class="text-sm text-danger">{{ error }}</p>
-    <Button type="submit" class="w-full" :disabled="loading">
-      {{ loading ? 'Envoi...' : 'Recevoir le code' }}
-    </Button>
+  <form class="flex flex-col gap-4" @submit.prevent="submit">
+    <div>
+      <label class="block text-xs font-semibold text-muted mb-2">Numéro de téléphone</label>
+      <div class="flex gap-2">
+        <CountrySelector v-model="country" />
+        <input
+          v-model="localNumber"
+          type="tel"
+          inputmode="numeric"
+          placeholder="6 12 34 56 78"
+          :disabled="loading"
+          class="flex-1 h-11 rounded-[10px] border bg-surface-el px-4 text-sm text-text placeholder:text-subtle outline-none focus:border-primary transition-colors"
+          :class="error ? 'border-danger' : 'border-border'"
+        />
+      </div>
+      <div class="flex gap-2 flex-wrap mt-2">
+        <button
+          v-for="c in QUICK_COUNTRIES"
+          :key="c.code"
+          type="button"
+          data-test="country-chip"
+          class="flex items-center gap-1.5 h-7 px-2.5 rounded-[7px] border text-xs font-medium transition-colors"
+          :class="c.code === country.code
+            ? 'border-primary/40 bg-primary/10 text-primary'
+            : 'border-border text-subtle hover:border-primary/30 hover:text-text'"
+          @click="country = c"
+        >
+          {{ c.flag }} {{ c.name }}
+        </button>
+      </div>
+    </div>
+
+    <p v-if="error" class="text-xs text-danger" aria-live="polite">{{ error }}</p>
+
+    <button
+      type="submit"
+      :disabled="loading"
+      class="h-11 rounded-btn bg-primary text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors disabled:opacity-50"
+    >
+      {{ loading ? 'Envoi en cours...' : 'Recevoir le code par SMS →' }}
+    </button>
+
     <div id="recaptcha-container" />
   </form>
 </template>
