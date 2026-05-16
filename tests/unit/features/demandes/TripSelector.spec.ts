@@ -54,4 +54,12 @@ describe('TripSelector', () => {
     await wrapper.find('[data-test="trip-option-all"]').trigger('click')
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([null])
   })
+
+  it('renders correctly with empty trips array', () => {
+    const wrapper = mount(TripSelector, {
+      props: { trips: [], modelValue: null, totalCount: 0 },
+    })
+    expect(wrapper.find('[data-test="trip-dropdown-toggle"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Tous mes trajets')
+  })
 })

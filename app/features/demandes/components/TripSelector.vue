@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import type { ActiveTrip } from '@/features/demandes/types/index'
 
 const props = defineProps<{
@@ -13,6 +13,7 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = ref(false)
+const containerRef = ref<HTMLElement | null>(null)
 
 const selectedTrip = computed(() =>
   props.trips.find(t => t.tripId === props.modelValue) ?? null,
@@ -22,10 +23,30 @@ function select(tripId: string | null) {
   emit('update:modelValue', tripId)
   isOpen.value = false
 }
+
+function handleClickOutside(e: MouseEvent) {
+  if (containerRef.value && !containerRef.value.contains(e.target as Node)) {
+    isOpen.value = false
+  }
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') isOpen.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>
-  <div class="bg-green-500/5 border-b border-border px-4 py-3">
+  <div ref="containerRef" class="bg-green-500/5 border-b border-border px-4 py-3">
     <p class="text-xs font-bold text-text-muted uppercase tracking-wide mb-2">Mon trajet actif</p>
     <div class="flex items-center gap-3">
       <!-- Affichage du trajet sélectionné -->
@@ -44,6 +65,9 @@ function select(tripId: string | null) {
             data-test="trip-dropdown-toggle"
             class="text-text-muted text-xs ml-2"
             type="button"
+            :aria-expanded="isOpen"
+            aria-haspopup="listbox"
+            aria-label="Choisir un trajet"
             @click="isOpen = !isOpen"
           >▾</button>
         </div>
