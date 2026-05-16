@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import type { FilterState } from '@/features/demandes/types/index'
 import { DEFAULT_FILTER_STATE } from '@/features/demandes/types/index'
 
@@ -14,12 +14,34 @@ const emit = defineEmits<{
 }>()
 
 const openPicker = ref<'weight' | 'budget' | 'type' | 'sort' | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
 
 const hasActiveFilter = computed(() =>
   props.filters.maxWeightKg !== null ||
   props.filters.minBudgetPerKg !== null ||
-  props.filters.contentType !== null,
+  props.filters.contentType !== null ||
+  props.filters.sortBy !== 'score',
 )
+
+function handleClickOutside(e: MouseEvent) {
+  if (containerRef.value && !containerRef.value.contains(e.target as Node)) {
+    openPicker.value = null
+  }
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') openPicker.value = null
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', handleKeydown)
+})
 
 function resetAll() {
   emit('update:filters', { ...DEFAULT_FILTER_STATE })
@@ -40,7 +62,7 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
 </script>
 
 <template>
-  <div class="px-4 py-2.5 border-b border-border flex items-center gap-2 overflow-x-auto scrollbar-none">
+  <div ref="containerRef" class="px-4 py-2.5 border-b border-border flex items-center gap-2 overflow-x-auto scrollbar-none">
     <!-- Chip Tous -->
     <button
       data-test="filter-all"

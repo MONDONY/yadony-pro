@@ -46,4 +46,44 @@ describe('DemandFilters', () => {
     })
     expect(wrapper.text()).toContain('7')
   })
+
+  it('picker closes after selecting a weight option', async () => {
+    const wrapper = mount(DemandFilters, {
+      props: { filters: defaultFilters, resultCount: 14, availableContentTypes: [] },
+    })
+    await wrapper.find('[data-test="filter-weight"]').trigger('click')
+    await wrapper.find('[data-test="weight-option-5"]').trigger('click')
+    // picker should be closed
+    expect(wrapper.find('[data-test="weight-option-10"]').exists()).toBe(false)
+  })
+
+  it('emits update:filters with sortBy when a sort option is selected', async () => {
+    const wrapper = mount(DemandFilters, {
+      props: { filters: defaultFilters, resultCount: 14, availableContentTypes: [] },
+    })
+    await wrapper.find('[data-test="filter-sort"]').trigger('click')
+    await wrapper.find('[data-test="sort-option-date"]').trigger('click')
+    const emitted = wrapper.emitted('update:filters')
+    expect((emitted![0][0] as FilterState).sortBy).toBe('date')
+  })
+
+  it('chip "Tous" appears inactive when sortBy is not score', () => {
+    const sortedFilters: FilterState = { ...defaultFilters, sortBy: 'date' }
+    const wrapper = mount(DemandFilters, {
+      props: { filters: sortedFilters, resultCount: 14, availableContentTypes: [] },
+    })
+    const allChip = wrapper.find('[data-test="filter-all"]')
+    // hasActiveFilter = true → chip NOT bg-text (it should be border variant)
+    expect(allChip.classes()).not.toContain('bg-text')
+  })
+
+  it('emits update:filters with minBudgetPerKg when a budget chip is clicked', async () => {
+    const wrapper = mount(DemandFilters, {
+      props: { filters: defaultFilters, resultCount: 14, availableContentTypes: [] },
+    })
+    await wrapper.find('[data-test="filter-budget"]').trigger('click')
+    await wrapper.find('[data-test="budget-option-8"]').trigger('click')
+    const emitted = wrapper.emitted('update:filters')
+    expect((emitted![0][0] as FilterState).minBudgetPerKg).toBe(8)
+  })
 })
