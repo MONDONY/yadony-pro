@@ -1,6 +1,6 @@
 <!-- app/features/demandes/components/MatchingDashboard.vue -->
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, reactive } from 'vue'
 import { useMatchingRequests } from '@/features/demandes/composables/useMatchingRequests'
 import TripSelector from '@/features/demandes/components/TripSelector.vue'
 import DemandFilters from '@/features/demandes/components/DemandFilters.vue'
@@ -70,7 +70,7 @@ const availableContentTypes = computed(() =>
 
 const negotiatingRequest = ref<MatchingRequest | null>(null)
 const createTripRequest = ref<MatchingRequest | null>(null)
-const negotiatedIds = ref<Set<string>>(new Set())
+const negotiatedIds = reactive(new Set<string>())
 
 function openNegotiateModal(request: MatchingRequest) {
   if (!hasActiveTrips.value) {
