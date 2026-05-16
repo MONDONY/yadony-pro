@@ -86,7 +86,7 @@ async function submit() {
       @click.self="emit('close')"
     >
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div class="relative w-full max-w-md bg-surface border border-border rounded-card shadow-2xl overflow-hidden">
+      <div data-test="negociation-modal" class="relative w-full max-w-md bg-surface border border-border rounded-card shadow-2xl overflow-hidden">
 
         <!-- Header -->
         <div class="flex items-start justify-between gap-3 px-5 pt-5 pb-4 border-b border-border">

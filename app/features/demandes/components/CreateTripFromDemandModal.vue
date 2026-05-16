@@ -35,7 +35,7 @@ const suggestedPrice = computed(() =>
 )
 
 const canSubmit = computed(() =>
-  !!departureDate.value && proposedPrice.value > 0 && !isLoading.value,
+  !!departureDate.value && proposedPrice.value > 0 && proposedPrice.value <= 500 && !isLoading.value,
 )
 
 // ── Reset on new request ─────────────────────────────────────────────────────
@@ -57,7 +57,8 @@ function decrement() {
 }
 
 function increment() {
-  if (proposedPrice.value < suggestedPrice.value) proposedPrice.value++
+  const maxAllowed = Math.min(suggestedPrice.value, 500)
+  if (proposedPrice.value < maxAllowed) proposedPrice.value++
 }
 
 const priceBarWidth = computed(() => {
@@ -141,7 +142,7 @@ async function submit() {
         <button
           class="text-text-muted hover:text-text p-1 transition-colors -mr-1"
           type="button"
-          data-test="create-trip-cancel"
+          data-test="create-trip-close"
           @click="emit('close')"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -46,7 +46,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="bg-green-500/5 border-b border-border px-4 py-3">
+  <div ref="containerRef" data-test="trip-selector" class="bg-green-500/5 border-b border-border px-4 py-3">
     <p class="text-xs font-bold text-text-muted uppercase tracking-wide mb-2">Mon trajet actif</p>
     <div class="flex items-center gap-3">
       <!-- Affichage du trajet sélectionné -->
