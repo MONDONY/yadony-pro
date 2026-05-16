@@ -10,13 +10,13 @@
 
         <!-- Accordéon -->
         <div class="flex-1 flex flex-col divide-y divide-border">
-          <div v-for="item in faqItems" :key="item.question" class="py-5">
+          <div v-for="(item, i) in faqItems" :key="item.question" class="py-5">
             <button
               type="button"
               @click="toggle(item.question)"
               class="w-full flex items-start justify-between gap-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xs"
               :aria-expanded="openItem === item.question"
-              :aria-controls="`faq-answer-${faqItems.indexOf(item)}`"
+              :aria-controls="`faq-answer-${i}`"
             >
               <span class="font-semibold text-text">{{ item.question }}</span>
               <span
@@ -40,7 +40,7 @@
             >
               <div
                 v-show="openItem === item.question"
-                :id="`faq-answer-${faqItems.indexOf(item)}`"
+                :id="`faq-answer-${i}`"
                 class="mt-3 text-sm text-text-muted leading-relaxed pr-8"
               >
                 {{ item.answer }}
