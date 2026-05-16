@@ -60,7 +60,7 @@ const steps = [
   },
   {
     number: '3',
-    gradient: 'linear-gradient(90deg, var(--success), #22c55e)',
+    gradient: 'linear-gradient(90deg, var(--success), var(--success))',
     pillBg: 'rgb(var(--success-rgb) / 0.15)',
     pillColor: 'var(--success)',
     mascot: '/mascots/colis_livre.png',
