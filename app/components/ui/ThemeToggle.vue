@@ -1,9 +1,10 @@
 <template>
   <button
+    type="button"
     @click="toggle"
-    :title="isDark ? 'Passer en mode clair' : 'Passer en mode sombre'"
+    :aria-label="isDark ? 'Passer en mode clair' : 'Passer en mode sombre'"
+    :aria-pressed="isDark"
     class="p-2 rounded-sm text-text-muted hover:text-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-    aria-label="Basculer le thème"
   >
     <!-- Sun icon (shown in dark mode to switch to light) -->
     <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
@@ -22,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-const isDark = ref(true)
+const isDark = ref(false)
 
 onMounted(() => {
   const saved = localStorage.getItem('dony-theme')
