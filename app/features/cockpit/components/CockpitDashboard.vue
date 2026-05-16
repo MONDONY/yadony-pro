@@ -14,7 +14,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const { kpis, urgentActions, isLoading, error, fetchAll } = useCockpit()
 const { trips, fetchTrips } = useTrips()
-const { requests, invitingId, invitedIds, fetchRequests, inviteRequest } = useMatchingRequests()
+const { requests, fetchRequests } = useMatchingRequests()
 
 onMounted(async () => {
   await Promise.all([fetchAll(), fetchTrips(), fetchRequests()])
@@ -123,9 +123,9 @@ function onModifier(id: string) {
             v-for="request in previewRequests"
             :key="request.id"
             :request="request"
-            :is-inviting="invitingId === request.id"
-            :is-invited="invitedIds.has(request.id)"
-            @invite="(requestId, tripId) => inviteRequest(requestId, tripId)"
+            :is-negotiating="false"
+            :has-negotiated="false"
+            @negotiate="router.push('/demandes')"
           />
         </div>
       </section>
