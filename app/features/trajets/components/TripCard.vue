@@ -93,6 +93,12 @@ const statusBadgeClass: Record<string, string> = {
           :style="{ width: fillPct + '%' }"
         />
       </div>
+      <span
+        v-if="capacityUnit && capacityUnit !== 'KG_FREE'"
+        class="inline-flex items-center gap-1 text-xs text-text-muted"
+      >
+        {{ capacityUnit === 'SUITCASE_23KG' ? '1 valise 23 kg' : '1 valise 32 kg' }}
+      </span>
     </div>
 
     <!-- Counters -->

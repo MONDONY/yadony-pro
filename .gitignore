@@ -29,3 +29,4 @@ playwright/.cache
 
 # Logs
 *.log
+.worktrees/
