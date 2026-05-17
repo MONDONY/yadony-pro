@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import OtpForm from '@/features/auth/components/OtpForm.vue'
 
 const navigateToMock = vi.fn()
@@ -45,7 +45,7 @@ describe('OtpForm', () => {
     confirmOtpMock.mockResolvedValue({ isProAccount: true })
     const wrapper = mount(OtpForm, { props: { phone: '+33612345678' } })
     await wrapper.findComponent({ name: 'OtpInput' }).vm.$emit('complete', '123456')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
     expect(confirmOtpMock).toHaveBeenCalledWith('123456')
   })
 
@@ -53,7 +53,7 @@ describe('OtpForm', () => {
     confirmOtpMock.mockResolvedValue({ isProAccount: true })
     const wrapper = mount(OtpForm, { props: { phone: '+33612345678' } })
     await wrapper.findComponent({ name: 'OtpInput' }).vm.$emit('complete', '123456')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
     expect(navigateToMock).toHaveBeenCalledWith('/cockpit')
   })
 
@@ -61,7 +61,7 @@ describe('OtpForm', () => {
     confirmOtpMock.mockResolvedValue({ isProAccount: false })
     const wrapper = mount(OtpForm, { props: { phone: '+33612345678' } })
     await wrapper.findComponent({ name: 'OtpInput' }).vm.$emit('complete', '999999')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
     expect(navigateToMock).toHaveBeenCalledWith('/upgrade')
   })
 
@@ -69,27 +69,27 @@ describe('OtpForm', () => {
     confirmOtpMock.mockRejectedValue(new Error('Code incorrect'))
     const wrapper = mount(OtpForm, { props: { phone: '+33612345678' } })
     await wrapper.findComponent({ name: 'OtpInput' }).vm.$emit('complete', '000000')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
     expect(wrapper.text()).toContain('Code incorrect')
   })
 
   it('emits resend when resend button clicked (countdown at 0)', async () => {
+    vi.useFakeTimers()
     const wrapper = mount(OtpForm, { props: { phone: '+33612345678' } })
-    // Forcer countdown à 0
-    ;(wrapper.vm as unknown as { countdown: number }).countdown = 0
+    vi.advanceTimersByTime(60000)
     await wrapper.vm.$nextTick()
     const btn = wrapper.find('[data-test="resend-btn"]')
-    if (btn.exists()) {
-      await btn.trigger('click')
-      expect(wrapper.emitted('resend')).toBeTruthy()
-    }
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+    expect(wrapper.emitted('resend')).toBeTruthy()
+    vi.useRealTimers()
   })
 
   it('falls back to "Code incorrect" when error has no message', async () => {
     confirmOtpMock.mockRejectedValue(new Error(''))
     const wrapper = mount(OtpForm, { props: { phone: '+33612345678' } })
     await wrapper.findComponent({ name: 'OtpInput' }).vm.$emit('complete', '000000')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
     expect(wrapper.text()).toContain('Code incorrect')
   })
 

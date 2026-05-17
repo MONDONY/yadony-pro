@@ -27,6 +27,7 @@ onUnmounted(() => {
 })
 
 async function submit(code: string) {
+  if (loading.value) return
   error.value = null
   loading.value = true
   try {
