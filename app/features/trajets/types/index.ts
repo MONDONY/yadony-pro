@@ -2,6 +2,7 @@
 
 export type TripStatus = 'ACTIVE' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 export type TransportMode = 'PLANE' | 'CAR' | 'TRAIN' | 'BUS' | 'BOAT' | 'OTHER'
+export type CapacityUnit = 'SUITCASE_23KG' | 'SUITCASE_32KG' | 'KG_FREE'
 export type TripFilter = 'TOUS' | 'ACTIFS' | 'COMPLETS' | 'EN_COURS' | 'TERMINES' | 'ANNULES'
 export type ViewMode = 'list' | 'calendar'
 export type DateMode = 'none' | 'day' | 'period'
@@ -43,6 +44,7 @@ export interface Trip {
   dropoffPlace: SelectedPlace
   availableWeightKg: number
   usedWeightKg: number
+  capacityUnit?: CapacityUnit
   pricePerKg: number
   acceptedCategories: string[]
   refusedCategories: string[]
@@ -72,6 +74,7 @@ export interface AnnouncementFormData {
   pickupPlace: SelectedPlace | null
   dropoffPlace: SelectedPlace | null
   availableWeightKg: number
+  capacityUnit: CapacityUnit
   pricePerKg: number
   acceptedCategories: string[]
   refusedCategories: string[]
@@ -89,6 +92,7 @@ export interface CreateAnnouncementPayload {
   pickupAddress: { label: string; lat: number; lng: number }
   deliveryAddress: { label: string; lat: number; lng: number }
   availableKg: number
+  capacityUnit: CapacityUnit
   pricePerKg: number
   description: string | null
   acceptedContentTypes: string[]

@@ -5,6 +5,7 @@ import type {
   ValidationErrors,
   Trip,
   CreateAnnouncementPayload,
+  CapacityUnit,
 } from '@/features/trajets/types/index'
 
 export function useAnnouncementForm() {
@@ -18,6 +19,7 @@ export function useAnnouncementForm() {
     pickupPlace: null,
     dropoffPlace: null,
     availableWeightKg: 15,
+    capacityUnit: 'SUITCASE_23KG' as CapacityUnit,
     pricePerKg: 7,
     acceptedCategories: [],
     refusedCategories: [],
@@ -55,6 +57,7 @@ export function useAnnouncementForm() {
       pickupAddress: { label: pickup.label, lat: pickup.lat, lng: pickup.lng },
       deliveryAddress: { label: dropoff.label, lat: dropoff.lat, lng: dropoff.lng },
       availableKg: form.availableWeightKg,
+      capacityUnit: form.capacityUnit,
       pricePerKg: form.pricePerKg,
       description: form.senderNote || null,
       acceptedContentTypes: form.acceptedCategories,
@@ -89,6 +92,7 @@ export function useAnnouncementForm() {
     form.pickupPlace = trip.pickupPlace
     form.dropoffPlace = trip.dropoffPlace
     form.availableWeightKg = trip.availableWeightKg
+    form.capacityUnit = trip.capacityUnit ?? 'SUITCASE_23KG'
     form.pricePerKg = trip.pricePerKg
     form.acceptedCategories = [...trip.acceptedCategories]
     form.refusedCategories = [...trip.refusedCategories]

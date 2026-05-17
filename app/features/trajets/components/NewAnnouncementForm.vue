@@ -7,6 +7,7 @@ import { configService } from '@/features/trajets/services/configService'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
 import TransportModeChips from '@/features/trajets/components/TransportModeChips.vue'
 import WeightSlider from '@/features/trajets/components/WeightSlider.vue'
+import CapacitySelector from '@/features/trajets/components/CapacitySelector.vue'
 import PriceOptionCards from '@/features/trajets/components/PriceOptionCards.vue'
 import ContentTagChips from '@/features/trajets/components/ContentTagChips.vue'
 import { Button } from '@/components/ui/button'
@@ -218,6 +219,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
     <!-- Section Capacité & Prix -->
     <section class="space-y-5">
       <h2 class="font-bold text-lg text-text border-b border-border pb-2">Capacité & Prix</h2>
+      <CapacitySelector v-model="form.capacityUnit" />
       <WeightSlider v-model="form.availableWeightKg" :min="1" :max="23" />
       <div>
         <label class="block text-sm font-medium text-text mb-3">

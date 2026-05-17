@@ -30,6 +30,15 @@ const paymentMethods = computed(() => {
   methods.push('Carte (Stripe)')
   return methods
 })
+
+const capacityUnitLabel = computed(() => {
+  const labels: Record<string, string> = {
+    SUITCASE_23KG: '1 valise 23 kg',
+    SUITCASE_32KG: '1 valise 32 kg',
+    KG_FREE: 'Kg libre',
+  }
+  return labels[props.trip.capacityUnit ?? ''] ?? ''
+})
 </script>
 
 <template>
@@ -113,6 +122,10 @@ const paymentMethods = computed(() => {
             <p class="text-xs text-text-muted">Prix</p>
             <p class="text-sm text-text font-bold">{{ trip.pricePerKg }} €/kg</p>
           </div>
+        </div>
+
+        <div v-if="capacityUnitLabel" class="flex items-center gap-1.5 text-sm text-text-muted">
+          <span class="font-medium text-text">{{ capacityUnitLabel }}</span>
         </div>
       </div>
     </section>
