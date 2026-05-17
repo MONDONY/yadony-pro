@@ -12,13 +12,15 @@ const localNumber = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-const fullPhone = computed(
-  () => `${country.value.dial}${localNumber.value.replace(/[\s\-]/g, '')}`,
-)
+const fullPhone = computed(() => {
+  const local = localNumber.value.replace(/[\s\-]/g, '').replace(/^0/, '')
+  return `${country.value.dial}${local}`
+})
 
 const { sendOtp } = useFirebaseAuth()
 
 async function submit() {
+  if (loading.value) return
   error.value = null
   if (!/^\+\d{8,15}$/.test(fullPhone.value)) {
     error.value = 'Numéro invalide — ex : 6 12 34 56 78'

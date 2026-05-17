@@ -27,7 +27,10 @@ describe('PhoneNumberForm', () => {
     const wrapper = mount(PhoneNumberForm)
     const chips = wrapper.findAll('[data-test="country-chip"]')
     await chips[1].trigger('click') // Sénégal
-    expect(wrapper.text()).toContain('+221')
+    await wrapper.find('input[type="tel"]').setValue('771234567')
+    await wrapper.find('form').trigger('submit')
+    await wrapper.vm.$nextTick()
+    expect(sendOtpMock).toHaveBeenCalledWith('+221771234567', 'recaptcha-container')
   })
 
   it('shows error when local number is empty on submit', async () => {
