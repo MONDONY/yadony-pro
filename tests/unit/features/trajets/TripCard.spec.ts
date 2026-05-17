@@ -106,4 +106,24 @@ describe('TripCard', () => {
     expect(link.exists()).toBe(true)
     expect(link.attributes('href')).toBe('/trajets/trip-1/modifier')
   })
+
+  it('shows "1 valise 23 kg" label when capacityUnit is SUITCASE_23KG', async () => {
+    const wrapper = await mountTripCard({ ...baseTripProps, capacityUnit: 'SUITCASE_23KG' })
+    expect(wrapper.text()).toContain('1 valise 23 kg')
+  })
+
+  it('shows "1 valise 32 kg" label when capacityUnit is SUITCASE_32KG', async () => {
+    const wrapper = await mountTripCard({ ...baseTripProps, capacityUnit: 'SUITCASE_32KG' })
+    expect(wrapper.text()).toContain('1 valise 32 kg')
+  })
+
+  it('does not show a valise label when capacityUnit is KG_FREE', async () => {
+    const wrapper = await mountTripCard({ ...baseTripProps, capacityUnit: 'KG_FREE' })
+    expect(wrapper.text()).not.toContain('valise')
+  })
+
+  it('does not show a valise label when capacityUnit is absent', async () => {
+    const wrapper = await mountTripCard(baseTripProps)
+    expect(wrapper.text()).not.toContain('valise')
+  })
 })

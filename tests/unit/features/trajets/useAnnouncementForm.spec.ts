@@ -47,6 +47,7 @@ describe('useAnnouncementForm', () => {
     expect(form.refusedCategories).toEqual([])
     expect(form.departureCity).toBeNull()
     expect(form.transportMode).toBeNull()
+    expect(form.capacityUnit).toBe('SUITCASE_23KG')
   })
 
   it('validate returns errors for missing required fields', async () => {
@@ -87,6 +88,35 @@ describe('useAnnouncementForm', () => {
     const result = await submit('PUBLISHED')
     expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ transportMode: 'AVION' }))
     expect(result.status).toBe('PUBLISHED')
+  })
+
+  it('buildPayload includes capacityUnit in the payload', async () => {
+    mockCreate.mockResolvedValue({ id: 'trip-cu', status: 'PUBLISHED' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-06-01'
+    form.transportMode = 'AVION'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    form.capacityUnit = 'SUITCASE_32KG'
+    await submit('PUBLISHED')
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ capacityUnit: 'SUITCASE_32KG' }))
+  })
+
+  it('buildPayload defaults capacityUnit to SUITCASE_23KG when not changed', async () => {
+    mockCreate.mockResolvedValue({ id: 'trip-default', status: 'PUBLISHED' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-06-01'
+    form.transportMode = 'AVION'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    await submit('PUBLISHED')
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ capacityUnit: 'SUITCASE_23KG' }))
   })
 
   it('submit calls createAnnouncement with DRAFT status', async () => {
@@ -130,6 +160,28 @@ describe('useAnnouncementForm', () => {
     expect(form.pricePerKg).toBe(8)
     expect(form.cashAccepted).toBe(true)
     expect(form.departureDate).toBe('')
+  })
+
+  it('applyTemplate sets capacityUnit from trip, defaults to SUITCASE_23KG when absent', async () => {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, applyTemplate } = useAnnouncementForm()
+    const base = {
+      id: 't2', status: 'COMPLETED' as const,
+      departureCity: validPlace, arrivalCity: validPlace2,
+      departureDate: '2026-05-01', departureTime: null, arrivalTime: null,
+      transportMode: 'AVION' as const, pickupPlace: validPlace, dropoffPlace: validPlace2,
+      availableWeightKg: 10, usedWeightKg: 0, pricePerKg: 6,
+      acceptedCategories: [], refusedCategories: [],
+      senderNote: null, cashAccepted: false,
+      confirmedParcelCount: 0, pendingBidCount: 0, reservedRevenueEuros: 0,
+      createdAt: '2026-05-01T00:00:00Z',
+    }
+    // With explicit capacityUnit
+    applyTemplate({ ...base, capacityUnit: 'SUITCASE_32KG' as const })
+    expect(form.capacityUnit).toBe('SUITCASE_32KG')
+    // Without capacityUnit (undefined) → fallback
+    applyTemplate({ ...base })
+    expect(form.capacityUnit).toBe('SUITCASE_23KG')
   })
 
   it('netPrice computes 88% of pricePerKg correctly', async () => {
