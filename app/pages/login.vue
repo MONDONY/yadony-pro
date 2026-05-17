@@ -14,6 +14,14 @@ function onSent(p: string) {
   phone.value = p
   step.value = 'otp'
 }
+
+function handleBack() {
+  if (step.value === 'otp') {
+    step.value = 'phone'
+  } else {
+    navigateTo('/')
+  }
+}
 </script>
 
 <template>
@@ -23,7 +31,7 @@ function onSent(p: string) {
       <button
         type="button"
         class="flex items-center gap-1.5 text-sm text-subtle hover:text-text transition-colors"
-        @click="step === 'otp' ? (step = 'phone') : navigateTo('/')"
+        @click="handleBack"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <path d="M19 12H5M12 19l-7-7 7-7" />
