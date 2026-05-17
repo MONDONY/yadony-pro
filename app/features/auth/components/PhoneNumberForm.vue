@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import CountrySelector, { type Country, COUNTRIES } from './CountrySelector.vue'
+import CountrySelector from './CountrySelector.vue'
+import { type Country, COUNTRIES } from '../data/countries.ts'
 import { useFirebaseAuth } from '@/features/auth/composables/useFirebaseAuth'
 
 const QUICK_COUNTRIES = COUNTRIES.slice(0, 4) // FR, SN, CI, ML

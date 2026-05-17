@@ -40,10 +40,10 @@ async function submit(code: string) {
   }
   catch (e) {
     error.value = (e as Error).message || 'Code incorrect'
-    otpInput.value?.reset()
   }
   finally {
     loading.value = false
+    if (error.value) otpInput.value?.reset()
   }
 }
 </script>
