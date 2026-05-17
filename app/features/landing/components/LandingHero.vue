@@ -111,10 +111,10 @@
           </div>
         </div>
 
-        <!-- Mascotte principale sur_avion.png (z-index 3) -->
+        <!-- Mascotte principale confiant.png (z-index 3) -->
         <img
-          src="/mascots/sur_avion.png"
-          alt="Mascotte dony sur un avion"
+          src="/mascots/confiant.png"
+          alt="Mascotte dony confiante"
           style="position:absolute;right:0;bottom:0;z-index:3;width:400px;height:auto;object-fit:contain;"
         />
 
@@ -130,10 +130,10 @@
           </div>
         </div>
 
-        <!-- Mascotte secondaire pouce_leve.png (z-index 6) -->
+        <!-- Mascotte secondaire joyeux.png (z-index 6) -->
         <img
-          src="/mascots/pouce_leve.png"
-          alt="Mascotte dony pouce levé"
+          src="/mascots/joyeux.png"
+          alt="Mascotte dony joyeuse"
           style="position:absolute;bottom:20px;left:220px;z-index:6;width:100px;height:auto;object-fit:contain;"
         />
       </div>

@@ -29,7 +29,7 @@
 
       <!-- Droite — mascotte -->
       <img
-        src="/mascots/pouce_leve.png"
+        src="/mascots/joyeux.png"
         alt=""
         class="w-48 h-auto object-contain flex-shrink-0 hidden lg:block"
         aria-hidden="true"

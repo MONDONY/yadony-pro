@@ -24,7 +24,7 @@ const initials = computed(() =>
   <aside class="w-sidebar shrink-0 bg-surface border-r border-border flex flex-col">
     <!-- Logo -->
     <div class="px-6 py-5 border-b border-border">
-      <NuxtLink to="/" class="font-display font-bold text-xl text-primary">
+      <NuxtLink to="/cockpit" class="font-display font-bold text-xl text-primary">
         dony <span class="text-text">PRO</span>
       </NuxtLink>
     </div>
@@ -53,7 +53,7 @@ const initials = computed(() =>
 
     <!-- Nav -->
     <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-      <NavItem to="/" label="Centre de commandes">
+      <NavItem to="/cockpit" label="Centre de commandes">
         <template #icon><Home class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/trajets" label="Mes Trajets">

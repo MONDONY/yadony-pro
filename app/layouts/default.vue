@@ -8,11 +8,6 @@ const meta = computed(() => ({
   title: (route.meta.pageTitle as string) ?? 'dony PRO',
   subtitle: route.meta.pageSubtitle as string | undefined,
 }))
-
-// Force dark mode in the authenticated cockpit
-onMounted(() => {
-  document.documentElement.classList.add('dark')
-})
 </script>
 
 <template>

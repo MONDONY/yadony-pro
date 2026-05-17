@@ -22,7 +22,7 @@ const items = [
 </script>
 
 <template>
-  <div class="w-[420px] shrink-0 bg-bg border-r border-border flex flex-col p-8 relative overflow-hidden">
+  <div class="w-1/2 shrink-0 bg-bg border-r border-border flex flex-col p-10 relative overflow-hidden">
     <!-- Glow blobs -->
     <div
       aria-hidden="true"

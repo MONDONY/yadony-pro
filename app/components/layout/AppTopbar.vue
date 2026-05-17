@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Bell, LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useFirebaseAuth } from '@/features/auth/composables/useFirebaseAuth'
 
 defineProps<{ title: string; subtitle?: string }>()
@@ -18,6 +19,7 @@ async function logout() {
       <p v-if="subtitle" class="text-sm text-text-muted">{{ subtitle }}</p>
     </div>
     <div class="flex items-center gap-2">
+      <ThemeToggle />
       <Button variant="ghost" size="icon">
         <Bell class="w-4 h-4" />
       </Button>

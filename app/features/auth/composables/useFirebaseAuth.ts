@@ -44,7 +44,7 @@ export function useFirebaseAuth() {
     authStore.clear()
     recaptchaVerifier = null
     confirmation = null
-    await navigateTo('/login')
+    await navigateTo('/')
   }
 
   return { sendOtp, confirmOtp, signOut }
