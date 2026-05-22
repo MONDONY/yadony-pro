@@ -1,5 +1,13 @@
 import { useApi } from '@/composables/useApi'
 
+interface DeviceDto {
+  deviceId: string
+  deviceName: string
+  platform: string
+  lastSeenAt: string
+  isCurrent: boolean
+}
+
 /** Construit un nom lisible depuis le user agent (ex: "Chrome sur Windows"). */
 export function buildWebDeviceName(userAgent: string): string {
   const browser = /Edg/.test(userAgent) ? 'Edge'
@@ -14,6 +22,23 @@ export function buildWebDeviceName(userAgent: string): string {
     : /iPhone|iPad/.test(userAgent) ? 'iOS'
     : 'Web'
   return `${browser} sur ${os}`
+}
+
+/**
+ * Vérifie si l'appareil courant est toujours enregistré côté serveur.
+ * Retourne `true` si encore enregistré OU en cas d'erreur réseau (fail-safe :
+ * on ne déconnecte jamais sur une simple erreur de fetch).
+ * Retourne `false` UNIQUEMENT si le serveur répond et que l'appareil courant
+ * n'est plus dans la liste (révoqué).
+ */
+export async function isCurrentDeviceRegistered(): Promise<boolean> {
+  try {
+    const api = useApi()
+    const devices = await api<DeviceDto[]>('/users/me/devices', { method: 'GET' })
+    return devices.some((d) => d.isCurrent)
+  } catch {
+    return true // fail-safe : erreur réseau → ne pas déconnecter
+  }
 }
 
 /**

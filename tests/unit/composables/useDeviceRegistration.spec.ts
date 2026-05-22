@@ -83,3 +83,46 @@ describe('registerWebDevice', () => {
     await expect(registerWebDevice()).resolves.toBeUndefined()
   })
 })
+
+describe('isCurrentDeviceRegistered', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    mockApiFn.mockReset()
+  })
+
+  it('retourne true quand la liste contient un device avec isCurrent: true', async () => {
+    mockApiFn.mockResolvedValue([
+      { deviceId: 'abc', deviceName: 'Chrome sur Windows', platform: 'web', lastSeenAt: '2026-05-22T10:00:00Z', isCurrent: false },
+      { deviceId: 'xyz', deviceName: 'iPhone', platform: 'ios', lastSeenAt: '2026-05-22T09:00:00Z', isCurrent: true },
+    ])
+    const { isCurrentDeviceRegistered } = await import('@/composables/useDeviceRegistration')
+    await expect(isCurrentDeviceRegistered()).resolves.toBe(true)
+  })
+
+  it("retourne false quand aucun device n'a isCurrent: true (appareil révoqué)", async () => {
+    mockApiFn.mockResolvedValue([
+      { deviceId: 'abc', deviceName: 'Chrome sur Windows', platform: 'web', lastSeenAt: '2026-05-22T10:00:00Z', isCurrent: false },
+      { deviceId: 'xyz', deviceName: 'iPhone', platform: 'ios', lastSeenAt: '2026-05-22T09:00:00Z', isCurrent: false },
+    ])
+    const { isCurrentDeviceRegistered } = await import('@/composables/useDeviceRegistration')
+    await expect(isCurrentDeviceRegistered()).resolves.toBe(false)
+  })
+
+  it('retourne false quand la liste est vide (aucun appareil enregistré)', async () => {
+    mockApiFn.mockResolvedValue([])
+    const { isCurrentDeviceRegistered } = await import('@/composables/useDeviceRegistration')
+    await expect(isCurrentDeviceRegistered()).resolves.toBe(false)
+  })
+
+  it("retourne true en cas d'erreur réseau (fail-safe : ne pas déconnecter)", async () => {
+    mockApiFn.mockRejectedValue(new Error('Network error'))
+    const { isCurrentDeviceRegistered } = await import('@/composables/useDeviceRegistration')
+    await expect(isCurrentDeviceRegistered()).resolves.toBe(true)
+  })
+
+  it("retourne true en cas d'erreur 500 du serveur (fail-safe)", async () => {
+    mockApiFn.mockRejectedValue({ response: { status: 500 } })
+    const { isCurrentDeviceRegistered } = await import('@/composables/useDeviceRegistration')
+    await expect(isCurrentDeviceRegistered()).resolves.toBe(true)
+  })
+})
