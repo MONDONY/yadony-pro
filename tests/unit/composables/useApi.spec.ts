@@ -2,6 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 
+// Mock getDeviceId pour isoler les tests de useApi du localStorage
+vi.mock('@/lib/deviceId', () => ({
+  getDeviceId: vi.fn(() => 'test-device-uuid-1234'),
+}))
+
 interface FetchOptions {
   baseURL: string
   onRequest: (ctx: { options: { headers: Record<string, string> } }) => void
@@ -56,6 +61,28 @@ describe('useApi', () => {
     const ctx = { options: { headers: {} as Record<string, string> } }
     capturedOpts!.onRequest(ctx)
     expect(ctx.options.headers.Authorization).toBeUndefined()
+  })
+
+  it('onRequest adds X-Device-Id header', async () => {
+    const { useApi } = await import('@/composables/useApi')
+    useApi()
+    const ctx = { options: { headers: {} as Record<string, string> } }
+    capturedOpts!.onRequest(ctx)
+    expect(ctx.options.headers['X-Device-Id']).toBe('test-device-uuid-1234')
+  })
+
+  it('onRequest adds both Authorization and X-Device-Id when token is present', async () => {
+    const auth = useAuthStore()
+    auth.setSession('jwt-xyz', {
+      id: 'u2', phoneNumber: '+33', displayName: 'Y',
+      isProAccount: true, roles: ['ROLE_TRAVELER'], avatarUrl: null,
+    })
+    const { useApi } = await import('@/composables/useApi')
+    useApi()
+    const ctx = { options: { headers: {} as Record<string, string> } }
+    capturedOpts!.onRequest(ctx)
+    expect(ctx.options.headers.Authorization).toBe('Bearer jwt-xyz')
+    expect(ctx.options.headers['X-Device-Id']).toBe('test-device-uuid-1234')
   })
 
   it('onResponseError calls auth.clear and navigates to /login on 401', async () => {

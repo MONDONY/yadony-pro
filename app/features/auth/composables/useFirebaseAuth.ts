@@ -6,6 +6,7 @@ import {
 } from 'firebase/auth'
 import { useAuthStore, type AuthUser } from '@/stores/auth'
 import { useApi } from '@/composables/useApi'
+import { registerWebDevice } from '@/composables/useDeviceRegistration'
 
 let recaptchaVerifier: RecaptchaVerifier | null = null
 let confirmation: ConfirmationResult | null = null
@@ -36,6 +37,7 @@ export function useFirebaseAuth() {
     authStore.idToken = idToken
     const user = await api<AuthUser>('/auth/me')
     authStore.setSession(idToken, user)
+    void registerWebDevice()
     return user
   }
 

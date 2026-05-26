@@ -1,6 +1,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
 import { getAuth, onAuthStateChanged, type Auth } from 'firebase/auth'
 import { useAuthStore, type AuthUser } from '@/stores/auth'
+import { isCurrentDeviceRegistered } from '@/composables/useDeviceRegistration'
 
 export default defineNuxtPlugin(async () => {
   const config = useRuntimeConfig()
@@ -33,6 +34,14 @@ export default defineNuxtPlugin(async () => {
 
           if (user) {
             authStore.setSession(idToken, user)
+            // La session est restaurée passivement (pas une connexion explicite) :
+            // on ne ré-enregistre PAS l'appareil (sinon une session révoquée
+            // réapparaîtrait). À la place, on vérifie qu'on n'a pas été révoqué.
+            const stillRegistered = await isCurrentDeviceRegistered()
+            if (!stillRegistered) {
+              await auth.signOut()
+              authStore.clear()
+            }
           } else {
             // Backend rejected the token (account deleted, etc.) — clean up
             await auth.signOut()
