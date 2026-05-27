@@ -1,5 +1,7 @@
 import { useApi } from '@/composables/useApi'
 import type {
+  TrackingEvent,
+  QrCode,
   Trip,
   TripBid,
   TripPage,
@@ -212,7 +214,23 @@ export function tripsService() {
     await api<void>(`/tracking/${bidId}/confirm-delivery`, { method: 'POST', body: { confirmationCode: code } })
   }
 
-  return { listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement, updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid, confirmDelivery }
+  async function postTrackingEvent(bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE'): Promise<void> {
+    await api<void>('/tracking/events', { method: 'POST', body: { bidId, eventType } })
+  }
+
+  async function getTrackingEvents(bidId: string): Promise<TrackingEvent[]> {
+    return api<TrackingEvent[]>(`/tracking/${bidId}/events`, {})
+  }
+
+  async function getQrCode(bidId: string): Promise<QrCode> {
+    return api<QrCode>(`/tracking/${bidId}/qr-code`, {})
+  }
+
+  return {
+    listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement,
+    updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
+    confirmDelivery, postTrackingEvent, getTrackingEvents, getQrCode,
+  }
 }
 
 function filterToStatus(filter: TripFilter): string {

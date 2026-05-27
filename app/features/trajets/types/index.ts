@@ -135,3 +135,22 @@ export interface TripKpis {
   netRevenueEuros: number
   revenuePerKg: number
 }
+
+export type TrackingEventType = 'DEPART' | 'TRANSIT' | 'ARRIVEE'
+
+export interface TrackingEvent {
+  id: string
+  bidId: string
+  eventType: string
+  scannedAt: string | null
+  gpsLat: number | null
+  gpsLon: number | null
+  photoUrl: string | null
+  createdAt: string
+}
+
+export interface QrCode {
+  bidId: string
+  scanUrl: string
+  qrCodeBase64: string
+}

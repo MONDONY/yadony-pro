@@ -8,6 +8,7 @@ const mockSvc = {
   acceptBid: vi.fn(),
   rejectBid: vi.fn(),
   confirmDelivery: vi.fn(),
+  postTrackingEvent: vi.fn(),
   listTrips: vi.fn(),
   createAnnouncement: vi.fn(),
   getTemplates: vi.fn(),
@@ -138,6 +139,18 @@ describe('useTripDetail', () => {
     const { rejectBid } = useTripDetail('trip-1')
     await rejectBid('bid-7')
     expect(mockSvc.rejectBid).toHaveBeenCalledWith('bid-7')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalledWith('trip-1')
+    expect(mockSvc.getAnnouncement).toHaveBeenCalledWith('trip-1')
+  })
+
+  it('markTrackingEvent posts the event then refreshes bids and trip', async () => {
+    mockSvc.postTrackingEvent.mockResolvedValue(undefined)
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', availableWeightKg: 20, usedWeightKg: 0, status: 'ACTIVE' })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { markTrackingEvent } = useTripDetail('trip-1')
+    await markTrackingEvent('bid-1', 'DEPART')
+    expect(mockSvc.postTrackingEvent).toHaveBeenCalledWith('bid-1', 'DEPART')
     expect(mockSvc.getAnnouncementBids).toHaveBeenCalledWith('trip-1')
     expect(mockSvc.getAnnouncement).toHaveBeenCalledWith('trip-1')
   })

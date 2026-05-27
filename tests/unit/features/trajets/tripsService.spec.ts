@@ -198,4 +198,26 @@ describe('tripsService', () => {
     await svc.rejectBid('bid-99')
     expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-99/reject', { method: 'PUT' })
   })
+
+  it('confirmDelivery POSTs the 6-digit code to /tracking/:id/confirm-delivery', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    await svc.confirmDelivery('bid-99', '123456')
+    expect(mockApiFn).toHaveBeenCalledWith('/tracking/bid-99/confirm-delivery', {
+      method: 'POST',
+      body: { confirmationCode: '123456' },
+    })
+  })
+
+  it('postTrackingEvent POSTs the event to /tracking/events', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    await svc.postTrackingEvent('bid-99', 'DEPART')
+    expect(mockApiFn).toHaveBeenCalledWith('/tracking/events', {
+      method: 'POST',
+      body: { bidId: 'bid-99', eventType: 'DEPART' },
+    })
+  })
 })

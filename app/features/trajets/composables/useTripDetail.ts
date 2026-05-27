@@ -67,6 +67,15 @@ export function useTripDetail(tripId: string) {
     await fetchTrip()
   }
 
+  async function markTrackingEvent(
+    bidId: string,
+    eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE',
+  ): Promise<void> {
+    await svc.postTrackingEvent(bidId, eventType)
+    await fetchBids()
+    await fetchTrip()
+  }
+
   const kpis = computed<TripKpis>(() => {
     const t = trip.value
     if (!t) return { fillRatePct: 0, grossRevenueEuros: 0, commissionEuros: 0, netRevenueEuros: 0, revenuePerKg: 0 }
@@ -117,6 +126,7 @@ export function useTripDetail(tripId: string) {
     acceptBid,
     rejectBid,
     confirmDelivery,
+    markTrackingEvent,
     exportBidsCsv,
   }
 }

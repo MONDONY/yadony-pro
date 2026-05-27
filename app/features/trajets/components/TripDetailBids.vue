@@ -15,6 +15,7 @@ const emit = defineEmits<{
   'accept': [bidId: string]
   'reject': [bidId: string]
   'confirm-delivery': [bidId: string, code: string]
+  'tracking-event': [bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE']
   'export-csv': []
 }>()
 
@@ -244,6 +245,28 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
                   <XCircle class="w-4 h-4" />
                 </button>
               </div>
+              <div v-else-if="bid.status === 'ACCEPTED'">
+                <button
+                  :disabled="props.loadingBidId === bid.id"
+                  class="flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
+                  :data-test="`handover-${bid.id}`"
+                  @click="emit('tracking-event', bid.id, 'DEPART')"
+                >
+                  <PackageCheck class="w-3.5 h-3.5" />
+                  Prise en charge
+                </button>
+              </div>
+              <div v-else-if="bid.status === 'HANDED_OVER'">
+                <button
+                  :disabled="props.loadingBidId === bid.id"
+                  class="flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
+                  :data-test="`transit-${bid.id}`"
+                  @click="emit('tracking-event', bid.id, 'TRANSIT')"
+                >
+                  <PackageCheck class="w-3.5 h-3.5" />
+                  En transit
+                </button>
+              </div>
               <div v-else-if="bid.status === 'IN_TRANSIT'">
                 <button
                   :disabled="props.loadingBidId === bid.id"
@@ -325,6 +348,32 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
           >
             <XCircle class="w-3.5 h-3.5" />
             Refuser
+          </button>
+        </div>
+
+        <!-- Action ACCEPTED : confirmer la prise en charge (DEPART) -->
+        <div v-else-if="bid.status === 'ACCEPTED'" class="pt-1">
+          <button
+            :disabled="props.loadingBidId === bid.id"
+            class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn bg-primary text-white text-xs font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
+            :data-test="`handover-card-${bid.id}`"
+            @click="emit('tracking-event', bid.id, 'DEPART')"
+          >
+            <PackageCheck class="w-3.5 h-3.5" />
+            Confirmer la prise en charge
+          </button>
+        </div>
+
+        <!-- Action HANDED_OVER : marquer en transit (TRANSIT) -->
+        <div v-else-if="bid.status === 'HANDED_OVER'" class="pt-1">
+          <button
+            :disabled="props.loadingBidId === bid.id"
+            class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn border border-primary/50 text-primary text-xs font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
+            :data-test="`transit-card-${bid.id}`"
+            @click="emit('tracking-event', bid.id, 'TRANSIT')"
+          >
+            <PackageCheck class="w-3.5 h-3.5" />
+            Marquer en transit
           </button>
         </div>
 
