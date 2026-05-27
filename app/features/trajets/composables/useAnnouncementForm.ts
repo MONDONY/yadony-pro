@@ -7,6 +7,7 @@ import type {
   CreateAnnouncementPayload,
   CapacityUnit,
 } from '@/features/trajets/types/index'
+import type { TripTemplate } from '@/features/trajets/data/tripTemplates'
 
 export function useAnnouncementForm() {
   const form = reactive<AnnouncementFormData>({
@@ -100,5 +101,20 @@ export function useAnnouncementForm() {
     form.cashAccepted = trip.cashAccepted
   }
 
-  return { form, netPrice, validate, submit, submitEdit, applyTemplate }
+  /**
+   * Pré-remplit le formulaire depuis un modèle prédéfini : corridor, transport,
+   * capacité, prix et contenu accepté. Laisse la date et les adresses de remise/
+   * récupération vides (personnelles au voyageur).
+   */
+  function applyQuickTemplate(t: TripTemplate): void {
+    form.departureCity = { ...t.departureCity }
+    form.arrivalCity = { ...t.arrivalCity }
+    form.transportMode = t.transportMode
+    form.capacityUnit = t.capacityUnit
+    form.availableWeightKg = t.availableWeightKg
+    form.pricePerKg = t.pricePerKg
+    form.acceptedCategories = [...t.acceptedCategories]
+  }
+
+  return { form, netPrice, validate, submit, submitEdit, applyTemplate, applyQuickTemplate }
 }

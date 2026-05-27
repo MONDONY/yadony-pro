@@ -11,6 +11,7 @@ import CapacitySelector from '@/features/trajets/components/CapacitySelector.vue
 import PriceOptionCards from '@/features/trajets/components/PriceOptionCards.vue'
 import ContentTagChips from '@/features/trajets/components/ContentTagChips.vue'
 import { Button } from '@/components/ui/button'
+import { TRIP_TEMPLATES, type TripTemplate } from '@/features/trajets/data/tripTemplates'
 import type { Trip, ValidationErrors } from '@/features/trajets/types/index'
 
 const emit = defineEmits<{
@@ -25,12 +26,14 @@ const props = withDefaults(defineProps<{
   editTripId: undefined,
 })
 
-const { form, netPrice, validate, submit, submitEdit, applyTemplate } = useAnnouncementForm()
+const { form, netPrice, validate, submit, submitEdit, applyTemplate, applyQuickTemplate } = useAnnouncementForm()
 const { fetchTemplates } = useTrips()
 const { fetchContentCategories } = configService()
 
 const errors = ref<ValidationErrors>({})
 const isSubmitting = ref(false)
+const quickTemplates = TRIP_TEMPLATES
+const selectedQuickTemplateId = ref<string | null>(null)
 const templates = ref<Trip[]>([])
 const showTemplates = ref(false)
 const selectedTemplateId = ref<string | null>(null)
@@ -68,6 +71,11 @@ function onSelectTemplate(trip: Trip) {
   showTemplates.value = false
 }
 
+function onSelectQuickTemplate(t: TripTemplate) {
+  applyQuickTemplate(t)
+  selectedQuickTemplateId.value = t.id
+}
+
 async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
   const validationErrors = validate()
   errors.value = validationErrors
@@ -89,6 +97,35 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
 
 <template>
   <div class="max-w-2xl space-y-8">
+
+    <!-- Modèles rapides prédéfinis -->
+    <div v-if="!editTripId" class="bg-surface border border-border rounded-card p-4" data-test="quick-templates">
+      <p class="flex items-center gap-2 text-sm font-medium text-text mb-3">
+        <LayoutTemplate class="w-4 h-4 text-primary" />
+        Modèles rapides
+        <span class="text-xs font-normal text-text-muted">— corridor, prix et contenu pré-remplis</span>
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="t in quickTemplates"
+          :key="t.id"
+          type="button"
+          :data-test="`quick-template-${t.id}`"
+          :class="[
+            'px-3 py-1.5 rounded-full border text-sm transition-colors',
+            selectedQuickTemplateId === t.id
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-border hover:border-primary/50 text-text-muted hover:text-text',
+          ]"
+          @click="onSelectQuickTemplate(t)"
+        >
+          {{ t.emoji }} {{ t.label }} · {{ t.pricePerKg }}€/kg
+        </button>
+      </div>
+      <p v-if="selectedQuickTemplateId" class="text-xs text-text-muted mt-2" data-test="quick-template-hint">
+        Modèle appliqué. Complète la date et les lieux de remise / récupération, puis publie.
+      </p>
+    </div>
 
     <!-- Template picker -->
     <div v-if="templates.length > 0" class="bg-surface border border-border rounded-card p-4">
