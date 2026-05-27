@@ -111,8 +111,8 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
 }
 
 function mapBidResponseToTripBid(b: BackendBidResponse): TripBid {
-  const weightKg = Number(b.weightKg)
-  const pricePerKg = Number(b.pricePerKg)
+  const weightKg = Number(b.weightKg) || 0
+  const pricePerKg = Number(b.pricePerKg) || 0
   const paymentAmountEuros = Math.round(pricePerKg * weightKg * 100) / 100
   const earningsEuros = Math.round(paymentAmountEuros * 0.88 * 100) / 100
   const senderName = b.senderName ?? 'Expéditeur'
