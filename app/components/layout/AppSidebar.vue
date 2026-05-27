@@ -10,6 +10,7 @@ import {
   Tags,
   Bell,
   Inbox,
+  Calculator,
   Settings,
   Plus,
 } from 'lucide-vue-next'
@@ -80,6 +81,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/tarifs" label="Grille tarifaire">
         <template #icon><Tags class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/assistant-prix" label="Assistant de prix">
+        <template #icon><Calculator class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/messages" label="Messagerie">
         <template #icon><Inbox class="w-4 h-4" /></template>
