@@ -3,9 +3,11 @@ import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBusinessPreferences } from '@/features/parametres/composables/useBusinessPreferences'
 import { useKyc } from '@/features/kyc/composables/useKyc'
+import { usePayout } from '@/features/payout/composables/usePayout'
 import ProfileInfoCard from '@/features/parametres/components/ProfileInfoCard.vue'
 import BusinessPreferencesForm from '@/features/parametres/components/BusinessPreferencesForm.vue'
 import KycStatusCard from '@/features/kyc/components/KycStatusCard.vue'
+import PayoutCard from '@/features/payout/components/PayoutCard.vue'
 import type { BusinessPreferences } from '@/features/parametres/types/index'
 
 definePageMeta({
@@ -23,10 +25,18 @@ const {
   fetchStatus: fetchKycStatus,
   startVerification: startKycVerification,
 } = useKyc()
+const {
+  descriptor: payoutDescriptor,
+  isWorking: payoutWorking,
+  fetchAccount: fetchPayoutAccount,
+  startOnboarding: startPayoutOnboarding,
+  refresh: refreshPayout,
+} = usePayout()
 
 onMounted(() => {
   fetchPreferences()
   fetchKycStatus()
+  fetchPayoutAccount()
 })
 
 async function onSubmit(next: BusinessPreferences) {
@@ -35,6 +45,13 @@ async function onSubmit(next: BusinessPreferences) {
 
 async function onVerifyKyc() {
   const url = await startKycVerification()
+  if (url && import.meta.client) {
+    window.open(url, '_blank', 'noopener')
+  }
+}
+
+async function onSetupPayout() {
+  const url = await startPayoutOnboarding()
   if (url && import.meta.client) {
     window.open(url, '_blank', 'noopener')
   }
@@ -56,6 +73,17 @@ async function onVerifyKyc() {
       :can-verify="kycDescriptor.canVerify"
       :is-starting="kycStarting"
       @verify="onVerifyKyc"
+    />
+
+    <PayoutCard
+      :label="payoutDescriptor.label"
+      :description="payoutDescriptor.description"
+      :tone="payoutDescriptor.tone"
+      :action="payoutDescriptor.action"
+      :can-refresh="payoutDescriptor.canRefresh"
+      :is-working="payoutWorking"
+      @setup="onSetupPayout"
+      @refresh="refreshPayout"
     />
 
     <section class="bg-surface border border-border rounded-card p-5">
