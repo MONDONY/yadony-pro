@@ -123,6 +123,25 @@ describe('tripsService', () => {
     expect(result.usedWeightKg).toBe(5)
   })
 
+  it('getAnnouncement derives cashAccepted from acceptedPaymentMethods when the flag is absent (regression)', async () => {
+    const fakeDetail = {
+      id: 'trip-cash', travelerId: 'user-1', departureCity: 'Lyon', arrivalCity: 'Bamako',
+      departureDate: '2026-06-08', departureTime: null, arrivalTime: '18:00',
+      pickupAddress: { label: 'Part-Dieu', lat: 45.76, lng: 4.86 },
+      deliveryAddress: { label: 'Hamdallaye', lat: 12.63, lng: -8.0 },
+      availableKg: 23, totalKg: 23, pricePerKg: 8,
+      transportMode: 'PLANE', status: 'ACTIVE', pendingBidCount: 0, confirmedParcelCount: 0,
+      senderNote: null, acceptedContentTypes: [], refusedTypes: [],
+      acceptedPaymentMethods: ['STRIPE', 'CASH'],
+      // cashAccepted volontairement absent (ancien backend détail)
+      createdAt: '2026-05-27T12:00:00', updatedAt: '2026-05-27T12:00:00', bidsCount: 0, traveler: null,
+    }
+    mockApiFn.mockResolvedValue(fakeDetail)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncement('trip-cash')
+    expect(result.cashAccepted).toBe(true)
+  })
+
   it('updateAnnouncement sends PUT /announcements/:id', async () => {
     const fakeDetail = {
       id: 'trip-42', travelerId: 'u1', departureCity: 'Lyon', arrivalCity: 'Abidjan',

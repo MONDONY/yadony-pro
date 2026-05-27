@@ -104,7 +104,7 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     acceptedCategories: a.acceptedContentTypes,
     refusedCategories: a.refusedTypes,
     senderNote: a.senderNote ?? null,
-    cashAccepted: a.cashAccepted,
+    cashAccepted: a.cashAccepted ?? (a.acceptedPaymentMethods?.includes('CASH') ?? false),
     confirmedParcelCount: a.confirmedParcelCount,
     pendingBidCount: a.pendingBidCount,
     reservedRevenueEuros: 0,
