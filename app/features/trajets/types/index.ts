@@ -60,6 +60,42 @@ export interface SaveTripTemplatePayload {
   acceptedCategories: string[]
 }
 
+export interface UserTripRecurrence {
+  id: string
+  sourceTemplateId: string | null
+  departureCity: string
+  arrivalCity: string
+  transportMode: TransportMode
+  capacityUnit: CapacityUnit
+  availableKg: number
+  pricePerKg: number
+  acceptedCategories: string[]
+  pickupAddress: SelectedPlace
+  deliveryAddress: SelectedPlace
+  departureTime: string | null
+  weekdays: string
+  horizonDays: number
+  active: boolean
+  lastGeneratedDate: string | null
+}
+
+export interface SaveTripRecurrencePayload {
+  sourceTemplateId: string | null
+  departureCity: string
+  arrivalCity: string
+  transportMode: TransportMode
+  capacityUnit: CapacityUnit
+  availableKg: number
+  pricePerKg: number
+  acceptedCategories: string[]
+  pickupAddress: { label: string; lat: number; lng: number }
+  deliveryAddress: { label: string; lat: number; lng: number }
+  departureTime: string | null
+  weekdays: string
+  horizonDays: number | null
+  active: boolean
+}
+
 export interface Trip {
   id: string
   status: TripStatus

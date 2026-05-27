@@ -15,6 +15,7 @@ import {
   UserCircle,
   Settings,
   Plus,
+  Repeat,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -71,6 +72,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/automatisations" label="Automatisations">
         <template #icon><Bot class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/recurrences" label="Trajets récurrents">
+        <template #icon><Repeat class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/negociations" label="Négociations">
         <template #icon><MessageSquareDot class="w-4 h-4" /></template>
