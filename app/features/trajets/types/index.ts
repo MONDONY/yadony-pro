@@ -31,6 +31,35 @@ export interface SelectedPlace {
   lng: number
 }
 
+export interface UserTripTemplate {
+  id: string
+  label: string
+  emoji: string | null
+  departureCity: SelectedPlace
+  arrivalCity: SelectedPlace
+  transportMode: TransportMode
+  capacityUnit: CapacityUnit
+  availableWeightKg: number
+  pricePerKg: number
+  acceptedCategories: string[]
+}
+
+export interface SaveTripTemplatePayload {
+  label: string
+  emoji: string | null
+  departureCity: string
+  departureLat: number | null
+  departureLng: number | null
+  arrivalCity: string
+  arrivalLat: number | null
+  arrivalLng: number | null
+  transportMode: TransportMode
+  capacityUnit: CapacityUnit
+  availableKg: number
+  pricePerKg: number
+  acceptedCategories: string[]
+}
+
 export interface Trip {
   id: string
   status: TripStatus

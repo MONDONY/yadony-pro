@@ -6,6 +6,8 @@ import type {
   Trip,
   CreateAnnouncementPayload,
   CapacityUnit,
+  UserTripTemplate,
+  SaveTripTemplatePayload,
 } from '@/features/trajets/types/index'
 import type { TripTemplate } from '@/features/trajets/data/tripTemplates'
 
@@ -106,7 +108,7 @@ export function useAnnouncementForm() {
    * capacité, prix et contenu accepté. Laisse la date et les adresses de remise/
    * récupération vides (personnelles au voyageur).
    */
-  function applyQuickTemplate(t: TripTemplate): void {
+  function applyQuickTemplate(t: TripTemplate | UserTripTemplate): void {
     form.departureCity = { ...t.departureCity }
     form.arrivalCity = { ...t.arrivalCity }
     form.transportMode = t.transportMode
@@ -116,5 +118,29 @@ export function useAnnouncementForm() {
     form.acceptedCategories = [...t.acceptedCategories]
   }
 
-  return { form, netPrice, validate, submit, submitEdit, applyTemplate, applyQuickTemplate }
+  /**
+   * Construit le payload pour enregistrer le trajet courant comme modèle réutilisable.
+   * Requiert au minimum les villes de départ et d'arrivée.
+   */
+  function buildTemplatePayload(label: string): SaveTripTemplatePayload {
+    const dep = form.departureCity!
+    const arr = form.arrivalCity!
+    return {
+      label,
+      emoji: null,
+      departureCity: dep.label,
+      departureLat: dep.lat || null,
+      departureLng: dep.lng || null,
+      arrivalCity: arr.label,
+      arrivalLat: arr.lat || null,
+      arrivalLng: arr.lng || null,
+      transportMode: form.transportMode ?? 'PLANE',
+      capacityUnit: form.capacityUnit,
+      availableKg: form.availableWeightKg,
+      pricePerKg: form.pricePerKg,
+      acceptedCategories: [...form.acceptedCategories],
+    }
+  }
+
+  return { form, netPrice, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
 }
