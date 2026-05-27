@@ -116,3 +116,32 @@ l'app mobile pour les actions critiques.
 
 Chaque phase sera détaillée en spec dédiée puis en plan d'implémentation au moment de la
 traiter. Démarrage par **P0 (corrections)** car bloquant, puis **P1 (autonomie)**.
+
+---
+
+## État d'avancement — 2026-05-27 (session autonome)
+
+Implémenté sur la branche `feat/dony-pro-roadmap` (dépôt dony-pro, **non poussée** — PR à faire),
+chaque feature avec tests unitaires et couverture globale ≥ 90 % (442 tests verts).
+
+| Phase | Feature | Statut |
+|---|---|---|
+| P0 | Corrections (tests colis, code mort, vitest, couverture) | ✅ Fait |
+| P1 | Page Paramètres + préférences business (`/users/me/business-preferences`) | ✅ Fait — `/parametres` |
+| P1 | Statut KYC + lancement Stripe Identity (`/kyc/status`, `/kyc/session`) | ✅ Fait — carte dans `/parametres` |
+| P1 | Payout Stripe Connect (`/payments/connect/*`) | ✅ Fait — carte dans `/parametres` ⚠️ round-trip onboarding à vérifier en navigateur (clés test) |
+| P1.5 | Grille tarifaire (`/travelers/me/price-grid`) | ✅ Fait — `/tarifs` |
+| P2 | Centre de notifications (`/notifications`) | ✅ Fait — `/notifications` |
+| P2 | Messagerie — inbox (`/conversations`) | ✅ Fait — `/messages` ⚠️ fil temps réel = Firestore, à brancher (SDK + règles) |
+| P2 | Suivi livraison / handover | ⏸️ Différé — mobile-only (QR/GPS/photo) |
+| P2 | Litiges | ⏸️ Différé — **aucun endpoint voyageur** côté backend (litiges internes/admin) |
+| P3 | Assistant de prix (`/announcements/market-price`, `/config/commission-rate`) | ✅ Fait — `/assistant-prix` |
+| P4 | Parrainage (`/me/referral`) | ✅ Fait — `/parrainage` |
+| P4 | Profil public + badge Kilo Pro (`/users/{id}/profile-public`) | ✅ Fait — `/mon-profil` (aperçu auth-gated ; lien anonyme public = endpoint public backend à créer) |
+| P4 | Abonnements corridor | ⏸️ Différé — sémantique voyageur (« mes abonnés ») non couverte par les endpoints existants |
+
+**À faire ensuite (nécessite décisions / travail hors front dony-pro) :**
+1. Pousser `feat/dony-pro-roadmap` et ouvrir la/les PR(s).
+2. Vérifier en navigateur les flux de redirection Stripe (Connect onboarding + KYC Identity) avec des clés de test.
+3. Fil de messagerie temps réel : intégrer le SDK Firestore + règles de sécurité.
+4. Backend : endpoint litiges voyageur + endpoint profil public anonyme + endpoint « mes abonnés » si ces features sont souhaitées.
