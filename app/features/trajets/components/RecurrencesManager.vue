@@ -76,6 +76,8 @@ async function onCreate() {
       pickupAddress: { label: pickupPlace.value!.label, lat: pickupPlace.value!.lat, lng: pickupPlace.value!.lng },
       deliveryAddress: { label: dropoffPlace.value!.label, lat: dropoffPlace.value!.lat, lng: dropoffPlace.value!.lng },
       departureTime: time.value || null,
+      arrivalTime: tpl.arrivalTime,
+      cashAccepted: tpl.cashAccepted,
       weekdays: days.value.map((d) => (d ? '1' : '0')).join(''),
       horizonDays: 14,
       active: true,

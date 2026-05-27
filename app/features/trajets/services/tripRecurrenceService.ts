@@ -25,6 +25,8 @@ interface BackendTripRecurrence {
   pickupAddress: BackendAddress
   deliveryAddress: BackendAddress
   departureTime: string | null
+  arrivalTime: string | null
+  cashAccepted: boolean
   weekdays: string
   horizonDays: number
   active: boolean
@@ -38,6 +40,7 @@ function toPlace(a: BackendAddress) {
 function mapToRecurrence(r: BackendTripRecurrence): UserTripRecurrence {
   // L'API peut renvoyer "HH:mm:ss" — on tronque à "HH:mm".
   const time = r.departureTime ? r.departureTime.slice(0, 5) : null
+  const arrival = r.arrivalTime ? r.arrivalTime.slice(0, 5) : null
   return {
     id: r.id,
     sourceTemplateId: r.sourceTemplateId,
@@ -51,6 +54,8 @@ function mapToRecurrence(r: BackendTripRecurrence): UserTripRecurrence {
     pickupAddress: toPlace(r.pickupAddress),
     deliveryAddress: toPlace(r.deliveryAddress),
     departureTime: time,
+    arrivalTime: arrival,
+    cashAccepted: r.cashAccepted ?? false,
     weekdays: r.weekdays,
     horizonDays: r.horizonDays,
     active: r.active,
@@ -97,6 +102,8 @@ export function recurrenceToPayload(r: UserTripRecurrence): SaveTripRecurrencePa
     pickupAddress: { label: r.pickupAddress.label, lat: r.pickupAddress.lat, lng: r.pickupAddress.lng },
     deliveryAddress: { label: r.deliveryAddress.label, lat: r.deliveryAddress.lat, lng: r.deliveryAddress.lng },
     departureTime: r.departureTime,
+    arrivalTime: r.arrivalTime,
+    cashAccepted: r.cashAccepted,
     weekdays: r.weekdays,
     horizonDays: r.horizonDays,
     active: r.active,

@@ -21,6 +21,8 @@ interface BackendTripTemplate {
   availableKg: number
   pricePerKg: number
   acceptedCategories: string[] | null
+  cashAccepted: boolean
+  arrivalTime: string | null
 }
 
 function mapToTemplate(t: BackendTripTemplate): UserTripTemplate {
@@ -35,6 +37,8 @@ function mapToTemplate(t: BackendTripTemplate): UserTripTemplate {
     availableWeightKg: t.availableKg,
     pricePerKg: t.pricePerKg,
     acceptedCategories: t.acceptedCategories ?? [],
+    cashAccepted: t.cashAccepted ?? false,
+    arrivalTime: t.arrivalTime ? t.arrivalTime.slice(0, 5) : null,
   }
 }
 

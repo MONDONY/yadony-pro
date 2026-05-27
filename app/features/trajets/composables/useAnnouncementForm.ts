@@ -116,6 +116,8 @@ export function useAnnouncementForm() {
     form.availableWeightKg = t.availableWeightKg
     form.pricePerKg = t.pricePerKg
     form.acceptedCategories = [...t.acceptedCategories]
+    if ('cashAccepted' in t) form.cashAccepted = t.cashAccepted
+    if ('arrivalTime' in t) form.arrivalTime = t.arrivalTime ?? ''
   }
 
   /**
@@ -139,6 +141,8 @@ export function useAnnouncementForm() {
       availableKg: form.availableWeightKg,
       pricePerKg: form.pricePerKg,
       acceptedCategories: [...form.acceptedCategories],
+      cashAccepted: form.cashAccepted,
+      arrivalTime: form.arrivalTime || null,
     }
   }
 

@@ -25,6 +25,8 @@ const backendRecurrence = {
   pickupAddress: { label: '12 rue', lat: 48.86, lng: 2.33 },
   deliveryAddress: { label: 'CDG', lat: 49.01, lng: 2.55 },
   departureTime: '14:00:00',
+  arrivalTime: '18:30:00',
+  cashAccepted: true,
   weekdays: '0000100',
   horizonDays: 14,
   active: true,
@@ -46,6 +48,8 @@ describe('tripRecurrenceService', () => {
     expect(result[0].weekdays).toBe('0000100')
     expect(result[0].pickupAddress.label).toBe('12 rue')
     expect(result[0].acceptedCategories).toEqual(['Vêtements'])
+    expect(result[0].arrivalTime).toBe('18:30')
+    expect(result[0].cashAccepted).toBe(true)
   })
 
   it('list maps null acceptedCategories and null time', async () => {
@@ -65,7 +69,8 @@ describe('tripRecurrenceService', () => {
       availableKg: 23, pricePerKg: 8, acceptedCategories: ['Vêtements'],
       pickupAddress: { label: '12 rue', lat: 48.86, lng: 2.33 },
       deliveryAddress: { label: 'CDG', lat: 49.01, lng: 2.55 },
-      departureTime: '14:00', weekdays: '0000100', horizonDays: 14, active: true,
+      departureTime: '14:00', arrivalTime: '18:30', cashAccepted: true,
+      weekdays: '0000100', horizonDays: 14, active: true,
     }
     await tripRecurrenceService().create(payload)
     expect(mockApiFn).toHaveBeenCalledWith('/trip-recurrences', { method: 'POST', body: payload })
@@ -89,5 +94,7 @@ describe('tripRecurrenceService', () => {
     expect(payload.departureTime).toBe('14:00')
     expect(payload.pickupAddress).toEqual({ label: '12 rue', lat: 48.86, lng: 2.33 })
     expect(payload.active).toBe(true)
+    expect(payload.arrivalTime).toBe('18:30')
+    expect(payload.cashAccepted).toBe(true)
   })
 })

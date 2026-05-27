@@ -42,6 +42,8 @@ export interface UserTripTemplate {
   availableWeightKg: number
   pricePerKg: number
   acceptedCategories: string[]
+  cashAccepted: boolean
+  arrivalTime: string | null
 }
 
 export interface SaveTripTemplatePayload {
@@ -58,6 +60,8 @@ export interface SaveTripTemplatePayload {
   availableKg: number
   pricePerKg: number
   acceptedCategories: string[]
+  cashAccepted: boolean
+  arrivalTime: string | null
 }
 
 export interface UserTripRecurrence {
@@ -73,6 +77,8 @@ export interface UserTripRecurrence {
   pickupAddress: SelectedPlace
   deliveryAddress: SelectedPlace
   departureTime: string | null
+  arrivalTime: string | null
+  cashAccepted: boolean
   weekdays: string
   horizonDays: number
   active: boolean
@@ -91,6 +97,8 @@ export interface SaveTripRecurrencePayload {
   pickupAddress: { label: string; lat: number; lng: number }
   deliveryAddress: { label: string; lat: number; lng: number }
   departureTime: string | null
+  arrivalTime: string | null
+  cashAccepted: boolean
   weekdays: string
   horizonDays: number | null
   active: boolean

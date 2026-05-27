@@ -27,6 +27,8 @@ const backendTemplate = {
   availableKg: 23,
   pricePerKg: 8,
   acceptedCategories: ['Vêtements', 'Documents'],
+  cashAccepted: true,
+  arrivalTime: '18:30:00',
 }
 
 describe('tripTemplateService', () => {
@@ -47,6 +49,8 @@ describe('tripTemplateService', () => {
     expect(result[0].departureCity.lat).toBe(48.85)
     expect(result[0].availableWeightKg).toBe(23)
     expect(result[0].acceptedCategories).toEqual(['Vêtements', 'Documents'])
+    expect(result[0].cashAccepted).toBe(true)
+    expect(result[0].arrivalTime).toBe('18:30')
   })
 
   it('list maps null acceptedCategories to empty array', async () => {
@@ -68,6 +72,7 @@ describe('tripTemplateService', () => {
       arrivalCity: 'Dakar', arrivalLat: 14.71, arrivalLng: -17.46,
       transportMode: 'PLANE' as const, capacityUnit: 'SUITCASE_23KG' as const,
       availableKg: 23, pricePerKg: 8, acceptedCategories: ['Vêtements', 'Documents'],
+      cashAccepted: true, arrivalTime: '18:30',
     }
     const result = await svc.create(payload)
     expect(mockApiFn).toHaveBeenCalledWith('/trip-templates', { method: 'POST', body: payload })
@@ -84,6 +89,7 @@ describe('tripTemplateService', () => {
       arrivalCity: 'Abidjan', arrivalLat: null, arrivalLng: null,
       transportMode: 'PLANE' as const, capacityUnit: 'KG_FREE' as const,
       availableKg: 30, pricePerKg: 9, acceptedCategories: [],
+      cashAccepted: false, arrivalTime: null,
     }
     await svc.update('tpl-1', payload)
     expect(mockApiFn).toHaveBeenCalledWith('/trip-templates/tpl-1', { method: 'PUT', body: payload })
