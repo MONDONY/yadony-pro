@@ -60,12 +60,14 @@ async function onSetupPayout() {
 
 <template>
   <div class="max-w-3xl space-y-6">
-    <ProfileInfoCard
-      :display-name="auth.user?.displayName ?? null"
-      :phone-number="auth.user?.phoneNumber ?? null"
-      :is-pro-account="auth.isProAccount"
-      :roles="auth.user?.roles ?? []"
-    />
+    <ClientOnly>
+      <ProfileInfoCard
+        :display-name="auth.user?.displayName ?? null"
+        :phone-number="auth.user?.phoneNumber ?? null"
+        :is-pro-account="auth.isProAccount"
+        :roles="auth.user?.roles ?? []"
+      />
+    </ClientOnly>
 
     <KycStatusCard
       :label="kycDescriptor.label"
