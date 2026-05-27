@@ -7,6 +7,7 @@ import {
   MessageSquareDot,
   Search,
   BarChart3,
+  Settings,
   Plus,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
@@ -73,6 +74,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/activite" label="Mon Activité">
         <template #icon><BarChart3 class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/parametres" label="Paramètres">
+        <template #icon><Settings class="w-4 h-4" /></template>
       </NavItem>
     </nav>
 
