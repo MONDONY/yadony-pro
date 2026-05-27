@@ -1,8 +1,9 @@
 <!-- app/features/trajets/components/TripDetailBids.vue -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { CheckCircle, XCircle, Download, List, Table2, PackageCheck } from 'lucide-vue-next'
+import { CheckCircle, XCircle, Download, List, Table2, PackageCheck, QrCode, X } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import QrScanner from '@/features/trajets/components/QrScanner.vue'
 import type { TripBid } from '@/features/trajets/types/index'
 
 const props = defineProps<{
@@ -35,6 +36,23 @@ function closeConfirmModal() {
 function submitConfirmDelivery() {
   if (!confirmingBid.value || confirmCode.value.length !== 6) return
   emit('confirm-delivery', confirmingBid.value.id, confirmCode.value)
+}
+
+const scanningBid = ref<TripBid | null>(null)
+
+function openScan(bid: TripBid) {
+  scanningBid.value = bid
+}
+
+function closeScan() {
+  scanningBid.value = null
+}
+
+function onScanDetected() {
+  // Le QR du colis confirme la présence à la remise → on enregistre la prise en charge.
+  if (!scanningBid.value) return
+  emit('tracking-event', scanningBid.value.id, 'DEPART')
+  closeScan()
 }
 
 watch(() => props.loadingBidId, (newVal, oldVal) => {
@@ -352,15 +370,25 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
         </div>
 
         <!-- Action ACCEPTED : confirmer la prise en charge (DEPART) -->
-        <div v-else-if="bid.status === 'ACCEPTED'" class="pt-1">
+        <div v-else-if="bid.status === 'ACCEPTED'" class="flex items-center gap-2 pt-1">
           <button
             :disabled="props.loadingBidId === bid.id"
-            class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn bg-primary text-white text-xs font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
+            class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn bg-primary text-white text-xs font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
             :data-test="`handover-card-${bid.id}`"
             @click="emit('tracking-event', bid.id, 'DEPART')"
           >
             <PackageCheck class="w-3.5 h-3.5" />
             Confirmer la prise en charge
+          </button>
+          <button
+            :disabled="props.loadingBidId === bid.id"
+            class="flex items-center justify-center h-9 w-9 rounded-btn border border-primary/50 text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+            :data-test="`scan-card-${bid.id}`"
+            aria-label="Scanner le QR du colis"
+            title="Scanner le QR du colis"
+            @click="openScan(bid)"
+          >
+            <QrCode class="w-4 h-4" />
           </button>
         </div>
 
@@ -466,6 +494,36 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
             Confirmer
           </button>
         </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- Modale scan QR (prise en charge) -->
+  <Teleport to="body">
+    <div
+      v-if="scanningBid"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      data-test="scan-modal"
+      @click.self="closeScan"
+    >
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div class="relative w-full max-w-sm bg-surface border border-border rounded-card shadow-2xl p-6 space-y-4">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 class="font-semibold text-text text-sm">Scanner le QR du colis</h3>
+            <p class="text-xs text-text-muted mt-0.5">Colis de {{ scanningBid.senderName }}</p>
+          </div>
+          <button class="text-text-muted hover:text-text transition-colors p-1" data-test="scan-close" @click="closeScan">
+            <X class="w-4 h-4" />
+          </button>
+        </div>
+        <QrScanner @detected="onScanDetected" />
+        <button
+          class="w-full h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+          @click="closeScan"
+        >
+          Annuler
+        </button>
       </div>
     </div>
   </Teleport>
