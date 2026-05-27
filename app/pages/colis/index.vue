@@ -31,7 +31,6 @@ const {
   setStatusFilter,
   setTripFilter,
   setSearch,
-  setSenderSearch,
   toggleSelection,
   selectAll,
   clearSelection,
@@ -92,7 +91,6 @@ function onExportCsv() {
       :available-trips="availableTrips"
       @update:status-filter="setStatusFilter"
       @update:trip-id="setTripFilter"
-      @update:sender-search="setSenderSearch"
       @update:search="setSearch"
     />
 

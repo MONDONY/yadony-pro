@@ -39,6 +39,8 @@ const fakeBid = {
   history: [],
   createdAt: '2026-05-01T10:00:00Z',
   expiresAt: null,
+  trackingNumber: null,
+  trackingToken: null,
 }
 
 async function importUseBids() {
@@ -102,11 +104,11 @@ describe('useBids', () => {
     expect(mockListBids).toHaveBeenCalledWith(expect.objectContaining({ tripId: 'trip-99' }))
   })
 
-  it('setSenderSearch updates senderSearch for client-side filtering', async () => {
+  it('setSearch updates the search filter for client-side filtering', async () => {
     const useBids = await importUseBids()
-    const { filters, setSenderSearch } = useBids()
-    setSenderSearch('Alice')
-    expect(filters.value.senderSearch).toBe('Alice')
+    const { filters, setSearch } = useBids()
+    setSearch('Alice')
+    expect(filters.value.search).toBe('Alice')
   })
 
   it('sets error message when fetchBids rejects', async () => {
@@ -187,7 +189,7 @@ describe('useBids', () => {
     await fetchBids()
     selectedIds.value = ['bid-1']
     const csv = exportCsv()
-    expect(csv).toContain('id,expéditeur,corridor,date départ,poids (kg),statut,revenus (€)')
+    expect(csv).toContain('id,n°suivi,expéditeur,corridor,date départ,poids (kg),statut,revenus (€)')
     expect(csv).toContain('bid-1')
     expect(csv).toContain('Alice')
     expect(csv).toContain('Paris → Dakar')

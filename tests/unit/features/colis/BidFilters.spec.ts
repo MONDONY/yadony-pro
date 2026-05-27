@@ -13,7 +13,7 @@ vi.mock('@/lib/utils', () => ({
 const defaultFilters = {
   statusFilter: 'TOUS' as const,
   tripId: null,
-  senderSearch: '',
+  search: '',
 }
 
 async function mountBidFilters(props = {}) {
@@ -51,11 +51,11 @@ describe('BidFilters', () => {
     expect(wrapper.emitted('update:statusFilter')?.[0]).toEqual(['ACCEPTED'])
   })
 
-  it('emits update:senderSearch on input', async () => {
+  it('emits update:search on input', async () => {
     const wrapper = await mountBidFilters()
-    const input = wrapper.find('[data-test="filter-sender-search"]')
+    const input = wrapper.find('[data-test="filter-search"]')
     await input.setValue('Alice')
-    expect(wrapper.emitted('update:senderSearch')?.[0]).toEqual(['Alice'])
+    expect(wrapper.emitted('update:search')?.[0]).toEqual(['Alice'])
   })
 
   it('renders trip options when availableTrips is provided', async () => {
