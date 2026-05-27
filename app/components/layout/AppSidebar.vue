@@ -9,6 +9,7 @@ import {
   BarChart3,
   Tags,
   Bell,
+  Inbox,
   Settings,
   Plus,
 } from 'lucide-vue-next'
@@ -79,6 +80,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/tarifs" label="Grille tarifaire">
         <template #icon><Tags class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/messages" label="Messagerie">
+        <template #icon><Inbox class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/notifications" label="Notifications">
         <template #icon><Bell class="w-4 h-4" /></template>
