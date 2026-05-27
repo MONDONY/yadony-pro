@@ -12,6 +12,7 @@ import {
   Inbox,
   Calculator,
   Gift,
+  UserCircle,
   Settings,
   Plus,
 } from 'lucide-vue-next'
@@ -94,6 +95,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/parrainage" label="Parrainage">
         <template #icon><Gift class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/mon-profil" label="Mon profil public">
+        <template #icon><UserCircle class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/parametres" label="Paramètres">
         <template #icon><Settings class="w-4 h-4" /></template>
