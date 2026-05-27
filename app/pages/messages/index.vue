@@ -20,7 +20,7 @@ onMounted(() => {
 <template>
   <div class="max-w-2xl space-y-4">
     <p class="text-sm text-text-muted">
-      Le fil de discussion en temps réel se poursuit dans l'application mobile dony.
+      Clique une conversation pour ouvrir le fil et discuter en temps réel.
     </p>
 
     <section class="bg-surface border border-border rounded-card p-3">

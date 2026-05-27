@@ -38,4 +38,22 @@ describe('conversationsService', () => {
     await svc.unarchive('c1')
     expect(mockApiFn).toHaveBeenCalledWith('/conversations/c1/unarchive', { method: 'POST' })
   })
+
+  it('getById GETs /conversations/{id}', async () => {
+    mockApiFn.mockResolvedValue({ id: 'c1', firestoreConversationId: 'f1' })
+    const svc = (await importService())()
+    const result = await svc.getById('c1')
+    expect(mockApiFn).toHaveBeenCalledWith('/conversations/c1')
+    expect(result.firestoreConversationId).toBe('f1')
+  })
+
+  it('updateLastMessage POSTs the preview to /conversations/{id}/last-message', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const svc = (await importService())()
+    await svc.updateLastMessage('c1', 'Salut')
+    expect(mockApiFn).toHaveBeenCalledWith('/conversations/c1/last-message', {
+      method: 'POST',
+      body: { preview: 'Salut' },
+    })
+  })
 })
