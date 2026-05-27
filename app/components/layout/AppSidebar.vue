@@ -11,6 +11,7 @@ import {
   Bell,
   Inbox,
   Calculator,
+  Gift,
   Settings,
   Plus,
 } from 'lucide-vue-next'
@@ -90,6 +91,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/notifications" label="Notifications">
         <template #icon><Bell class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/parrainage" label="Parrainage">
+        <template #icon><Gift class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/parametres" label="Paramètres">
         <template #icon><Settings class="w-4 h-4" /></template>
