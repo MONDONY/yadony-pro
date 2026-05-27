@@ -2,8 +2,10 @@
 import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBusinessPreferences } from '@/features/parametres/composables/useBusinessPreferences'
+import { useKyc } from '@/features/kyc/composables/useKyc'
 import ProfileInfoCard from '@/features/parametres/components/ProfileInfoCard.vue'
 import BusinessPreferencesForm from '@/features/parametres/components/BusinessPreferencesForm.vue'
+import KycStatusCard from '@/features/kyc/components/KycStatusCard.vue'
 import type { BusinessPreferences } from '@/features/parametres/types/index'
 
 definePageMeta({
@@ -15,13 +17,27 @@ definePageMeta({
 const auth = useAuthStore()
 const { preferences, isLoading, isSaving, error, savedAt, fetchPreferences, savePreferences } =
   useBusinessPreferences()
+const {
+  descriptor: kycDescriptor,
+  isStarting: kycStarting,
+  fetchStatus: fetchKycStatus,
+  startVerification: startKycVerification,
+} = useKyc()
 
 onMounted(() => {
   fetchPreferences()
+  fetchKycStatus()
 })
 
 async function onSubmit(next: BusinessPreferences) {
   await savePreferences(next)
+}
+
+async function onVerifyKyc() {
+  const url = await startKycVerification()
+  if (url && import.meta.client) {
+    window.open(url, '_blank', 'noopener')
+  }
 }
 </script>
 
@@ -32,6 +48,14 @@ async function onSubmit(next: BusinessPreferences) {
       :phone-number="auth.user?.phoneNumber ?? null"
       :is-pro-account="auth.isProAccount"
       :roles="auth.user?.roles ?? []"
+    />
+
+    <KycStatusCard
+      :label="kycDescriptor.label"
+      :tone="kycDescriptor.tone"
+      :can-verify="kycDescriptor.canVerify"
+      :is-starting="kycStarting"
+      @verify="onVerifyKyc"
     />
 
     <section class="bg-surface border border-border rounded-card p-5">
@@ -45,7 +69,7 @@ async function onSubmit(next: BusinessPreferences) {
       </div>
 
       <template v-else>
-        <p v-if="error" class="mb-4 text-sm text-error" data-test="prefs-error">{{ error }}</p>
+        <p v-if="error" class="mb-4 text-sm text-danger" data-test="prefs-error">{{ error }}</p>
         <p v-else-if="savedAt" class="mb-4 text-sm text-success" data-test="prefs-saved">
           Préférences enregistrées.
         </p>
