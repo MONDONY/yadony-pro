@@ -100,10 +100,10 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <a
-        href="/trajets/nouveau"
+      <NuxtLink
+        to="/trajets/nouvelle-annonce"
         class="inline-flex shrink-0 items-center gap-1 bg-primary text-on-primary text-xs font-semibold px-3 py-2.5 rounded-btn shadow-btn hover:bg-primary-hover transition-colors whitespace-nowrap"
-      ><Plus class="h-3.5 w-3.5" aria-hidden="true" /> Nouveau</a>
+      ><Plus class="h-3.5 w-3.5" aria-hidden="true" /> Nouveau</NuxtLink>
     </div>
     <p class="text-xs text-text-muted mt-1.5"><span class="font-mono tabular-nums">{{ totalCount }}</span> demande{{ totalCount > 1 ? 's' : '' }} trouvée{{ totalCount > 1 ? 's' : '' }}</p>
   </div>

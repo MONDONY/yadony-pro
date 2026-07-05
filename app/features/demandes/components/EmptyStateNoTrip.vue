@@ -14,14 +14,14 @@ defineProps<{
     description="Les demandes compatibles apparaissent ici dès que tu as un trajet actif. Tu peux aussi explorer les demandes et créer un trajet depuis une demande qui t'intéresse."
   >
     <div class="flex flex-col items-center">
-      <a
+      <NuxtLink
         data-test="empty-create-trip-btn"
-        href="/trajets/nouveau"
+        to="/trajets/nouvelle-annonce"
         class="inline-flex items-center gap-1.5 bg-primary text-on-primary text-sm font-semibold px-5 py-2.5 rounded-btn shadow-btn hover:bg-primary-hover transition-colors"
       >
         <Plus class="h-4 w-4" aria-hidden="true" />
         Créer un trajet
-      </a>
+      </NuxtLink>
       <div v-if="totalOpenRequests && totalOpenRequests > 0" class="mt-5 pt-5 border-t border-border w-full max-w-xs">
         <p class="inline-flex items-center gap-1 text-xs text-text-muted">
           ou explore les
