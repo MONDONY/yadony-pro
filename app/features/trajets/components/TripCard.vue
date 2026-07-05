@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Plane, Car, Bus, Bike, Footprints, Clock, Euro, ChevronRight } from 'lucide-vue-next'
+import { Plane, Car, Bus, Footprints, Clock, ChevronRight } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { Trip, TransportMode } from '@/features/trajets/types/index'
 
 const props = defineProps<Trip>()
@@ -12,9 +13,9 @@ const fillPct = computed(() => {
 })
 
 const barColorClass = computed(() => {
-  if (fillPct.value >= 70) return 'bg-green-500'
-  if (fillPct.value >= 30) return 'bg-amber-500'
-  return 'bg-red-500'
+  if (fillPct.value >= 70) return 'bg-success'
+  if (fillPct.value >= 30) return 'bg-warning'
+  return 'bg-danger'
 })
 
 const transportIcon: Record<TransportMode, typeof Plane> = {
@@ -41,52 +42,49 @@ const statusLabel: Record<string, string> = {
   CANCELLED: 'Annulé',
 }
 
-const statusBadgeClass: Record<string, string> = {
-  ACTIVE: 'bg-green-500/20 text-green-400',
-  FULL: 'bg-[#0B5FFF]/20 text-[#0B5FFF]',
-  IN_PROGRESS: 'bg-amber-500/20 text-amber-400',
-  COMPLETED: 'bg-[#A8A294]/20 text-[#A8A294]',
-  CANCELLED: 'bg-[#1E2A4A] text-[#A8A294]',
+const statusVariant: Record<string, BadgeVariants['variant']> = {
+  ACTIVE: 'success',
+  FULL: 'info',
+  IN_PROGRESS: 'warning',
+  COMPLETED: 'neutral',
+  CANCELLED: 'neutral',
 }
 </script>
 
 <template>
-  <div class="bg-surface border border-border rounded-card p-5 flex flex-col gap-4 hover:border-primary/50 transition-colors">
-    <!-- Header: corridor + status badge -->
+  <div class="flex flex-col gap-4 rounded-el border border-border bg-surface p-5 shadow-card transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:shadow-pop motion-reduce:hover:translate-y-0">
+    <!-- Header : corridor + statut -->
     <div class="flex items-start justify-between gap-3">
-      <div class="flex items-center gap-2 min-w-0">
-        <component :is="modeIcon" class="w-4 h-4 text-primary shrink-0" />
-        <h3 class="font-bold text-text truncate">
+      <div class="flex min-w-0 items-center gap-2">
+        <component :is="modeIcon" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        <h3 class="truncate font-semibold text-text">
           {{ departureCity.label }}
-          <span class="text-text-muted mx-1">→</span>
+          <span class="mx-1 text-primary">→</span>
           {{ arrivalCity.label }}
         </h3>
       </div>
-      <span :class="cn('text-xs font-medium px-2 py-0.5 rounded-full shrink-0', statusBadgeClass[status])">
-        {{ statusLabel[status] }}
-      </span>
+      <Badge :variant="statusVariant[status]" size="sm">{{ statusLabel[status] }}</Badge>
     </div>
 
-    <!-- Date + price -->
+    <!-- Date + prix -->
     <div class="flex items-center gap-4 text-sm text-text-muted">
-      <span class="flex items-center gap-1">
-        <Clock class="w-3.5 h-3.5" />
+      <span class="flex items-center gap-1.5">
+        <Clock class="h-3.5 w-3.5" aria-hidden="true" />
         {{ formattedDate }}
         <template v-if="departureTime"> · {{ departureTime }}</template>
       </span>
-      <span class="flex items-center gap-1 text-text font-medium">
-        <Euro class="w-3.5 h-3.5 text-accent" />
-        {{ pricePerKg }}/kg
+      <span class="font-medium text-text">
+        <span class="font-mono tabular-nums">{{ pricePerKg }}</span> €/kg
       </span>
     </div>
 
-    <!-- Capacity bar -->
+    <!-- Capacité -->
     <div class="space-y-1.5">
       <div class="flex justify-between text-xs text-text-muted">
         <span>Capacité utilisée</span>
-        <span class="text-text">{{ usedWeightKg }} / {{ availableWeightKg }} kg</span>
+        <span class="font-mono tabular-nums text-text">{{ usedWeightKg }} / {{ availableWeightKg }} kg</span>
       </div>
-      <div class="h-1.5 w-full bg-border rounded-full overflow-hidden">
+      <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-el">
         <div
           data-test="capacity-bar"
           :class="cn('h-full rounded-full transition-all', barColorClass)"
@@ -95,25 +93,25 @@ const statusBadgeClass: Record<string, string> = {
       </div>
       <span
         v-if="capacityUnit && capacityUnit !== 'KG_FREE'"
-        class="inline-flex items-center gap-1 text-xs text-text-muted"
+        class="inline-flex items-center gap-1 text-xs text-text-subtle"
       >
         {{ capacityUnit === 'SUITCASE_23KG' ? '1 valise 23 kg' : '1 valise 32 kg' }}
       </span>
     </div>
 
-    <!-- Counters -->
+    <!-- Compteurs -->
     <div class="grid grid-cols-3 gap-2">
-      <div class="bg-bg rounded-btn px-3 py-2 text-center">
-        <p class="text-base font-bold text-text">{{ confirmedParcelCount }}</p>
-        <p class="text-xs text-text-muted">Colis confirmés</p>
+      <div class="rounded-el bg-surface-el px-3 py-2 text-center">
+        <p class="font-mono text-base font-semibold tabular-nums text-text">{{ confirmedParcelCount }}</p>
+        <p class="mt-0.5 text-xs text-text-subtle">Colis confirmés</p>
       </div>
-      <div class="bg-bg rounded-btn px-3 py-2 text-center">
-        <p class="text-base font-bold text-text">{{ pendingBidCount }}</p>
-        <p class="text-xs text-text-muted">Bids en attente</p>
+      <div class="rounded-el bg-surface-el px-3 py-2 text-center">
+        <p class="font-mono text-base font-semibold tabular-nums text-text">{{ pendingBidCount }}</p>
+        <p class="mt-0.5 text-xs text-text-subtle">Bids en attente</p>
       </div>
-      <div class="bg-bg rounded-btn px-3 py-2 text-center">
-        <p class="text-base font-bold text-accent">{{ reservedRevenueEuros }}€</p>
-        <p class="text-xs text-text-muted">Revenus réservés</p>
+      <div class="rounded-el bg-surface-el px-3 py-2 text-center">
+        <p class="font-mono text-base font-semibold tabular-nums text-primary">{{ reservedRevenueEuros }} €</p>
+        <p class="mt-0.5 text-xs text-text-subtle">Revenus réservés</p>
       </div>
     </div>
 
@@ -122,22 +120,22 @@ const statusBadgeClass: Record<string, string> = {
       <NuxtLink
         :to="`/trajets/${id}?tab=bids`"
         data-test="btn-voir-bids"
-        class="flex-1 h-8 text-xs font-medium rounded-btn border border-border text-text-muted hover:text-text hover:border-primary/50 transition-colors flex items-center justify-center"
+        class="flex h-9 flex-1 items-center justify-center rounded-btn border border-border-strong text-xs font-medium text-text transition-colors hover:bg-surface-el"
       >
         Voir bids
       </NuxtLink>
       <NuxtLink
         :to="`/trajets/${id}/modifier`"
         data-test="btn-modifier"
-        class="flex-1 h-8 text-xs font-medium rounded-btn border border-border text-text-muted hover:text-text hover:border-primary/50 transition-colors flex items-center justify-center"
+        class="flex h-9 flex-1 items-center justify-center rounded-btn border border-border-strong text-xs font-medium text-text transition-colors hover:bg-surface-el"
       >
         Modifier
       </NuxtLink>
       <NuxtLink
         :to="`/trajets/${id}`"
-        class="flex items-center gap-1 h-8 px-3 text-xs font-medium rounded-btn bg-primary text-white hover:bg-primary-hover transition-colors"
+        class="flex h-9 items-center gap-1 rounded-btn bg-primary px-3 text-xs font-medium text-on-primary shadow-btn transition-colors hover:bg-primary-hover"
       >
-        Gérer <ChevronRight class="w-3.5 h-3.5" />
+        Gérer <ChevronRight class="h-3.5 w-3.5" aria-hidden="true" />
       </NuxtLink>
     </div>
   </div>

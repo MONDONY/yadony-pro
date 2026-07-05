@@ -29,7 +29,7 @@ const deltaIcon = computed(() => (props.trend === 'down' ? ArrowDownRight : Arro
 
 <template>
   <div :class="cn('flex flex-col gap-2 rounded-el bg-surface border border-border shadow-card p-[18px]', props.class)">
-    <p class="text-[11px] font-medium text-text-muted tracking-wide">{{ label }}</p>
+    <p class="text-2xs font-medium text-text-muted tracking-wide">{{ label }}</p>
     <p class="font-mono text-2xl font-semibold text-text tabular-nums tracking-tight leading-none">{{ value }}</p>
     <div v-if="trend || sub || $slots.spark" class="flex items-center gap-2 mt-0.5">
       <span
@@ -37,6 +37,7 @@ const deltaIcon = computed(() => (props.trend === 'down' ? ArrowDownRight : Arro
         :class="cn('inline-flex items-center gap-0.5 font-mono text-xs tabular-nums', deltaClass)"
       >
         <component :is="deltaIcon" class="w-3.5 h-3.5" aria-hidden="true" />
+        <span class="sr-only">{{ trend === 'up' ? 'en hausse' : 'en baisse' }}<template v-if="trendValue"> de </template></span>
         <span v-if="trendValue">{{ trendValue }}</span>
       </span>
       <span v-if="sub" class="text-xs text-text-subtle">{{ sub }}</span>

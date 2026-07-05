@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Package, Plane, Search } from 'lucide-vue-next'
+import { Package } from 'lucide-vue-next'
 import { Card, CardHeader, CardTitle, CardBody, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -145,13 +145,13 @@ const query = ref('')
           <Card class="mt-4">
             <CardBody class="flex flex-col gap-4">
               <Field label="Rechercher un expéditeur" hint="Nom ou référence de colis">
-                <template #default="{ id }">
-                  <Input :id="id" v-model="query" placeholder="Aïcha, KS-2048…" />
+                <template #default="{ id, describedBy }">
+                  <Input :id="id" v-model="query" :aria-describedby="describedBy" placeholder="Aïcha, KS-2048…" />
                 </template>
               </Field>
               <Field label="Prix par kg" error="Le prix doit être supérieur à 0.">
-                <template #default="{ id, invalid }">
-                  <Input :id="id" :invalid="invalid" model-value="0" />
+                <template #default="{ id, invalid, describedBy }">
+                  <Input :id="id" :invalid="invalid" :aria-describedby="describedBy" model-value="0" />
                 </template>
               </Field>
             </CardBody>
@@ -174,10 +174,6 @@ const query = ref('')
 
       <footer class="mt-16 border-t border-border pt-8 text-sm text-text-subtle">
         Geist + Geist Mono · accent #1E49C7 · ombres en 2 couches · zéro emoji.
-        <span class="ml-1 inline-flex items-center gap-1 align-middle">
-          <Plane class="h-3.5 w-3.5" :stroke-width="1.75" />
-          <Search class="h-3.5 w-3.5" :stroke-width="1.75" />
-        </span>
       </footer>
     </div>
   </div>

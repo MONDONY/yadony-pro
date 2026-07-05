@@ -11,11 +11,11 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-white shadow-btn hover:bg-primary-hover active:translate-y-px',
+        default: 'bg-primary text-on-primary shadow-btn hover:bg-primary-hover active:translate-y-px',
         subtle:  'bg-primary/10 text-primary hover:bg-primary/15',
         ghost:   'text-text-muted hover:bg-surface-el hover:text-text',
         outline: 'border border-border-strong bg-transparent text-text hover:bg-surface-el',
-        danger:  'bg-danger text-white hover:brightness-105 active:translate-y-px',
+        danger:  'bg-danger text-on-danger hover:bg-danger-hover active:translate-y-px',
       },
       size: {
         default: 'h-10 px-4',

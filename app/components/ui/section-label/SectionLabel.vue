@@ -7,7 +7,7 @@ defineProps<{ class?: HTMLAttributes['class']; as?: string }>()
 <template>
   <component
     :is="$props.as ?? 'p'"
-    :class="cn('text-[11px] font-semibold uppercase tracking-[0.12em] text-text-subtle', $props.class)"
+    :class="cn('text-2xs font-semibold uppercase tracking-[0.12em] text-text-subtle', $props.class)"
   >
     <slot />
   </component>

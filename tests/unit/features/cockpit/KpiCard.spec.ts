@@ -3,9 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 vi.mock('lucide-vue-next', () => ({
-  TrendingUp: { template: '<svg class="trending-up" />' },
-  TrendingDown: { template: '<svg class="trending-down" />' },
-  Minus: { template: '<svg class="minus" />' },
+  ArrowUpRight: { template: '<svg class="arrow-up" />' },
+  ArrowDownRight: { template: '<svg class="arrow-down" />' },
 }))
 
 vi.mock('@/lib/utils', () => ({
@@ -32,24 +31,27 @@ describe('KpiCard', () => {
 
   it('does not render subLabel or trend row when neither is provided', async () => {
     const wrapper = await mountKpiCard({ id: 'colis', label: 'Colis', value: '12' })
-    // No div with sub/trend content should appear
-    const text = wrapper.text()
-    expect(text).not.toContain('ce mois')
+    expect(wrapper.text()).not.toContain('ce mois')
+    expect(wrapper.find('.arrow-up').exists()).toBe(false)
   })
 
-  it('renders TrendingUp icon for up trend', async () => {
-    const wrapper = await mountKpiCard({ id: 'rating', label: 'Note', value: '4.8 / 5', trend: 'up' })
-    expect(wrapper.find('.trending-up').exists()).toBe(true)
+  it('renders an up arrow (success) for up trend, with an accessible direction', async () => {
+    const wrapper = await mountKpiCard({ id: 'rating', label: 'Note', value: '4.8 / 5', trend: 'up', trendValue: '+12%' })
+    expect(wrapper.find('.arrow-up').exists()).toBe(true)
+    expect(wrapper.html()).toContain('text-success')
+    expect(wrapper.text()).toContain('en hausse')
   })
 
-  it('renders TrendingDown icon for down trend', async () => {
+  it('renders a down arrow (danger) for down trend', async () => {
     const wrapper = await mountKpiCard({ id: 'rating', label: 'Note', value: '3.5 / 5', trend: 'down' })
-    expect(wrapper.find('.trending-down').exists()).toBe(true)
+    expect(wrapper.find('.arrow-down').exists()).toBe(true)
+    expect(wrapper.html()).toContain('text-danger')
   })
 
-  it('renders Minus icon for neutral trend', async () => {
+  it('renders no delta row for neutral trend (calm by design)', async () => {
     const wrapper = await mountKpiCard({ id: 'colis', label: 'Colis', value: '12', trend: 'neutral' })
-    expect(wrapper.find('.minus').exists()).toBe(true)
+    expect(wrapper.find('.arrow-up').exists()).toBe(false)
+    expect(wrapper.find('.arrow-down').exists()).toBe(false)
   })
 
   it('renders trendValue when provided', async () => {
@@ -59,8 +61,7 @@ describe('KpiCard', () => {
 
   it('does not render trend icon when no trend is set', async () => {
     const wrapper = await mountKpiCard({ id: 'trips', label: 'Trajets', value: '3 / 5' })
-    expect(wrapper.find('.trending-up').exists()).toBe(false)
-    expect(wrapper.find('.trending-down').exists()).toBe(false)
-    expect(wrapper.find('.minus').exists()).toBe(false)
+    expect(wrapper.find('.arrow-up').exists()).toBe(false)
+    expect(wrapper.find('.arrow-down').exists()).toBe(false)
   })
 })

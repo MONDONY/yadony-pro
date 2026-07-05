@@ -32,19 +32,28 @@ export default {
           DEFAULT: 'rgb(var(--primary-rgb) / <alpha-value>)',
           hover:   'var(--primary-h)',
         },
+        // Encre posée sur l'accent (boutons pleins) — lisible AA dans les 2 thèmes.
+        'on-primary': 'rgb(var(--on-primary-rgb) / <alpha-value>)',
+        'on-danger':  'rgb(var(--on-danger-rgb) / <alpha-value>)',
         text: {
-          DEFAULT: 'var(--text)',
-          muted:   'var(--muted)',
-          subtle:  'var(--subtle)',
+          DEFAULT: 'rgb(var(--text-rgb) / <alpha-value>)',
+          muted:   'rgb(var(--muted-rgb) / <alpha-value>)',
+          subtle:  'rgb(var(--subtle-rgb) / <alpha-value>)',
         },
         success: 'rgb(var(--success-rgb) / <alpha-value>)',
         warning: 'rgb(var(--warning-rgb) / <alpha-value>)',
-        danger:  'rgb(var(--danger-rgb) / <alpha-value>)',
+        danger: {
+          DEFAULT: 'rgb(var(--danger-rgb) / <alpha-value>)',
+          hover:   'var(--danger-h)',
+        },
       },
       fontFamily: {
         display: ['Geist', 'system-ui', 'sans-serif'],
         sans:    ['Geist', 'system-ui', 'sans-serif'],
-        mono:    ['"Geist Mono"', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
+        mono:    ['var(--font-mono)'],
+      },
+      fontSize: {
+        '2xs': ['11px', { lineHeight: '1rem' }],
       },
       borderRadius: {
         card:  '16px',

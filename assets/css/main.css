@@ -37,10 +37,23 @@
   --primary-h:     #1A3FAD;
   --text:          #17181C;
   --muted:         #5B606C;
-  --subtle:        #8A8E98;
+  --subtle:        #6F747E;   /* AA sur blanc (~4.7:1), reste plus clair que --muted */
   --success:       #1B7A57;
-  --warning:       #A9781E;
+  --warning:       #8A6210;   /* AA sur le fill 10 % (~4.8:1) */
   --danger:        #A83A32;
+  --danger-h:      #8F2F28;
+
+  /* Encre posée SUR l'accent (boutons pleins) — thème-aware. */
+  --on-primary:    #FFFFFF;
+  --on-danger:     #FFFFFF;
+
+  /* Alias legacy : l'ancien --accent terracotta pointe vers l'accent unique.
+     Nécessaire aux inline-styles (landing, login) qui lisent var(--accent). */
+  --accent:        var(--primary);
+  --accent-h:      var(--primary-h);
+
+  /* Pile monospace unique (consommée par .font-num, DataTable, Tailwind). */
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* Canaux RGB (modificateurs d'opacité Tailwind : bg-primary/10, etc.) */
   --bg-rgb:            250 250 249;
@@ -51,9 +64,13 @@
   --primary-rgb:       30 73 199;
   --text-rgb:          23 24 28;
   --muted-rgb:         91 96 108;
+  --subtle-rgb:        111 116 126;
   --success-rgb:       27 122 87;
-  --warning-rgb:       169 120 30;
+  --warning-rgb:       138 98 16;
   --danger-rgb:        168 58 50;
+  --on-primary-rgb:    255 255 255;
+  --on-danger-rgb:     255 255 255;
+  --accent-rgb:        30 73 199;
 
   /* Élévation (2 couches — la signature Comptoir) */
   --elev-card: 0 1px 2px rgba(20, 25, 45, .06), 0 12px 28px -12px rgba(20, 25, 45, .18);
@@ -75,10 +92,18 @@
   --primary-h:     #8AA8FF;
   --text:          #F3F2EF;
   --muted:         #A0A4AD;
-  --subtle:        #71757E;
+  --subtle:        #8C9099;   /* AA (~5.6:1) sur --surface, clair sur --bg aussi */
   --success:       #3FB488;
   --warning:       #E0A94A;
   --danger:        #E5695F;
+  --danger-h:      #EF7E75;
+
+  /* Sur l'accent clair du dark, l'encre foncée est lisible (blanc échouerait AA). */
+  --on-primary:    #0C0D10;
+  --on-danger:     #17181C;
+
+  --accent:        var(--primary);
+  --accent-h:      var(--primary-h);
 
   --bg-rgb:            12 13 16;
   --surface-rgb:       21 23 28;
@@ -88,12 +113,18 @@
   --primary-rgb:       110 147 255;
   --text-rgb:          243 242 239;
   --muted-rgb:         160 164 173;
+  --subtle-rgb:        140 144 153;
   --success-rgb:       63 180 136;
   --warning-rgb:       224 169 74;
   --danger-rgb:        229 105 95;
+  --on-primary-rgb:    12 13 16;
+  --on-danger-rgb:     23 24 28;
+  --accent-rgb:        110 147 255;
 
-  --elev-card: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 30px -12px rgba(0, 0, 0, .55);
-  --elev-pop:  0 2px 4px rgba(0, 0, 0, .45), 0 22px 44px -16px rgba(0, 0, 0, .6);
+  /* Élévation en sombre : un liseré clair interne « porte » la carte (les ombres
+     noires seules sont invisibles sur fond sombre). */
+  --elev-card: inset 0 1px 0 rgba(255, 255, 255, .05), 0 1px 2px rgba(0, 0, 0, .4), 0 12px 30px -12px rgba(0, 0, 0, .55);
+  --elev-pop:  inset 0 1px 0 rgba(255, 255, 255, .06), 0 2px 4px rgba(0, 0, 0, .45), 0 22px 44px -16px rgba(0, 0, 0, .6);
   --elev-btn:  0 1px 2px rgba(0, 0, 0, .5);
 }
 
@@ -116,7 +147,7 @@ html, body, #__nuxt {
 /* Chiffres, montants, données : Geist Mono tabular. */
 .font-num,
 .tabular {
-  font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 

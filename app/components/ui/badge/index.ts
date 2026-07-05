@@ -19,7 +19,7 @@ export const badgeVariants = cva(
       },
       size: {
         default: 'px-2.5 py-1',
-        sm:      'px-2 py-0.5 text-[11px]',
+        sm:      'px-2 py-0.5 text-2xs',
       },
       dot: {
         true: '',

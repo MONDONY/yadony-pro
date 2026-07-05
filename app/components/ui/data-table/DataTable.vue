@@ -49,7 +49,7 @@ defineProps<{ class?: HTMLAttributes['class'] }>()
 .dony-table :deep(th.num),
 .dony-table :deep(td.num) {
   text-align: right;
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 </style>
