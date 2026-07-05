@@ -19,6 +19,16 @@ describe('cockpitService', () => {
     setActivePinia(createPinia())
   })
 
+  it('fetchStats calls GET /travelers/me/stats', async () => {
+    const fakeStats = { totalRevenue: 2000, monthlyRevenue: 420.5, acceptanceRate: 0.67, ratingCount: 7 }
+    mockApiFn.mockResolvedValue(fakeStats)
+    const { cockpitService } = await import('@/features/cockpit/services/cockpitService')
+    const svc = cockpitService()
+    const result = await svc.fetchStats()
+    expect(mockApiFn).toHaveBeenCalledWith('/travelers/me/stats')
+    expect(result).toEqual(fakeStats)
+  })
+
   it('fetchAnalytics calls GET /travelers/me/analytics', async () => {
     const fakeAnalytics = {
       revenueNetCurrentMonth: 420.5,

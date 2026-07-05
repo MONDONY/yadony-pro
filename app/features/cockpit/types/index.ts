@@ -20,6 +20,28 @@ export interface CalendarStats {
   totalTripsThisMonth: number
 }
 
+export interface TravelerStatsDestination {
+  from: string
+  to: string
+  count: number
+}
+
+/** Vue d'ensemble tout-temps du voyageur — miroir de TravelerStatsDto côté back. */
+export interface TravelerStats {
+  monthlyRevenue: number
+  totalRevenue: number
+  monthlyTrips: number
+  monthlyParcelsDelivered: number
+  acceptanceRate: number // ratio 0..1
+  averageRating: number
+  topDestinations: TravelerStatsDestination[]
+  totalTripsCompleted: number
+  activeTrips: number
+  totalParcelsDelivered: number
+  parcelsInTransit: number
+  ratingCount: number
+}
+
 export interface UrgentAction {
   id: string
   severity: UrgentActionSeverity
