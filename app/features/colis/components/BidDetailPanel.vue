@@ -149,7 +149,10 @@ function formatHistoryDate(iso: string): string {
             </div>
             <div>
               <dt class="text-xs text-text-muted">Poids</dt>
-              <dd class="text-sm text-text font-medium mt-0.5"><span class="font-mono tabular-nums">{{ bid.weightKg }}</span> kg</dd>
+              <dd class="text-sm text-text font-medium mt-0.5">
+                <template v-if="bid.weightKg !== null"><span class="font-mono tabular-nums">{{ bid.weightKg }}</span> kg</template>
+                <span v-else class="text-text-muted">—</span>
+              </dd>
             </div>
             <div>
               <dt class="text-xs text-text-muted">Valeur déclarée</dt>
@@ -225,10 +228,12 @@ function formatHistoryDate(iso: string): string {
           <SectionLabel as="h3" class="mb-3">Paiement</SectionLabel>
           <div class="flex items-center justify-between bg-bg rounded-el px-4 py-3 border border-border">
             <span class="text-sm text-text-muted">{{ paymentLabel[bid.paymentStatus] }}</span>
-            <span class="text-sm font-mono font-bold tabular-nums text-primary">{{ bid.paymentAmountEuros.toFixed(2) }} €</span>
+            <span class="text-sm font-mono font-bold tabular-nums text-primary">
+              {{ bid.paymentAmountEuros !== null ? `${bid.paymentAmountEuros.toFixed(2)} €` : '—' }}
+            </span>
           </div>
           <p class="text-xs text-text-muted mt-2">
-            Vos revenus nets (après commission 12 %) : <span class="text-primary font-mono font-semibold tabular-nums">{{ bid.earningsEuros.toFixed(2) }} €</span>
+            Vos revenus nets (après commission 12 %) : <span class="text-primary font-mono font-semibold tabular-nums">{{ bid.earningsEuros !== null ? `${bid.earningsEuros.toFixed(2)} €` : '—' }}</span>
           </p>
         </section>
 

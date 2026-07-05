@@ -129,7 +129,8 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
 
     <!-- Weight -->
     <td class="py-3 pr-4 text-sm text-text">
-      <span class="font-mono tabular-nums">{{ bid.weightKg }}</span> kg
+      <template v-if="bid.weightKg !== null"><span class="font-mono tabular-nums">{{ bid.weightKg }}</span> kg</template>
+      <span v-else class="text-text-muted">—</span>
     </td>
 
     <!-- Content -->
@@ -143,8 +144,9 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
     </td>
 
     <!-- Earnings -->
-    <td class="py-3 pr-4 text-sm font-mono font-semibold tabular-nums text-primary whitespace-nowrap">
-      {{ bid.earningsEuros.toFixed(2) }} €
+    <td class="py-3 pr-4 text-sm font-mono font-semibold tabular-nums whitespace-nowrap">
+      <span v-if="bid.earningsEuros !== null" class="text-primary">{{ bid.earningsEuros.toFixed(2) }} €</span>
+      <span v-else class="text-text-muted">—</span>
     </td>
 
     <!-- Actions -->
