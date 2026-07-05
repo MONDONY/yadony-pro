@@ -30,7 +30,7 @@ function handleBack() {
     <div class="flex items-center justify-between">
       <button
         type="button"
-        class="flex items-center gap-1.5 text-sm text-subtle hover:text-text transition-colors"
+        class="flex items-center gap-1.5 text-sm text-text-subtle hover:text-text transition-colors"
         @click="handleBack"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -46,7 +46,7 @@ function handleBack() {
       <h1 class="font-display text-2xl font-extrabold text-text">
         {{ step === 'phone' ? 'Connexion' : 'Code de vérification' }}
       </h1>
-      <p class="text-sm text-subtle mt-1">
+      <p class="text-sm text-text-subtle mt-1">
         {{ step === 'phone'
           ? 'Accède à ton espace voyageur professionnel'
           : `Code envoyé au ${phone}` }}
@@ -58,7 +58,7 @@ function handleBack() {
       <div class="flex items-center gap-2">
         <div
           class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-          :class="step === 'otp' ? 'bg-success/20 text-success' : 'bg-primary text-white'"
+          :class="step === 'otp' ? 'bg-success/20 text-success' : 'bg-primary text-on-primary'"
         >
           <svg v-if="step === 'otp'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
             <path d="M20 6L9 17l-5-5" />
@@ -72,15 +72,15 @@ function handleBack() {
         <div
           class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors border"
           :class="step === 'otp'
-            ? 'bg-primary text-white border-primary'
-            : 'bg-surface-el border-border text-subtle'"
+            ? 'bg-primary text-on-primary border-primary'
+            : 'bg-surface-el border-border text-text-subtle'"
         >
           2
         </div>
       </div>
       <div class="flex justify-between mt-1">
         <span class="text-[10px]" :class="step === 'otp' ? 'text-success' : 'text-primary'">Téléphone</span>
-        <span class="text-[10px]" :class="step === 'otp' ? 'text-primary' : 'text-subtle'">Code SMS</span>
+        <span class="text-[10px]" :class="step === 'otp' ? 'text-primary' : 'text-text-subtle'">Code SMS</span>
       </div>
     </div>
 
@@ -89,7 +89,7 @@ function handleBack() {
     <OtpForm v-else :phone="phone" @resend="step = 'phone'" />
 
     <!-- Message aide (mobile uniquement, étape phone) -->
-    <p v-if="step === 'phone'" class="text-xs text-subtle text-center lg:hidden">
+    <p v-if="step === 'phone'" class="text-xs text-text-subtle text-center lg:hidden">
       Pas encore de compte ?
       <a href="https://dony.app" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">
         Télécharge l'app dony

@@ -26,10 +26,12 @@ const emit = defineEmits<{
       data-test="delete-modal-backdrop"
       @click.self="emit('cancel')"
     >
-      <div class="bg-surface border border-border rounded-card w-full max-w-sm p-6 shadow-2xl space-y-4">
+      <div class="w-full max-w-sm rounded-card border border-border bg-surface p-6 shadow-pop space-y-4">
         <div class="flex items-center gap-3">
-          <AlertTriangle class="w-6 h-6 text-red-400 flex-shrink-0" />
-          <h2 class="font-bold text-text text-lg">Supprimer ce trajet ?</h2>
+          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-el bg-danger/10">
+            <AlertTriangle class="w-5 h-5 text-danger" />
+          </div>
+          <h2 class="font-display text-lg font-semibold text-text">Supprimer ce trajet ?</h2>
         </div>
         <p class="text-sm text-text-muted">
           Cette action est irréversible. Les expéditeurs ayant des bids en attente seront notifiés et remboursés automatiquement.
@@ -37,7 +39,7 @@ const emit = defineEmits<{
         <div class="flex gap-3 pt-2">
           <button
             data-test="delete-modal-cancel"
-            class="flex-1 h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+            class="flex-1 h-10 rounded-btn border border-border-strong text-sm text-text hover:bg-surface-el transition-colors"
             :disabled="isLoading"
             @click="emit('cancel')"
           >
@@ -45,7 +47,7 @@ const emit = defineEmits<{
           </button>
           <button
             data-test="delete-modal-confirm"
-            class="flex-1 h-10 rounded-btn bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+            class="flex-1 h-10 rounded-btn bg-danger text-on-danger text-sm font-medium hover:bg-danger-hover transition-colors disabled:opacity-50"
             :disabled="isLoading"
             @click="emit('confirm')"
           >

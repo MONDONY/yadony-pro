@@ -69,7 +69,7 @@
       <div class="flex items-center gap-3 pt-2 border-t border-border">
         <ThemeToggle />
         <NuxtLink to="/login" class="text-sm font-medium text-text" @click="menuOpen = false">Se connecter</NuxtLink>
-        <NuxtLink to="/login" class="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-btn" @click="menuOpen = false">Rejoindre</NuxtLink>
+        <NuxtLink to="/login" class="text-sm font-semibold bg-primary text-on-primary px-4 py-2 rounded-btn" @click="menuOpen = false">Rejoindre</NuxtLink>
       </div>
     </div>
   </nav>

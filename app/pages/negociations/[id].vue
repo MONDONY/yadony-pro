@@ -220,7 +220,7 @@ watch(isLoading, async (val) => {
           <!-- Bouton Contre-proposer (si canCounter) -->
           <button
             v-if="canCounter"
-            class="flex-1 h-10 rounded-btn bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            class="flex-1 h-10 rounded-btn bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             :disabled="actionLoading"
             @click="showCounterModal = true"
           >

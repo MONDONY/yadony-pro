@@ -1,55 +1,6 @@
-<template>
-  <section class="py-20" style="background-color: var(--surface-el);">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-12">
-        <h2 class="font-display font-bold text-3xl text-text mb-3">Ce qu'en disent les voyageurs</h2>
-        <p class="text-text-muted">Ils gèrent leur activité depuis dony PRO.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <figure
-          v-for="t in testimonials"
-          :key="t.name"
-          class="bg-surface rounded-card p-6 border border-border flex flex-col gap-4"
-        >
-          <!-- Étoiles -->
-          <div class="flex gap-0.5" :aria-label="`5 étoiles sur 5`">
-            <span v-for="i in 5" :key="i" style="color: #F59E0B; font-size: 14px;" aria-hidden="true">★</span>
-          </div>
-
-          <!-- Citation -->
-          <blockquote class="relative flex-1">
-            <span
-              class="absolute -top-2 -left-1 font-display font-bold leading-none select-none"
-              style="font-size: 40px; color: var(--primary); opacity: 0.4;"
-              aria-hidden="true"
-            >"</span>
-            <p class="text-sm text-text leading-relaxed pt-3">{{ t.quote }}</p>
-          </blockquote>
-
-          <!-- Auteur -->
-          <figcaption class="flex items-center gap-3 pt-4 border-t border-border">
-            <div
-              class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-              style="background: linear-gradient(135deg, var(--primary), var(--accent));"
-              aria-hidden="true"
-            >{{ t.initials }}</div>
-            <div>
-              <div class="text-sm font-semibold text-text">{{ t.name }}</div>
-              <div class="text-xs text-text-muted">{{ t.role }}</div>
-            </div>
-          </figcaption>
-        </figure>
-      </div>
-
-      <p class="text-center text-xs text-text-muted mt-8 italic">
-        * Témoignages représentatifs — à remplacer par de vrais retours dès disponibles.
-      </p>
-    </div>
-  </section>
-</template>
-
 <script setup lang="ts">
+import { Star, Quote } from 'lucide-vue-next'
+
 const testimonials = [
   {
     quote: "Avant, je gérais tout par WhatsApp. Maintenant j'ai une vue claire sur mes trajets, mes paiements et mes colis. Le cockpit m'a changé la vie.",
@@ -71,3 +22,55 @@ const testimonials = [
   },
 ]
 </script>
+
+<template>
+  <section class="bg-surface-el py-20">
+    <div class="mx-auto max-w-6xl px-6">
+      <div class="mb-12 text-center">
+        <h2 class="font-display text-3xl font-semibold tracking-[-0.02em] text-text">Ce qu'en disent les voyageurs</h2>
+        <p class="mt-3 text-text-muted">Ils gèrent leur activité depuis dony PRO.</p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <figure
+          v-for="t in testimonials"
+          :key="t.name"
+          class="flex flex-col gap-4 rounded-card border border-border bg-surface p-6 shadow-card"
+        >
+          <!-- Note -->
+          <div class="flex gap-0.5" aria-label="5 étoiles sur 5">
+            <Star
+              v-for="i in 5"
+              :key="i"
+              class="h-4 w-4 fill-warning text-warning"
+              :stroke-width="1.75"
+              aria-hidden="true"
+            />
+          </div>
+
+          <!-- Citation -->
+          <blockquote class="flex flex-1 flex-col gap-3">
+            <Quote class="h-5 w-5 text-primary/40" :stroke-width="1.75" aria-hidden="true" />
+            <p class="text-sm leading-relaxed text-text">{{ t.quote }}</p>
+          </blockquote>
+
+          <!-- Auteur -->
+          <figcaption class="flex items-center gap-3 border-t border-border pt-4">
+            <div
+              class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
+              aria-hidden="true"
+            >{{ t.initials }}</div>
+            <div>
+              <div class="text-sm font-semibold text-text">{{ t.name }}</div>
+              <div class="text-xs text-text-muted">{{ t.role }}</div>
+            </div>
+          </figcaption>
+        </figure>
+      </div>
+
+      <p class="mt-8 text-center text-xs italic text-text-muted">
+        * Témoignages représentatifs — à remplacer par de vrais retours dès disponibles.
+      </p>
+    </div>
+  </section>
+</template>

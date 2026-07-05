@@ -9,6 +9,7 @@ import EmptyStateNoTrip from '@/features/demandes/components/EmptyStateNoTrip.vu
 import MatchingRequestCard from '@/features/demandes/components/MatchingRequestCard.vue'
 import MatchingRequestRow from '@/features/demandes/components/MatchingRequestRow.vue'
 import RequestDetailModal from '@/features/demandes/components/RequestDetailModal.vue'
+import { SectionLabel } from '@/components/ui/section-label'
 import NegotiationStartModal from '@/features/negociations/components/NegotiationStartModal.vue'
 import CreateTripFromDemandModal from '@/features/demandes/components/CreateTripFromDemandModal.vue'
 import type { MatchingRequest, FilterState } from '@/features/demandes/types/index'
@@ -112,7 +113,7 @@ function openNegotiateModal(request: MatchingRequest) {
   <div>
     <!-- Erreur -->
     <div v-if="error && !isLoading" class="flex flex-col items-center justify-center py-16 text-center px-4">
-      <p class="text-red-400 font-medium text-sm">{{ error }}</p>
+      <p class="text-danger font-medium text-sm">{{ error }}</p>
       <button
         class="mt-4 px-4 py-2 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
         type="button"
@@ -124,7 +125,7 @@ function openNegotiateModal(request: MatchingRequest) {
       <!-- Skeleton -->
       <div class="h-20 bg-surface border-b border-border animate-pulse" />
       <div class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-        <div v-for="i in 6" :key="i" class="h-48 bg-surface border border-border rounded-card animate-pulse" />
+        <div v-for="i in 6" :key="i" class="h-48 bg-surface border border-border rounded-el shadow-card animate-pulse" />
       </div>
     </template>
 
@@ -158,14 +159,14 @@ function openNegotiateModal(request: MatchingRequest) {
 
         <template v-else>
           <!-- Vue liste : en-tête colonnes -->
-          <div v-if="viewMode === 'list'" class="flex items-center gap-4 px-4 py-2 border-b border-border bg-bg/50">
+          <div v-if="viewMode === 'list'" class="flex items-center gap-4 px-4 py-2 border-b border-border bg-surface-el/50">
             <div class="w-8 shrink-0" />
-            <div class="w-36 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Expéditeur</div>
-            <div class="w-16 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Poids</div>
-            <div class="w-28 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Type</div>
-            <div class="w-20 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Budget</div>
-            <div class="w-12 shrink-0 text-xs font-semibold text-text-muted uppercase tracking-wide">Score</div>
-            <div class="flex-1 text-xs font-semibold text-text-muted uppercase tracking-wide hidden md:block">Message</div>
+            <SectionLabel as="div" class="w-36 shrink-0">Expéditeur</SectionLabel>
+            <SectionLabel as="div" class="w-16 shrink-0">Poids</SectionLabel>
+            <SectionLabel as="div" class="w-28 shrink-0">Type</SectionLabel>
+            <SectionLabel as="div" class="w-20 shrink-0">Budget</SectionLabel>
+            <SectionLabel as="div" class="w-12 shrink-0">Score</SectionLabel>
+            <SectionLabel as="div" class="flex-1 hidden md:block">Message</SectionLabel>
             <div class="shrink-0 w-20" />
           </div>
 
@@ -197,7 +198,7 @@ function openNegotiateModal(request: MatchingRequest) {
 
           <!-- Pagination -->
           <div v-if="totalPages > 1" class="flex items-center justify-between px-4 py-3 border-t border-border">
-            <span class="text-xs text-text-muted">{{ paginationLabel }}</span>
+            <span class="text-xs text-text-muted font-mono tabular-nums">{{ paginationLabel }}</span>
             <div class="flex items-center gap-1">
               <button
                 :disabled="currentPage === 1"
@@ -209,7 +210,7 @@ function openNegotiateModal(request: MatchingRequest) {
                 <ChevronLeft class="w-4 h-4" />
               </button>
 
-              <span class="px-3 text-xs text-text font-medium">{{ currentPage }} / {{ totalPages }}</span>
+              <span class="px-3 text-xs text-text font-medium font-mono tabular-nums">{{ currentPage }} / {{ totalPages }}</span>
 
               <button
                 :disabled="currentPage === totalPages"

@@ -40,6 +40,6 @@ const modes: Array<{ key: TransportMode; label: string; icon: typeof Plane }> = 
         {{ m.label }}
       </button>
     </div>
-    <p v-if="error" class="mt-1 text-xs text-red-500">{{ error }}</p>
+    <p v-if="error" class="mt-1 text-xs text-danger">{{ error }}</p>
   </div>
 </template>

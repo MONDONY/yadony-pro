@@ -58,7 +58,7 @@ watch(() => props.open, (val) => {
       @click.self="emit('close')"
     >
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div class="relative w-full max-w-md bg-surface border border-border rounded-card shadow-2xl p-6 space-y-4">
+      <div class="relative w-full max-w-md rounded-card border border-border bg-surface p-6 shadow-pop space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="font-semibold text-text">Lier un trajet actif</h3>
           <button class="text-text-muted hover:text-text p-1" @click="emit('close')">
@@ -69,7 +69,7 @@ watch(() => props.open, (val) => {
         <p class="text-xs text-text-muted">Choisissez le trajet que vous allez utiliser pour transporter ce colis.</p>
 
         <div v-if="loadingTrips" class="space-y-2">
-          <div v-for="i in 3" :key="i" class="h-16 bg-bg rounded-card animate-pulse" />
+          <div v-for="i in 3" :key="i" class="h-16 bg-surface-el rounded-el animate-pulse" />
         </div>
         <div v-else-if="trips.length === 0" class="text-center py-6 text-sm text-text-muted">
           Aucun trajet actif disponible.
@@ -79,7 +79,7 @@ watch(() => props.open, (val) => {
             v-for="trip in trips"
             :key="trip.id"
             :data-test="`trip-option-${trip.id}`"
-            class="flex items-center gap-3 p-3 rounded-card border cursor-pointer transition-colors"
+            class="flex items-center gap-3 p-3 rounded-el border cursor-pointer transition-colors"
             :class="selectedId === trip.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'"
           >
             <input
@@ -93,7 +93,7 @@ watch(() => props.open, (val) => {
                 {{ trip.departureCity }} → {{ trip.arrivalCity }}
               </p>
               <p class="text-xs text-text-muted mt-0.5">
-                {{ new Date(trip.departureDate).toLocaleDateString('fr-FR') }} · {{ trip.availableKg }} kg disponibles
+                <span class="font-mono tabular-nums">{{ new Date(trip.departureDate).toLocaleDateString('fr-FR') }}</span> · <span class="font-mono tabular-nums">{{ trip.availableKg }}</span> kg disponibles
               </p>
             </div>
           </label>
@@ -101,18 +101,18 @@ watch(() => props.open, (val) => {
 
         <div class="flex gap-2.5 pt-1">
           <button
-            class="flex-1 h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+            class="flex-1 h-10 rounded-btn border border-border-strong text-sm text-text hover:bg-surface-el transition-colors"
             @click="emit('close')"
           >
             Annuler
           </button>
           <button
             :disabled="!selectedId || isLoading"
-            class="flex-1 flex items-center justify-center h-10 rounded-btn bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 flex items-center justify-center h-10 rounded-btn bg-primary text-on-primary text-sm font-medium shadow-btn hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-test="submit-trip-btn"
             @click="selectedId && emit('submit', selectedId)"
           >
-            <span v-if="isLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span v-if="isLoading" class="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
             <span v-else>Lier ce trajet</span>
           </button>
         </div>

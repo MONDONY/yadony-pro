@@ -116,7 +116,7 @@ function onExportCsv() {
           :data-test="`tab-${tab.key}`"
           :class="[
             'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
-            activeTab === tab.key ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text',
+            activeTab === tab.key ? 'bg-primary text-on-primary shadow-sm' : 'text-text-muted hover:text-text',
           ]"
           @click="activeTab = tab.key"
         >

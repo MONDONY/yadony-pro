@@ -1,8 +1,10 @@
 <!-- app/features/trajets/components/TripDetailBids.vue -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { CheckCircle, XCircle, Download, List, Table2, PackageCheck } from 'lucide-vue-next'
+import { CheckCircle, XCircle, Download, List, Table2, PackageCheck, Inbox } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import { Badge, type BadgeVariants } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { TripBid } from '@/features/trajets/types/index'
 
 const props = defineProps<{
@@ -71,19 +73,19 @@ const STATUS_LABELS: Record<string, string> = {
   EXPIRED: 'Expiré',
 }
 
-const STATUS_CLASSES: Record<string, string> = {
-  AWAITING_PAYMENT: 'bg-amber-500/20 text-amber-400',
-  PENDING: 'bg-border text-text-muted',
-  PAYMENT_ESCROWED: 'bg-blue-500/20 text-blue-400',
-  ACCEPTED: 'bg-green-500/20 text-green-400',
-  HANDED_OVER: 'bg-teal-500/20 text-teal-400',
-  IN_TRANSIT: 'bg-indigo-500/20 text-indigo-400',
-  REJECTED: 'bg-red-500/20 text-red-400',
-  CANCELLED: 'bg-border text-text-muted',
-  COMPLETED: 'bg-green-600/20 text-green-500',
-  NO_SHOW: 'bg-orange-500/20 text-orange-400',
-  PARCEL_REFUSED: 'bg-red-600/20 text-red-500',
-  EXPIRED: 'bg-border text-text-muted',
+const STATUS_VARIANT: Record<string, BadgeVariants['variant']> = {
+  AWAITING_PAYMENT: 'warning',
+  PENDING: 'neutral',
+  PAYMENT_ESCROWED: 'info',
+  ACCEPTED: 'success',
+  HANDED_OVER: 'info',
+  IN_TRANSIT: 'info',
+  REJECTED: 'danger',
+  CANCELLED: 'neutral',
+  COMPLETED: 'success',
+  NO_SHOW: 'warning',
+  PARCEL_REFUSED: 'danger',
+  EXPIRED: 'neutral',
 }
 
 const activeStatusFilter = ref<StatusFilter>('TOUS')
@@ -118,12 +120,12 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
           :data-test="`bid-filter-${f.key}`"
           :class="cn(
             'flex-shrink-0 px-3 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap',
-            activeStatusFilter === f.key ? 'bg-primary text-white' : 'text-text-muted hover:text-text',
+            activeStatusFilter === f.key ? 'bg-primary text-on-primary' : 'text-text-muted hover:text-text',
           )"
           @click="activeStatusFilter = f.key"
         >
           {{ f.label }}
-          <span v-if="f.key === 'PAYMENT_ESCROWED' && pendingCount > 0" class="ml-1 bg-amber-400 text-black rounded-full px-1.5 py-0.5 text-[10px] font-bold">
+          <span v-if="f.key === 'PAYMENT_ESCROWED' && pendingCount > 0" class="ml-1 bg-warning text-bg rounded-full px-1.5 py-0.5 text-[10px] font-mono font-semibold tabular-nums">
             {{ pendingCount }}
           </span>
         </button>
@@ -135,14 +137,14 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
         type="text"
         placeholder="Rechercher un expéditeur…"
         data-test="bid-sender-search"
-        class="h-9 px-3 rounded-btn bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors min-w-[180px]"
+        class="h-9 px-3 rounded-input bg-surface border border-border-strong text-sm text-text placeholder:text-text-subtle focus:outline-none focus:border-primary transition-colors min-w-[180px]"
       />
 
       <div class="ml-auto flex items-center gap-2">
         <!-- View mode toggle -->
         <div class="flex items-center gap-1 bg-surface border border-border rounded-btn p-1">
           <button
-            :class="['p-1.5 rounded transition-colors', viewMode === 'cards' ? 'bg-primary text-white' : 'text-text-muted hover:text-text']"
+            :class="['p-1.5 rounded transition-colors', viewMode === 'cards' ? 'bg-primary text-on-primary' : 'text-text-muted hover:text-text']"
             aria-label="Vue cartes"
             data-test="view-cards"
             @click="viewMode = 'cards'"
@@ -150,7 +152,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
             <List class="w-4 h-4" />
           </button>
           <button
-            :class="['p-1.5 rounded transition-colors', viewMode === 'table' ? 'bg-primary text-white' : 'text-text-muted hover:text-text']"
+            :class="['p-1.5 rounded transition-colors', viewMode === 'table' ? 'bg-primary text-on-primary' : 'text-text-muted hover:text-text']"
             aria-label="Vue tableau"
             data-test="view-table"
             @click="viewMode = 'table'"
@@ -162,7 +164,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
         <!-- Export CSV -->
         <button
           data-test="btn-export-csv"
-          class="flex items-center gap-1.5 h-9 px-3 rounded-btn border border-border text-sm text-text-muted hover:text-text hover:border-primary/50 transition-colors"
+          class="flex items-center gap-1.5 h-9 px-3 rounded-btn border border-border-strong text-sm text-text-muted hover:text-text hover:border-primary/50 transition-colors"
           @click="emit('export-csv')"
         >
           <Download class="w-3.5 h-3.5" />
@@ -173,28 +175,28 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
 
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-3">
-      <div v-for="i in 3" :key="i" class="h-24 bg-surface border border-border rounded-card animate-pulse" />
+      <div v-for="i in 3" :key="i" class="h-24 rounded-el border border-border bg-surface shadow-card animate-pulse" />
     </div>
 
     <!-- Empty state -->
     <div
       v-else-if="filteredBids.length === 0"
-      class="flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-card text-center"
+      class="rounded-el border border-dashed border-border"
     >
-      <p class="text-text-muted text-sm">Aucun colis pour ce filtre.</p>
+      <EmptyState :icon="Inbox" title="Aucun colis" description="Aucun colis ne correspond à ce filtre pour le moment." />
     </div>
 
     <!-- Table view -->
-    <div v-else-if="viewMode === 'table'" class="bg-surface border border-border rounded-card overflow-hidden">
+    <div v-else-if="viewMode === 'table'" class="rounded-card border border-border bg-surface shadow-card overflow-hidden">
       <table class="w-full text-sm">
         <thead>
-          <tr class="border-b border-border bg-bg">
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Expéditeur</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Poids</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Valeur</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Contenu</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Revenus nets</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Statut</th>
+          <tr class="border-b border-border bg-surface-el">
+            <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Expéditeur</th>
+            <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Poids</th>
+            <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Valeur</th>
+            <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Contenu</th>
+            <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Revenus nets</th>
+            <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Statut</th>
             <th class="px-4 py-3" />
           </tr>
         </thead>
@@ -202,34 +204,34 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
           <tr
             v-for="bid in filteredBids"
             :key="bid.id"
-            class="hover:bg-bg/50 transition-colors"
+            class="hover:bg-surface-el transition-colors"
             :data-test="`bid-row-${bid.id}`"
           >
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+                <div class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary flex-shrink-0">
                   {{ bid.senderInitials }}
                 </div>
                 <div>
                   <p class="font-medium text-text">{{ bid.senderName }}</p>
-                  <p class="text-xs text-text-muted">{{ bid.senderTotalShipments }} envois</p>
+                  <p class="text-xs text-text-muted"><span class="font-mono tabular-nums">{{ bid.senderTotalShipments }}</span> envois</p>
                 </div>
               </div>
             </td>
-            <td class="px-4 py-3 text-text font-medium">{{ bid.weightKg }} kg</td>
-            <td class="px-4 py-3 text-text-muted">{{ bid.declaredValueEuros }} €</td>
+            <td class="px-4 py-3 font-mono tabular-nums text-text font-medium">{{ bid.weightKg }} kg</td>
+            <td class="px-4 py-3 font-mono tabular-nums text-text-muted">{{ bid.declaredValueEuros }} €</td>
             <td class="px-4 py-3 text-text-muted max-w-[150px] truncate">{{ bid.contentDescription || '—' }}</td>
-            <td class="px-4 py-3 text-accent font-semibold">{{ bid.earningsEuros.toFixed(2) }} €</td>
+            <td class="px-4 py-3 font-mono tabular-nums text-primary font-semibold">{{ bid.earningsEuros.toFixed(2) }} €</td>
             <td class="px-4 py-3">
-              <span :class="cn('text-xs px-2 py-0.5 rounded-full font-medium', STATUS_CLASSES[bid.status] ?? 'bg-border text-text-muted')">
+              <Badge :variant="STATUS_VARIANT[bid.status] ?? 'neutral'" size="sm">
                 {{ STATUS_LABELS[bid.status] ?? bid.status }}
-              </span>
+              </Badge>
             </td>
             <td class="px-4 py-3">
               <div v-if="bid.status === 'PAYMENT_ESCROWED'" class="flex items-center gap-1.5">
                 <button
                   :disabled="props.loadingBidId === bid.id"
-                  class="p-1.5 rounded text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
+                  class="p-1.5 rounded-btn text-success hover:bg-success/10 transition-colors disabled:opacity-50"
                   :data-test="`accept-${bid.id}`"
                   @click="emit('accept', bid.id)"
                 >
@@ -237,7 +239,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
                 </button>
                 <button
                   :disabled="props.loadingBidId === bid.id"
-                  class="p-1.5 rounded text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                  class="p-1.5 rounded-btn text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
                   :data-test="`reject-${bid.id}`"
                   @click="emit('reject', bid.id)"
                 >
@@ -247,7 +249,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
               <div v-else-if="bid.status === 'IN_TRANSIT'">
                 <button
                   :disabled="props.loadingBidId === bid.id"
-                  class="flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium text-indigo-400 border border-indigo-400/30 hover:bg-indigo-500/10 transition-colors disabled:opacity-50"
+                  class="flex items-center gap-1 px-2 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
                   :data-test="`confirm-delivery-${bid.id}`"
                   @click="openConfirmModal(bid)"
                 >
@@ -266,38 +268,38 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
       <div
         v-for="bid in filteredBids"
         :key="bid.id"
-        class="bg-surface border border-border rounded-card p-4 space-y-3"
+        class="rounded-el border border-border bg-surface p-4 shadow-card space-y-3"
         :data-test="`bid-card-${bid.id}`"
       >
         <!-- Sender + status -->
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary flex-shrink-0">
+            <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary flex-shrink-0">
               {{ bid.senderInitials }}
             </div>
             <div class="min-w-0">
               <p class="font-semibold text-text truncate">{{ bid.senderName }}</p>
-              <p class="text-xs text-text-muted">{{ bid.senderTotalShipments }} envois</p>
+              <p class="text-xs text-text-muted"><span class="font-mono tabular-nums">{{ bid.senderTotalShipments }}</span> envois</p>
             </div>
           </div>
-          <span :class="cn('flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium', STATUS_CLASSES[bid.status] ?? 'bg-border text-text-muted')">
+          <Badge :variant="STATUS_VARIANT[bid.status] ?? 'neutral'" size="sm" class="flex-shrink-0">
             {{ STATUS_LABELS[bid.status] ?? bid.status }}
-          </span>
+          </Badge>
         </div>
 
         <!-- Details grid -->
         <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="bg-bg rounded-btn px-2 py-2">
-            <p class="text-sm font-bold text-text">{{ bid.weightKg }} kg</p>
-            <p class="text-xs text-text-muted">Poids</p>
+          <div class="bg-surface-el rounded-el px-2 py-2">
+            <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ bid.weightKg }} kg</p>
+            <p class="text-xs text-text-subtle">Poids</p>
           </div>
-          <div class="bg-bg rounded-btn px-2 py-2">
-            <p class="text-sm font-bold text-text">{{ bid.declaredValueEuros }} €</p>
-            <p class="text-xs text-text-muted">Valeur</p>
+          <div class="bg-surface-el rounded-el px-2 py-2">
+            <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ bid.declaredValueEuros }} €</p>
+            <p class="text-xs text-text-subtle">Valeur</p>
           </div>
-          <div class="bg-bg rounded-btn px-2 py-2">
-            <p class="text-sm font-bold text-accent">{{ bid.earningsEuros.toFixed(2) }} €</p>
-            <p class="text-xs text-text-muted">Revenus nets</p>
+          <div class="bg-surface-el rounded-el px-2 py-2">
+            <p class="font-mono text-sm font-semibold tabular-nums text-primary">{{ bid.earningsEuros.toFixed(2) }} €</p>
+            <p class="text-xs text-text-subtle">Revenus nets</p>
           </div>
         </div>
 
@@ -310,7 +312,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
         <div v-if="bid.status === 'PAYMENT_ESCROWED'" class="flex items-center gap-2 pt-1">
           <button
             :disabled="props.loadingBidId === bid.id"
-            class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn bg-green-500 text-white text-xs font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+            class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn bg-success text-on-primary text-xs font-medium hover:bg-success/90 transition-colors disabled:opacity-50"
             :data-test="`accept-card-${bid.id}`"
             @click="emit('accept', bid.id)"
           >
@@ -319,7 +321,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
           </button>
           <button
             :disabled="props.loadingBidId === bid.id"
-            class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn border border-red-400 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50"
+            class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn border border-danger text-danger text-xs font-medium hover:bg-danger/10 transition-colors disabled:opacity-50"
             :data-test="`reject-card-${bid.id}`"
             @click="emit('reject', bid.id)"
           >
@@ -332,7 +334,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
         <div v-else-if="bid.status === 'IN_TRANSIT'" class="pt-1">
           <button
             :disabled="props.loadingBidId === bid.id"
-            class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn border border-indigo-400/50 text-indigo-400 text-xs font-medium hover:bg-indigo-500/10 transition-colors disabled:opacity-50"
+            class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn border border-primary/50 text-primary text-xs font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
             :data-test="`confirm-delivery-card-${bid.id}`"
             @click="openConfirmModal(bid)"
           >
@@ -345,7 +347,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
 
     <!-- Footer count -->
     <p v-if="!isLoading && filteredBids.length > 0" class="text-xs text-text-muted text-right">
-      {{ filteredBids.length }} colis affichés · {{ props.bids.length }} au total
+      <span class="font-mono tabular-nums">{{ filteredBids.length }}</span> colis affichés · <span class="font-mono tabular-nums">{{ props.bids.length }}</span> au total
     </p>
   </div>
 
@@ -357,13 +359,13 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
       @click.self="closeConfirmModal"
     >
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div class="relative w-full max-w-sm bg-surface border border-border rounded-card shadow-2xl p-6 space-y-5">
+      <div class="relative w-full max-w-sm rounded-card border border-border bg-surface shadow-pop p-6 space-y-5">
 
         <!-- Header -->
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-              <PackageCheck class="w-5 h-5 text-indigo-400" />
+            <div class="w-10 h-10 rounded-el bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <PackageCheck class="w-5 h-5 text-primary" />
             </div>
             <div>
               <h3 class="font-semibold text-text text-sm">Confirmer la livraison</h3>
@@ -393,7 +395,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
             maxlength="6"
             placeholder="000000"
             data-test="confirm-delivery-code-input"
-            class="w-full h-12 px-4 rounded-btn bg-bg border border-border text-text text-center text-lg font-mono tracking-[0.4em] placeholder:text-text-muted/40 focus:outline-none focus:border-primary transition-colors"
+            class="w-full h-12 px-4 rounded-input bg-surface-el border border-border-strong text-text text-center text-lg font-mono tabular-nums tracking-[0.4em] placeholder:text-text-subtle/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]"
             @keyup.enter="submitConfirmDelivery"
           />
         </div>
@@ -401,18 +403,18 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
         <!-- Actions -->
         <div class="flex items-center gap-2.5 pt-1">
           <button
-            class="flex-1 h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+            class="flex-1 h-10 rounded-btn border border-border-strong text-sm text-text hover:bg-surface-el transition-colors"
             @click="closeConfirmModal"
           >
             Annuler
           </button>
           <button
             :disabled="confirmCode.length !== 6 || props.loadingBidId === confirmingBid.id"
-            class="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-btn bg-indigo-500 text-white text-sm font-medium hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-btn bg-primary text-on-primary text-sm font-medium shadow-btn hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-test="confirm-delivery-submit"
             @click="submitConfirmDelivery"
           >
-            <span v-if="props.loadingBidId === confirmingBid.id" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span v-if="props.loadingBidId === confirmingBid.id" class="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
             <CheckCircle v-else class="w-4 h-4" />
             Confirmer
           </button>

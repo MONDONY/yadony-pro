@@ -77,7 +77,7 @@ function goBack() {
         {{ updatedTrip.departureCity.label }} → {{ updatedTrip.arrivalCity.label }} a été modifié avec succès.
       </p>
       <button
-        class="px-6 py-2.5 rounded-btn bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors"
+        class="px-6 py-2.5 rounded-btn bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors"
         @click="goBack"
       >
         Voir le trajet →

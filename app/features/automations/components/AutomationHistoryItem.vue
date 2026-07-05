@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { CheckCircle, XCircle } from 'lucide-vue-next'
-import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import type { AutomationHistoryEntry } from '@/features/automations/types/index'
 
 const props = defineProps<{
@@ -27,11 +27,11 @@ const formattedDate = computed(() => {
     <div class="flex-shrink-0 mt-0.5">
       <CheckCircle
         v-if="entry.result === 'SUCCESS'"
-        class="w-4 h-4 text-green-400"
+        class="w-4 h-4 text-success"
       />
       <XCircle
         v-else
-        class="w-4 h-4 text-red-400"
+        class="w-4 h-4 text-danger"
       />
     </div>
 
@@ -41,23 +41,20 @@ const formattedDate = computed(() => {
         <span class="text-text-muted"> — {{ entry.actionTaken }}</span>
       </p>
       <div class="flex items-center gap-2 text-xs text-text-muted flex-wrap">
-        <time :datetime="entry.triggeredAt">{{ formattedDate }}</time>
+        <time :datetime="entry.triggeredAt" class="font-mono tabular-nums">{{ formattedDate }}</time>
         <template v-if="entry.bidId">
           <span class="text-border" aria-hidden="true">·</span>
-          <span>Bid {{ entry.bidId.slice(0, 8) }}…</span>
+          <span class="font-mono tabular-nums">Bid {{ entry.bidId.slice(0, 8) }}…</span>
         </template>
       </div>
     </div>
 
-    <span
-      :class="cn(
-        'flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full',
-        entry.result === 'SUCCESS'
-          ? 'bg-green-500/15 text-green-400'
-          : 'bg-red-500/15 text-red-400',
-      )"
+    <Badge
+      :variant="entry.result === 'SUCCESS' ? 'success' : 'danger'"
+      size="sm"
+      class="flex-shrink-0"
     >
       {{ entry.result === 'SUCCESS' ? 'Succès' : 'Échec' }}
-    </span>
+    </Badge>
   </div>
 </template>

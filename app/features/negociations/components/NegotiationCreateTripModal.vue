@@ -56,7 +56,7 @@ function onSubmit() {
       @click.self="emit('close')"
     >
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
-      <div class="relative w-full max-w-sm bg-surface border border-border rounded-card shadow-2xl p-6 space-y-4">
+      <div class="relative w-full max-w-sm rounded-card border border-border bg-surface p-6 shadow-pop space-y-4">
         <!-- Header -->
         <div class="flex items-center justify-between">
           <h3 class="font-semibold text-text">Créer un trajet dédié</h3>
@@ -79,7 +79,7 @@ function onSubmit() {
             <input
               v-model="departureDate"
               type="date"
-              class="w-full h-10 px-3 rounded-btn border border-border bg-transparent text-sm text-text focus:border-primary focus:outline-none"
+              class="w-full h-10 px-3 rounded-input border border-border bg-transparent text-sm text-text font-mono tabular-nums focus:border-primary focus:outline-none"
             />
           </div>
           <div>
@@ -89,7 +89,7 @@ function onSubmit() {
               type="number"
               min="0.1"
               step="0.5"
-              class="w-full h-10 px-3 rounded-btn border border-border bg-transparent text-sm text-text focus:border-primary focus:outline-none"
+              class="w-full h-10 px-3 rounded-input border border-border bg-transparent text-sm text-text font-mono tabular-nums focus:border-primary focus:outline-none"
             />
           </div>
           <div>
@@ -99,28 +99,28 @@ function onSubmit() {
               type="text"
               maxlength="280"
               placeholder="Ex. : Vol Air France AF558"
-              class="w-full h-10 px-3 rounded-btn border border-border bg-transparent text-sm text-text focus:border-primary focus:outline-none placeholder:text-text-muted/50"
+              class="w-full h-10 px-3 rounded-input border border-border bg-transparent text-sm text-text focus:border-primary focus:outline-none placeholder:text-text-muted/50"
             />
           </div>
         </div>
 
         <!-- Erreur -->
-        <p v-if="error" class="text-xs text-red-400">{{ error }}</p>
+        <p v-if="error" class="text-xs text-danger">{{ error }}</p>
 
         <!-- Actions -->
         <div class="flex gap-2.5 pt-1">
           <button
-            class="flex-1 h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+            class="flex-1 h-10 rounded-btn border border-border-strong text-sm text-text hover:bg-surface-el transition-colors"
             @click="emit('close')"
           >
             Annuler
           </button>
           <button
             :disabled="isLoading"
-            class="flex-1 flex items-center justify-center h-10 rounded-btn bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            class="flex-1 flex items-center justify-center h-10 rounded-btn bg-primary text-on-primary text-sm font-medium shadow-btn hover:bg-primary-hover transition-colors disabled:opacity-50"
             @click="onSubmit"
           >
-            <span v-if="isLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span v-if="isLoading" class="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
             <span v-else>Confirmer le trajet</span>
           </button>
         </div>

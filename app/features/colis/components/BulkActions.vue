@@ -27,16 +27,16 @@ const emit = defineEmits<{
     <div
       v-if="count > 0"
       data-test="bulk-actions-bar"
-      class="flex items-center gap-3 px-4 py-3 bg-surface border border-primary/40 rounded-card shadow-lg"
+      class="flex items-center gap-3 px-4 py-3 bg-surface border border-primary/40 rounded-el shadow-pop"
     >
       <span class="text-sm font-medium text-text-muted mr-2">
-        <span class="text-text font-bold">{{ count }}</span> sélectionné{{ count > 1 ? 's' : '' }}
+        <span class="text-text font-mono font-bold tabular-nums">{{ count }}</span> sélectionné{{ count > 1 ? 's' : '' }}
       </span>
 
       <button
         data-test="bulk-accept"
         :disabled="isLoading"
-        class="flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-btn bg-green-500/15 text-green-400 hover:bg-green-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-btn bg-success/15 text-success hover:bg-success/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         @click="emit('accept')"
       >
         <CheckCircle class="w-4 h-4" />
@@ -46,7 +46,7 @@ const emit = defineEmits<{
       <button
         data-test="bulk-reject"
         :disabled="isLoading"
-        class="flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-btn bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-btn bg-danger/15 text-danger hover:bg-danger/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         @click="emit('reject')"
       >
         <XCircle class="w-4 h-4" />

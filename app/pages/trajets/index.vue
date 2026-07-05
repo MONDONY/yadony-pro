@@ -72,14 +72,14 @@ onMounted(async () => {
       <div class="ml-auto flex items-center gap-2">
         <div class="flex items-center gap-1 bg-surface border border-border rounded-btn p-1">
           <button
-            :class="['p-1.5 rounded transition-colors', viewMode === 'list' ? 'bg-primary text-white' : 'text-text-muted hover:text-text']"
+            :class="['p-1.5 rounded transition-colors', viewMode === 'list' ? 'bg-primary text-on-primary' : 'text-text-muted hover:text-text']"
             aria-label="Vue liste"
             @click="viewMode === 'calendar' && toggleView()"
           >
             <List class="w-4 h-4" />
           </button>
           <button
-            :class="['p-1.5 rounded transition-colors', viewMode === 'calendar' ? 'bg-primary text-white' : 'text-text-muted hover:text-text']"
+            :class="['p-1.5 rounded transition-colors', viewMode === 'calendar' ? 'bg-primary text-on-primary' : 'text-text-muted hover:text-text']"
             aria-label="Vue calendrier"
             @click="viewMode === 'list' && toggleView()"
           >
@@ -89,7 +89,7 @@ onMounted(async () => {
 
         <NuxtLink
           to="/trajets/nouvelle-annonce"
-          class="flex items-center gap-2 h-9 px-4 rounded-btn bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors"
+          class="flex items-center gap-2 h-9 px-4 rounded-btn bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors"
           data-test="btn-nouvelle-annonce"
         >
           <Plus class="w-4 h-4" />
@@ -138,7 +138,7 @@ onMounted(async () => {
       <p class="text-text-muted text-sm">Aucun trajet trouvé pour ce filtre.</p>
       <NuxtLink
         to="/trajets/nouvelle-annonce"
-        class="mt-4 flex items-center gap-2 h-9 px-4 rounded-btn bg-primary text-white text-sm font-medium"
+        class="mt-4 flex items-center gap-2 h-9 px-4 rounded-btn bg-primary text-on-primary text-sm font-medium"
       >
         <Plus class="w-4 h-4" />
         Créer un trajet

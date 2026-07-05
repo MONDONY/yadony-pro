@@ -1,6 +1,9 @@
 <!-- app/features/demandes/components/MatchingRequestGroup.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Plane } from 'lucide-vue-next'
+import { Badge } from '@/components/ui/badge'
+import { SectionLabel } from '@/components/ui/section-label'
 import MatchingRequestCard from '@/features/demandes/components/MatchingRequestCard.vue'
 import type { MatchingRequest } from '@/features/demandes/types/index'
 
@@ -25,11 +28,12 @@ const sortedRequests = computed(() =>
   <div :data-test="`request-group-${tripId}`" class="space-y-3">
     <div class="flex items-center gap-3">
       <div class="h-px flex-1 bg-border" />
-      <div class="flex items-center gap-2 text-xs font-semibold text-text-muted uppercase tracking-wider">
-        <span>✈️ {{ tripCorridor }}</span>
-        <span class="bg-primary/15 text-primary px-2 py-0.5 rounded-full font-bold">
-          {{ requests.length }} demande{{ requests.length > 1 ? 's' : '' }}
-        </span>
+      <div class="flex items-center gap-2">
+        <Plane class="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+        <SectionLabel>{{ tripCorridor }}</SectionLabel>
+        <Badge variant="info" size="sm">
+          <span class="font-mono tabular-nums">{{ requests.length }}</span>&nbsp;demande{{ requests.length > 1 ? 's' : '' }}
+        </Badge>
       </div>
       <div class="h-px flex-1 bg-border" />
     </div>

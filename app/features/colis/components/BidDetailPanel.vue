@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { X, Star, CheckCircle, XCircle, Mail, Clock, Copy, Package, Truck, MapPin } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import { SectionLabel } from '@/components/ui/section-label'
 import type { Bid, BidStatus } from '@/features/colis/types/index'
 
 function copyToClipboard(text: string) {
@@ -91,14 +92,14 @@ function formatHistoryDate(iso: string): string {
     <div
       v-if="isOpen && bid"
       data-test="bid-detail-panel"
-      class="fixed right-0 top-0 h-full w-[480px] max-w-full bg-surface border-l border-border z-50 flex flex-col shadow-2xl"
+      class="fixed right-0 top-0 h-full w-[480px] max-w-full bg-surface border-l border-border z-50 flex flex-col shadow-pop"
     >
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
         <h2 class="text-lg font-bold text-text font-display">Détail du bid</h2>
         <button
           data-test="panel-close"
-          class="p-2 rounded-btn text-text-muted hover:text-text hover:bg-border transition-colors"
+          class="p-2 rounded-btn text-text-muted hover:text-text hover:bg-surface-el transition-colors"
           aria-label="Fermer"
           @click="emit('close')"
         >
@@ -111,7 +112,7 @@ function formatHistoryDate(iso: string): string {
 
         <!-- Sender profile -->
         <section>
-          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Expéditeur</h3>
+          <SectionLabel as="h3" class="mb-3">Expéditeur</SectionLabel>
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-base font-bold text-primary flex-shrink-0">
               {{ bid.sender.avatarInitials }}
@@ -122,10 +123,10 @@ function formatHistoryDate(iso: string): string {
                 <Star
                   v-for="i in 5"
                   :key="i"
-                  :class="cn('w-3.5 h-3.5', i <= ratingStars ? 'text-amber-400 fill-amber-400' : 'text-border')"
+                  :class="cn('w-3.5 h-3.5', i <= ratingStars ? 'text-warning fill-warning' : 'text-border')"
                 />
                 <span class="text-xs text-text-muted ml-1.5">
-                  {{ bid.sender.rating.toFixed(1) }} · {{ bid.sender.totalSentParcels }} envois
+                  <span class="font-mono tabular-nums">{{ bid.sender.rating.toFixed(1) }}</span> · <span class="font-mono tabular-nums">{{ bid.sender.totalSentParcels }}</span> envois
                 </span>
               </div>
             </div>
@@ -134,7 +135,7 @@ function formatHistoryDate(iso: string): string {
 
         <!-- Bid info -->
         <section>
-          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Détails du colis</h3>
+          <SectionLabel as="h3" class="mb-3">Détails du colis</SectionLabel>
           <dl class="grid grid-cols-2 gap-y-3 gap-x-4">
             <div>
               <dt class="text-xs text-text-muted">Corridor</dt>
@@ -148,11 +149,11 @@ function formatHistoryDate(iso: string): string {
             </div>
             <div>
               <dt class="text-xs text-text-muted">Poids</dt>
-              <dd class="text-sm text-text font-medium mt-0.5">{{ bid.weightKg }} kg</dd>
+              <dd class="text-sm text-text font-medium mt-0.5"><span class="font-mono tabular-nums">{{ bid.weightKg }}</span> kg</dd>
             </div>
             <div>
               <dt class="text-xs text-text-muted">Valeur déclarée</dt>
-              <dd class="text-sm text-text font-medium mt-0.5">{{ bid.declaredValueEuros }} €</dd>
+              <dd class="text-sm text-text font-medium mt-0.5"><span class="font-mono tabular-nums">{{ bid.declaredValueEuros }}</span> €</dd>
             </div>
             <div class="col-span-2">
               <dt class="text-xs text-text-muted">Contenu</dt>
@@ -163,17 +164,17 @@ function formatHistoryDate(iso: string): string {
 
         <!-- Tracking -->
         <section v-if="bid.trackingNumber || ['ACCEPTED','HANDED_OVER','IN_TRANSIT','COMPLETED'].includes(bid.status)">
-          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Suivi du colis</h3>
+          <SectionLabel as="h3" class="mb-3">Suivi du colis</SectionLabel>
 
           <!-- Numéro de suivi -->
-          <div v-if="bid.trackingNumber" class="flex items-center gap-3 bg-bg border border-border rounded-card px-4 py-3 mb-4">
+          <div v-if="bid.trackingNumber" class="flex items-center gap-3 bg-bg border border-border rounded-el px-4 py-3 mb-4">
             <Package class="w-4 h-4 text-primary shrink-0" />
             <div class="flex-1 min-w-0">
               <p class="text-xs text-text-muted">Numéro de suivi</p>
               <p class="font-mono font-bold text-text tracking-widest text-sm mt-0.5">{{ bid.trackingNumber }}</p>
             </div>
             <button
-              class="p-1.5 rounded hover:bg-border transition-colors text-text-muted hover:text-primary"
+              class="p-1.5 rounded hover:bg-surface-el transition-colors text-text-muted hover:text-primary"
               title="Copier le numéro"
               type="button"
               @click="copyToClipboard(bid.trackingNumber!)"
@@ -198,7 +199,7 @@ function formatHistoryDate(iso: string): string {
                 <div :class="cn(
                   'w-7 h-7 rounded-full flex items-center justify-center border-2',
                   ['ACCEPTED','HANDED_OVER','IN_TRANSIT','COMPLETED'].indexOf(bid.status) >= i
-                    ? 'bg-primary border-primary text-white'
+                    ? 'bg-primary border-primary text-on-primary'
                     : 'bg-bg border-border text-text-muted'
                 )">
                   <component :is="step.icon" class="w-3.5 h-3.5" />
@@ -221,19 +222,19 @@ function formatHistoryDate(iso: string): string {
 
         <!-- Payment status -->
         <section>
-          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Paiement</h3>
-          <div class="flex items-center justify-between bg-bg rounded-card px-4 py-3 border border-border">
+          <SectionLabel as="h3" class="mb-3">Paiement</SectionLabel>
+          <div class="flex items-center justify-between bg-bg rounded-el px-4 py-3 border border-border">
             <span class="text-sm text-text-muted">{{ paymentLabel[bid.paymentStatus] }}</span>
-            <span class="text-sm font-bold text-accent">{{ bid.paymentAmountEuros.toFixed(2) }} €</span>
+            <span class="text-sm font-mono font-bold tabular-nums text-primary">{{ bid.paymentAmountEuros.toFixed(2) }} €</span>
           </div>
           <p class="text-xs text-text-muted mt-2">
-            Vos revenus nets (après commission 12 %) : <span class="text-accent font-semibold">{{ bid.earningsEuros.toFixed(2) }} €</span>
+            Vos revenus nets (après commission 12 %) : <span class="text-primary font-mono font-semibold tabular-nums">{{ bid.earningsEuros.toFixed(2) }} €</span>
           </p>
         </section>
 
         <!-- History -->
         <section>
-          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Historique</h3>
+          <SectionLabel as="h3" class="mb-3">Historique</SectionLabel>
           <ol class="relative space-y-3 border-l border-border ml-2">
             <li
               v-for="(entry, i) in sortedHistory"
@@ -261,7 +262,7 @@ function formatHistoryDate(iso: string): string {
       >
         <button
           data-test="panel-btn-accept"
-          class="flex-1 flex items-center justify-center gap-2 h-10 rounded-btn bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors"
+          class="flex-1 flex items-center justify-center gap-2 h-10 rounded-btn bg-success text-on-primary text-sm font-medium shadow-btn hover:bg-success/90 transition-colors"
           @click="emit('accept', bid.id)"
         >
           <CheckCircle class="w-4 h-4" />
@@ -269,7 +270,7 @@ function formatHistoryDate(iso: string): string {
         </button>
         <button
           data-test="panel-btn-reject"
-          class="flex-1 flex items-center justify-center gap-2 h-10 rounded-btn border border-red-400 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors"
+          class="flex-1 flex items-center justify-center gap-2 h-10 rounded-btn border border-danger text-danger text-sm font-medium hover:bg-danger/10 transition-colors"
           @click="emit('reject', bid.id)"
         >
           <XCircle class="w-4 h-4" />

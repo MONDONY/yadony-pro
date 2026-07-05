@@ -21,8 +21,8 @@ const fillPct = computed(() =>
   <div class="space-y-3">
     <div class="flex justify-between items-baseline">
       <span class="text-sm text-text-muted">Poids disponible</span>
-      <span class="font-bold text-2xl text-text">
-        {{ modelValue }}<span class="text-base text-text-muted ml-1">kg</span>
+      <span class="font-mono text-2xl font-semibold tabular-nums text-text">
+        {{ modelValue }}<span class="ml-1 text-base font-sans text-text-muted">kg</span>
       </span>
     </div>
     <div class="relative h-5 flex items-center">
@@ -43,8 +43,8 @@ const fillPct = computed(() =>
       />
     </div>
     <div class="flex justify-between text-xs text-text-muted">
-      <span>{{ min }} kg</span>
-      <span>{{ max }} kg</span>
+      <span class="font-mono tabular-nums">{{ min }} kg</span>
+      <span class="font-mono tabular-nums">{{ max }} kg</span>
     </div>
   </div>
 </template>

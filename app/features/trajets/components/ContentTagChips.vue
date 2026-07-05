@@ -67,7 +67,7 @@ function onKeydown(e: KeyboardEvent) {
         class="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-primary/10 border border-primary text-primary"
       >
         {{ tag }}
-        <button class="hover:text-red-400 transition-colors" @click="remove(tag)">
+        <button class="hover:text-danger transition-colors" @click="remove(tag)">
           <X class="w-3 h-3" />
         </button>
       </span>
@@ -78,12 +78,12 @@ function onKeydown(e: KeyboardEvent) {
         v-model="customInput"
         type="text"
         :placeholder="placeholder ?? 'Ajouter un tag personnalisé…'"
-        class="flex-1 h-9 px-3 rounded-btn border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
+        class="flex-1 h-9 px-3 rounded-input border border-border-strong bg-surface text-sm text-text placeholder:text-text-subtle focus:outline-none focus:border-primary transition-colors"
         @keydown="onKeydown"
       />
       <button
         type="button"
-        class="h-9 px-3 rounded-btn border border-border text-text-muted hover:text-text hover:border-primary/50 transition-colors"
+        class="h-9 px-3 rounded-btn border border-border-strong text-text-muted hover:text-text hover:border-primary/50 transition-colors"
         @click="addCustom"
       >
         <Plus class="w-4 h-4" />

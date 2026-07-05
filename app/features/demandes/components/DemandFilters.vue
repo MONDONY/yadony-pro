@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { LayoutGrid, List } from 'lucide-vue-next'
+import { LayoutGrid, List, Weight, Euro, Package, ArrowDownNarrowWide, Star, Clock, TrendingUp } from 'lucide-vue-next'
 import type { FilterState } from '@/features/demandes/types/index'
 import { DEFAULT_FILTER_STATE } from '@/features/demandes/types/index'
 
@@ -57,11 +57,12 @@ function patch(partial: Partial<FilterState>) {
 
 const weightOptions = [5, 10, 15, 20]
 const budgetOptions = [5, 8, 10, 15]
-const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
-  { value: 'score', label: '⭐ Score' },
-  { value: 'date', label: '🕒 Récent' },
-  { value: 'price', label: '💶 Prix élevé' },
+const sortOptions: { value: FilterState['sortBy']; label: string; icon: typeof Star }[] = [
+  { value: 'score', label: 'Score', icon: Star },
+  { value: 'date', label: 'Récent', icon: Clock },
+  { value: 'price', label: 'Prix élevé', icon: TrendingUp },
 ]
+const currentSort = computed(() => sortOptions.find(s => s.value === props.filters.sortBy) ?? sortOptions[0])
 </script>
 
 <template>
@@ -76,7 +77,7 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
       type="button"
       @click="resetAll"
     >
-      Tous ({{ resultCount }})
+      Tous (<span class="font-mono tabular-nums">{{ resultCount }}</span>)
     </button>
 
     <!-- Chip Poids -->
@@ -84,20 +85,21 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
       <button
         data-test="filter-weight"
         :class="[
-          'text-xs font-medium px-3 py-1.5 rounded-full transition-colors',
+          'inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors',
           filters.maxWeightKg !== null ? 'bg-text text-bg' : 'bg-surface border border-border text-text-muted hover:text-text',
         ]"
         type="button"
         @click="openPicker = openPicker === 'weight' ? null : 'weight'"
       >
-        ⚖️ {{ filters.maxWeightKg !== null ? `< ${filters.maxWeightKg} kg` : 'Poids' }}
+        <Weight class="h-3.5 w-3.5" aria-hidden="true" />
+        <span :class="filters.maxWeightKg !== null ? 'font-mono tabular-nums' : ''">{{ filters.maxWeightKg !== null ? `< ${filters.maxWeightKg} kg` : 'Poids' }}</span>
       </button>
-      <div v-if="openPicker === 'weight'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-btn shadow-lg z-20 py-1 min-w-24">
+      <div v-if="openPicker === 'weight'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-el shadow-pop z-20 py-1 min-w-24">
         <button
           v-for="w in weightOptions"
           :key="w"
           :data-test="`weight-option-${w}`"
-          class="w-full text-left px-3 py-1.5 text-xs hover:bg-bg transition-colors text-text"
+          class="w-full text-left px-3 py-1.5 text-xs hover:bg-surface-el transition-colors text-text font-mono tabular-nums"
           type="button"
           @click="patch({ maxWeightKg: w })"
         >
@@ -105,7 +107,7 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
         </button>
         <button
           v-if="filters.maxWeightKg !== null"
-          class="w-full text-left px-3 py-1.5 text-xs text-text-muted hover:bg-bg border-t border-border transition-colors"
+          class="w-full text-left px-3 py-1.5 text-xs text-text-muted hover:bg-surface-el border-t border-border transition-colors"
           type="button"
           @click="patch({ maxWeightKg: null })"
         >Effacer</button>
@@ -117,20 +119,21 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
       <button
         data-test="filter-budget"
         :class="[
-          'text-xs font-medium px-3 py-1.5 rounded-full transition-colors',
+          'inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors',
           filters.minBudgetPerKg !== null ? 'bg-text text-bg' : 'bg-surface border border-border text-text-muted hover:text-text',
         ]"
         type="button"
         @click="openPicker = openPicker === 'budget' ? null : 'budget'"
       >
-        💶 {{ filters.minBudgetPerKg !== null ? `> ${filters.minBudgetPerKg} €/kg` : '€/kg min' }}
+        <Euro class="h-3.5 w-3.5" aria-hidden="true" />
+        <span :class="filters.minBudgetPerKg !== null ? 'font-mono tabular-nums' : ''">{{ filters.minBudgetPerKg !== null ? `> ${filters.minBudgetPerKg} €/kg` : '€/kg min' }}</span>
       </button>
-      <div v-if="openPicker === 'budget'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-btn shadow-lg z-20 py-1 min-w-28">
+      <div v-if="openPicker === 'budget'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-el shadow-pop z-20 py-1 min-w-28">
         <button
           v-for="b in budgetOptions"
           :key="b"
           :data-test="`budget-option-${b}`"
-          class="w-full text-left px-3 py-1.5 text-xs hover:bg-bg transition-colors text-text"
+          class="w-full text-left px-3 py-1.5 text-xs hover:bg-surface-el transition-colors text-text font-mono tabular-nums"
           type="button"
           @click="patch({ minBudgetPerKg: b })"
         >
@@ -138,7 +141,7 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
         </button>
         <button
           v-if="filters.minBudgetPerKg !== null"
-          class="w-full text-left px-3 py-1.5 text-xs text-text-muted hover:bg-bg border-t border-border transition-colors"
+          class="w-full text-left px-3 py-1.5 text-xs text-text-muted hover:bg-surface-el border-t border-border transition-colors"
           type="button"
           @click="patch({ minBudgetPerKg: null })"
         >Effacer</button>
@@ -150,26 +153,27 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
       <button
         data-test="filter-type"
         :class="[
-          'text-xs font-medium px-3 py-1.5 rounded-full transition-colors',
+          'inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors',
           filters.contentType !== null ? 'bg-text text-bg' : 'bg-surface border border-border text-text-muted hover:text-text',
         ]"
         type="button"
         @click="openPicker = openPicker === 'type' ? null : 'type'"
       >
-        📦 {{ filters.contentType ?? 'Type' }}
+        <Package class="h-3.5 w-3.5" aria-hidden="true" />
+        {{ filters.contentType ?? 'Type' }}
       </button>
-      <div v-if="openPicker === 'type'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-btn shadow-lg z-20 py-1 min-w-32">
+      <div v-if="openPicker === 'type'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-el shadow-pop z-20 py-1 min-w-32">
         <button
           v-for="ct in availableContentTypes"
           :key="ct"
           :data-test="`type-option-${ct}`"
-          class="w-full text-left px-3 py-1.5 text-xs hover:bg-bg transition-colors text-text"
+          class="w-full text-left px-3 py-1.5 text-xs hover:bg-surface-el transition-colors text-text"
           type="button"
           @click="patch({ contentType: ct })"
         >{{ ct }}</button>
         <button
           v-if="filters.contentType !== null"
-          class="w-full text-left px-3 py-1.5 text-xs text-text-muted hover:bg-bg border-t border-border transition-colors"
+          class="w-full text-left px-3 py-1.5 text-xs text-text-muted hover:bg-surface-el border-t border-border transition-colors"
           type="button"
           @click="patch({ contentType: null })"
         >Effacer</button>
@@ -180,21 +184,22 @@ const sortOptions: { value: FilterState['sortBy']; label: string }[] = [
     <div class="relative shrink-0">
       <button
         data-test="filter-sort"
-        class="text-xs font-medium px-3 py-1.5 rounded-full bg-surface border border-border text-text-muted hover:text-text transition-colors"
+        class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-surface border border-border text-text-muted hover:text-text transition-colors"
         type="button"
         @click="openPicker = openPicker === 'sort' ? null : 'sort'"
       >
-        🔽 {{ sortOptions.find(s => s.value === filters.sortBy)?.label ?? 'Trier' }}
+        <ArrowDownNarrowWide class="h-3.5 w-3.5" aria-hidden="true" />
+        {{ currentSort.label }}
       </button>
-      <div v-if="openPicker === 'sort'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-btn shadow-lg z-20 py-1 min-w-32">
+      <div v-if="openPicker === 'sort'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-el shadow-pop z-20 py-1 min-w-32">
         <button
           v-for="opt in sortOptions"
           :key="opt.value"
           :data-test="`sort-option-${opt.value}`"
-          class="w-full text-left px-3 py-1.5 text-xs hover:bg-bg transition-colors text-text"
+          class="w-full text-left px-3 py-1.5 text-xs hover:bg-surface-el transition-colors text-text inline-flex w-full items-center gap-2"
           type="button"
           @click="patch({ sortBy: opt.value })"
-        >{{ opt.label }}</button>
+        ><component :is="opt.icon" class="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />{{ opt.label }}</button>
       </div>
     </div>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import type { PresetRule } from '@/features/automations/types/index'
 
 const props = defineProps<{
@@ -36,7 +37,7 @@ const description = computed(
   <div
     :data-test="`preset-rule-card-${rule.id}`"
     :class="cn(
-      'flex items-start gap-4 p-4 bg-surface border rounded-card transition-all duration-200',
+      'flex items-start gap-4 rounded-el border bg-surface p-5 shadow-card transition-all duration-200',
       rule.enabled ? 'border-primary/40' : 'border-border',
     )"
   >
@@ -67,18 +68,8 @@ const description = computed(
     <div class="flex-1 min-w-0 space-y-1">
       <div class="flex items-center gap-2 flex-wrap">
         <p class="text-sm font-semibold text-text">{{ rule.label }}</p>
-        <span
-          v-if="rule.enabled"
-          class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 font-medium"
-        >
-          Active
-        </span>
-        <span
-          v-else
-          class="text-xs px-2 py-0.5 rounded-full border border-border text-text-muted font-medium"
-        >
-          Inactive
-        </span>
+        <Badge v-if="rule.enabled" variant="success" size="sm">Active</Badge>
+        <Badge v-else variant="neutral" size="sm">Inactive</Badge>
       </div>
       <p class="text-xs text-text-muted leading-relaxed">{{ description }}</p>
       <p v-if="rule.isConfigurable" class="text-xs text-primary/70 font-medium">

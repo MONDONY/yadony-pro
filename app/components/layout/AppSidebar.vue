@@ -11,6 +11,7 @@ import {
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/stores/auth'
 import NavItem from './NavItem.vue'
 
@@ -33,11 +34,11 @@ const initials = computed(() =>
     <ClientOnly>
       <div class="px-4 py-4 border-b border-border flex items-center gap-3">
         <Avatar>
-          <AvatarFallback class="bg-primary text-white text-sm">{{ initials }}</AvatarFallback>
+          <AvatarFallback class="bg-primary text-on-primary text-sm">{{ initials }}</AvatarFallback>
         </Avatar>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium truncate">{{ auth.user?.displayName }}</p>
-          <span class="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">PRO</span>
+          <Badge variant="info" size="sm" :dot="false">PRO</Badge>
         </div>
       </div>
       <template #fallback>
@@ -81,7 +82,7 @@ const initials = computed(() =>
       <NuxtLink
         to="/trajets/nouvelle-annonce"
         data-test="btn-nouvelle-annonce"
-        class="flex items-center justify-center gap-2 w-full rounded-md bg-primary text-white text-sm font-medium px-4 py-2 hover:bg-primary/90 transition-colors"
+        class="flex w-full items-center justify-center gap-2 rounded-btn bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-btn transition-[background,transform] duration-150 hover:bg-primary-hover active:translate-y-px"
       >
         <Plus class="w-4 h-4" />
         Nouvelle annonce

@@ -1,57 +1,11 @@
-<template>
-  <section id="fonctionnalites" class="py-20">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="font-display font-bold text-3xl text-text mb-3">Tout ce dont tu as besoin</h2>
-        <p class="text-text-muted max-w-lg mx-auto">Un workspace pensé pour les voyageurs professionnels de la diaspora.</p>
-      </div>
-
-      <div class="flex flex-col gap-20">
-        <div
-          v-for="(feature, i) in features"
-          :key="feature.title"
-          class="flex flex-col lg:flex-row items-center gap-12"
-          :class="{ 'lg:flex-row-reverse': i % 2 !== 0 }"
-        >
-          <!-- Texte -->
-          <div class="flex-1 flex flex-col gap-5">
-            <div
-              class="inline-flex items-center gap-2 w-fit px-3 py-1.5 rounded-full text-sm font-semibold"
-              :style="feature.badgeStyle"
-            >
-              <span aria-hidden="true">{{ feature.icon }}</span>
-              <span>{{ feature.badge }}</span>
-            </div>
-            <h3 class="font-display font-bold text-2xl text-text">{{ feature.title }}</h3>
-            <p class="text-text-muted leading-relaxed">{{ feature.description }}</p>
-            <ul class="flex flex-col gap-2 mt-2" :aria-label="`Points clés de ${feature.title}`">
-              <li
-                v-for="item in feature.bullets"
-                :key="item"
-                class="flex items-start gap-2 text-sm text-text-muted"
-              >
-                <span class="mt-0.5 flex-shrink-0 text-success" aria-hidden="true">✓</span>
-                {{ item }}
-              </li>
-            </ul>
-          </div>
-
-          <!-- Visuel CSS mockup -->
-          <div class="flex-shrink-0 w-full lg:w-[380px]">
-            <div class="bg-surface rounded-card border border-border p-5 shadow-lg" v-html="feature.visual" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-</template>
-
 <script setup lang="ts">
+import { LayoutDashboard, Handshake, Lock, Check, BadgeCheck, ArrowUpRight } from 'lucide-vue-next'
+
 const features = [
   {
-    icon: '📊',
+    key: 'cockpit',
+    icon: LayoutDashboard,
     badge: 'Cockpit opérationnel',
-    badgeStyle: 'background-color: rgb(var(--primary-rgb) / 0.1); color: var(--primary);',
     title: 'Une vue 360° de ton activité',
     description: 'KPIs en temps réel, historique des trajets, revenus encaissés, taux d\'acceptation — tout au même endroit.',
     bullets: [
@@ -59,31 +13,11 @@ const features = [
       'Suivi des colis actifs par trajet',
       'Export fiscal en un clic',
     ],
-    visual: `<div style="display:flex;flex-direction:column;gap:12px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div style="background:rgb(var(--success-rgb)/0.1);border-radius:12px;padding:12px;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Revenus avril</div>
-          <div style="font-size:22px;font-weight:800;color:var(--success);font-family:'Hanken Grotesk',sans-serif;">3 240 €</div>
-        </div>
-        <div style="background:rgb(var(--primary-rgb)/0.1);border-radius:12px;padding:12px;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Colis actifs</div>
-          <div style="font-size:22px;font-weight:800;color:var(--primary);font-family:'Hanken Grotesk',sans-serif;">12</div>
-        </div>
-      </div>
-      <div style="background:var(--surface-el);border-radius:12px;padding:12px;">
-        <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Trajets récents</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--text);">Paris → Dakar</span><span style="color:var(--success);font-weight:600;">+680 €</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--text);">CDG → Abidjan</span><span style="color:var(--success);font-weight:600;">+530 €</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--text);">Lyon → Bamako</span><span style="color:var(--warning);font-weight:600;">En cours</span></div>
-        </div>
-      </div>
-    </div>`,
   },
   {
-    icon: '🤝',
+    key: 'matching',
+    icon: Handshake,
     badge: 'Matching & négociation',
-    badgeStyle: 'background-color: rgb(var(--accent-rgb) / 0.1); color: var(--accent);',
     title: 'Trouve les bons expéditeurs',
     description: 'dony te propose des expéditeurs vérifiés qui correspondent à ton trajet. Négocie le prix directement, sans intermédiaire.',
     bullets: [
@@ -91,22 +25,11 @@ const features = [
       'Chat intégré pour négocier le tarif',
       'Expéditeurs vérifiés KYC uniquement',
     ],
-    visual: `<div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="background:var(--surface-el);border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:11px;color:var(--muted);">Nouveau match</div><div style="font-size:13px;font-weight:600;color:var(--text);">Paris → Dakar · 6 kg</div></div>
-        <span style="background:rgb(var(--success-rgb)/0.15);color:var(--success);font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;">Vérifié ✓</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
-        <div style="align-self:flex-start;background:rgb(var(--primary-rgb)/0.12);border-radius:0 12px 12px 12px;padding:8px 12px;font-size:12px;color:var(--text);max-width:80%;">Je propose 45 € pour 6 kg ?</div>
-        <div style="align-self:flex-end;background:var(--primary);border-radius:12px 0 12px 12px;padding:8px 12px;font-size:12px;color:white;max-width:80%;">Je fais 50 €, c'est mon dernier prix.</div>
-        <div style="align-self:flex-start;background:rgb(var(--success-rgb)/0.12);border-radius:0 12px 12px 12px;padding:8px 12px;font-size:12px;color:var(--success);max-width:80%;">✓ Accord ! Je confirme le paiement.</div>
-      </div>
-    </div>`,
   },
   {
-    icon: '🔒',
+    key: 'paiements',
+    icon: Lock,
     badge: 'Paiements sécurisés',
-    badgeStyle: 'background-color: rgb(var(--success-rgb) / 0.1); color: var(--success);',
     title: 'Encaisse sans risque',
     description: 'Les fonds sont bloqués en séquestre Stripe dès la confirmation. Tu es payé automatiquement à la livraison confirmée.',
     bullets: [
@@ -114,23 +37,127 @@ const features = [
       'Libération automatique après scan QR livraison',
       'Protection en cas de litige via dony',
     ],
-    visual: `<div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgb(var(--primary-rgb)/0.15);color:var(--primary);font-weight:700;flex-shrink:0;">1</div>
-        <div style="font-size:12px;color:var(--text);">Expéditeur confirme · <span style="color:var(--success);font-weight:600;">Fonds bloqués</span></div>
-      </div>
-      <div style="width:2px;height:16px;background:var(--border);margin-left:15px;"></div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgb(var(--warning-rgb)/0.15);color:var(--warning);font-weight:700;flex-shrink:0;">2</div>
-        <div style="font-size:12px;color:var(--text);">Tu transportes le colis · <span style="color:var(--warning);">En séquestre</span></div>
-      </div>
-      <div style="width:2px;height:16px;background:var(--border);margin-left:15px;"></div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgb(var(--success-rgb)/0.15);color:var(--success);font-weight:700;flex-shrink:0;">3</div>
-        <div style="font-size:12px;color:var(--text);">Scan QR livraison · <span style="color:var(--success);font-weight:600;">Virement automatique</span></div>
-      </div>
-      <div style="background:rgb(var(--success-rgb)/0.08);border:1px solid rgb(var(--success-rgb)/0.2);border-radius:12px;padding:10px 12px;margin-top:4px;font-size:12px;color:var(--success);font-weight:600;">💰 +1 240 € virés sur ton compte Stripe</div>
-    </div>`,
   },
-]
+] as const
 </script>
+
+<template>
+  <section id="fonctionnalites" class="py-24">
+    <div class="mx-auto max-w-6xl px-6">
+      <div class="mb-16 text-center">
+        <h2 class="font-display text-3xl font-semibold tracking-[-0.02em] text-text text-balance">Tout ce dont tu as besoin</h2>
+        <p class="mx-auto mt-3 max-w-lg text-text-muted">Un workspace pensé pour les voyageurs professionnels de la diaspora.</p>
+      </div>
+
+      <div class="flex flex-col gap-20">
+        <div
+          v-for="feature in features"
+          :key="feature.title"
+          class="grid items-center gap-10 lg:grid-cols-2 lg:gap-16"
+        >
+          <!-- Texte -->
+          <div class="flex flex-col gap-5">
+            <div class="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5">
+              <component :is="feature.icon" class="h-4 w-4 text-primary" :stroke-width="1.75" aria-hidden="true" />
+              <span class="text-xs font-medium text-text-muted">{{ feature.badge }}</span>
+            </div>
+
+            <h3 class="font-display text-2xl font-semibold tracking-[-0.02em] text-text text-balance">{{ feature.title }}</h3>
+            <p class="leading-relaxed text-text-muted">{{ feature.description }}</p>
+
+            <ul class="mt-2 flex flex-col gap-2.5" :aria-label="`Points clés de ${feature.title}`">
+              <li
+                v-for="item in feature.bullets"
+                :key="item"
+                class="flex items-start gap-2.5 text-sm text-text-muted"
+              >
+                <Check class="mt-0.5 h-4 w-4 flex-shrink-0 text-success" :stroke-width="2" aria-hidden="true" />
+                <span>{{ item }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Aperçu produit (surface Comptoir, vraies données mono tabular) -->
+          <div class="rounded-card border border-border bg-surface p-5 shadow-pop" aria-hidden="true">
+            <!-- Cockpit : KPIs + trajets récents -->
+            <div v-if="feature.key === 'cockpit'" class="flex flex-col gap-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-el border border-border bg-surface p-3 shadow-card">
+                  <div class="text-2xs text-text-muted">Revenus avril</div>
+                  <div class="mt-1 font-mono text-lg font-semibold tabular-nums text-text">3 240 €</div>
+                  <div class="mt-0.5 font-mono text-2xs tabular-nums text-success">▲ 8,1 %</div>
+                </div>
+                <div class="rounded-el border border-border bg-surface p-3 shadow-card">
+                  <div class="text-2xs text-text-muted">Colis actifs</div>
+                  <div class="mt-1 font-mono text-lg font-semibold tabular-nums text-text">12</div>
+                  <div class="mt-0.5 text-2xs text-text-subtle">4 corridors</div>
+                </div>
+              </div>
+              <div class="rounded-el bg-surface-el p-3">
+                <div class="mb-2 text-2xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Trajets récents</div>
+                <div class="flex flex-col gap-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-text">Paris → Dakar</span>
+                    <span class="font-mono text-xs font-semibold tabular-nums text-success">+680 €</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-text">CDG → Abidjan</span>
+                    <span class="font-mono text-xs font-semibold tabular-nums text-success">+530 €</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-text">Lyon → Bamako</span>
+                    <span class="text-2xs font-medium text-warning">En cours</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Matching : match + négociation -->
+            <div v-else-if="feature.key === 'matching'" class="flex flex-col gap-3">
+              <div class="flex items-center justify-between rounded-el bg-surface-el px-3 py-2.5">
+                <div>
+                  <div class="text-2xs text-text-muted">Nouveau match</div>
+                  <div class="text-xs font-medium text-text">Paris → Dakar · 6 kg</div>
+                </div>
+                <span class="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-2xs font-medium text-success">
+                  <BadgeCheck class="h-3 w-3" :stroke-width="1.75" aria-hidden="true" />
+                  Vérifié
+                </span>
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <div class="max-w-[82%] self-start rounded-el rounded-tl-xs bg-surface-el px-3 py-2 text-xs text-text">Je propose 45 € pour 6 kg ?</div>
+                <div class="max-w-[82%] self-end rounded-el rounded-tr-xs bg-primary px-3 py-2 text-xs text-on-primary">Je fais 50 €, c'est mon dernier prix.</div>
+                <div class="inline-flex max-w-[82%] items-center gap-1.5 self-start rounded-el rounded-tl-xs bg-success/10 px-3 py-2 text-xs font-medium text-success">
+                  <Check class="h-3.5 w-3.5 flex-shrink-0" :stroke-width="2" aria-hidden="true" />
+                  Accord ! Je confirme le paiement.
+                </div>
+              </div>
+            </div>
+
+            <!-- Paiements : séquestre en 3 étapes -->
+            <div v-else class="flex flex-col gap-2">
+              <div class="flex items-center gap-3">
+                <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-xs font-semibold text-primary">1</span>
+                <span class="text-xs text-text">Expéditeur confirme · <span class="font-medium text-success">Fonds bloqués</span></span>
+              </div>
+              <div class="ml-3.5 h-4 w-px bg-border"></div>
+              <div class="flex items-center gap-3">
+                <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-warning/10 font-mono text-xs font-semibold text-warning">2</span>
+                <span class="text-xs text-text">Tu transportes le colis · <span class="font-medium text-warning">En séquestre</span></span>
+              </div>
+              <div class="ml-3.5 h-4 w-px bg-border"></div>
+              <div class="flex items-center gap-3">
+                <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-success/10 font-mono text-xs font-semibold text-success">3</span>
+                <span class="text-xs text-text">Scan QR livraison · <span class="font-medium text-success">Virement automatique</span></span>
+              </div>
+              <div class="mt-1 flex items-center gap-2 rounded-el border border-success/20 bg-success/5 px-3 py-2.5 text-xs font-medium text-success">
+                <ArrowUpRight class="h-4 w-4 flex-shrink-0" :stroke-width="1.75" aria-hidden="true" />
+                <span><span class="font-mono tabular-nums">+1 240 €</span> virés sur ton compte Stripe</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>

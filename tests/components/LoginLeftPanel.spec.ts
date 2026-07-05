@@ -13,11 +13,11 @@ describe('LoginLeftPanel', () => {
     expect(wrapper.text()).toContain('PRO')
   })
 
-  it('renders the securise mascot image', () => {
+  it('shows an editorial headline instead of a mascot (redesign Comptoir)', () => {
     const wrapper = mount(LoginLeftPanel)
-    const img = wrapper.find('img')
-    expect(img.exists()).toBe(true)
-    expect(img.attributes('src')).toBe('/mascots/securise.png')
+    // La mascotte a été retirée au profit d'une accroche typographique.
+    expect(wrapper.find('img[src*="mascots"]').exists()).toBe(false)
+    expect(wrapper.find('h2').exists()).toBe(true)
   })
 
   it('renders 3 security reassurance items', () => {

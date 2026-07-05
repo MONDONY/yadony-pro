@@ -1,7 +1,9 @@
 <!-- app/features/colis/components/BidTable.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
+import { PackageSearch } from 'lucide-vue-next'
 import BidTableRow from '@/features/colis/components/BidTableRow.vue'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { Bid } from '@/features/colis/types/index'
 
 const props = defineProps<{
@@ -33,19 +35,19 @@ function onSelectAll() {
 </script>
 
 <template>
-  <div class="bg-surface border border-border rounded-card overflow-hidden">
+  <div class="overflow-hidden rounded-card border border-border bg-surface shadow-card">
     <!-- Loading skeleton -->
     <div v-if="isLoading" class="p-6 space-y-3">
-      <div v-for="i in 5" :key="i" class="h-12 bg-border/40 rounded animate-pulse" />
+      <div v-for="i in 5" :key="i" class="h-12 bg-surface-el rounded-el animate-pulse" />
     </div>
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="bids.length === 0"
-      class="flex flex-col items-center justify-center py-20 text-center"
-    >
-      <p class="text-text-muted text-sm">Aucun colis correspondant à ces filtres.</p>
-    </div>
+      :icon="PackageSearch"
+      title="Aucun colis"
+      description="Aucun colis ne correspond à ces filtres."
+    />
 
     <!-- Table -->
     <div v-else class="overflow-x-auto">
@@ -61,15 +63,15 @@ function onSelectAll() {
                 @change="onSelectAll"
               />
             </th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Expéditeur</th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">N° Suivi</th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Corridor</th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Date départ</th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Poids</th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Contenu</th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Statut</th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Revenus</th>
-            <th class="py-3 pr-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Actions</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">Expéditeur</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">N° Suivi</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">Corridor</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">Date départ</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">Poids</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">Contenu</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">Statut</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">Revenus</th>
+            <th class="py-3 pr-4 text-[11px] font-semibold text-text-subtle uppercase tracking-[0.07em]">Actions</th>
           </tr>
         </thead>
         <tbody>
