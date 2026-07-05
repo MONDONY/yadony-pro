@@ -30,3 +30,7 @@ playwright/.cache
 # Logs
 *.log
 .worktrees/
+
+# Redesign : captures de revue (non versionnées)
+design-*.png
+.playwright-mcp/

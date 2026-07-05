@@ -3,7 +3,10 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/eslint', '@nuxtjs/tailwindcss', '@pinia/nuxt'],
   components: [
-    { path: '~/components', pathPrefix: false },
+    // Le kit UI (~/components/ui) est importé explicitement via ses barrels
+    // index.ts (convention shadcn-vue) — on l'exclut de l'auto-import pour
+    // éviter les collisions de noms (Button, Card, Input…).
+    { path: '~/components', pathPrefix: false, ignore: ['**/ui/**'] },
     { path: '~/features/landing/components', pathPrefix: false },
   ],
   typescript: {

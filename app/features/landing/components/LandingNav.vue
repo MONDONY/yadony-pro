@@ -76,6 +76,8 @@
 </template>
 
 <script setup lang="ts">
+import ThemeToggle from '@/components/ui/ThemeToggle.vue'
+
 const { isDark } = useTheme()
 const menuOpen = ref(false)
 
