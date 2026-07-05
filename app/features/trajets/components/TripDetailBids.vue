@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, Download, List, Table2, PackageCheck, Inbox } fro
 import { cn } from '@/lib/utils'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import TripBidDetailPanel from '@/features/trajets/components/TripBidDetailPanel.vue'
 import type { TripBid } from '@/features/trajets/types/index'
 
 const props = defineProps<{
@@ -17,8 +18,23 @@ const emit = defineEmits<{
   'accept': [bidId: string]
   'reject': [bidId: string]
   'confirm-delivery': [bidId: string, code: string]
+  'confirm-presence': [bidId: string]
+  'refuse-parcel': [bidId: string, reason: string]
+  'cancel': [bidId: string]
   'export-csv': []
 }>()
+
+// Panneau de détail d'un colis (ouvert au clic sur une carte/ligne).
+const detailBid = ref<TripBid | null>(null)
+
+function onPanelRequestDelivery(bid: TripBid) {
+  detailBid.value = null
+  openConfirmModal(bid)
+}
+function forwardAndClose(fn: () => void) {
+  fn()
+  detailBid.value = null
+}
 
 const confirmingBid = ref<TripBid | null>(null)
 const confirmCode = ref('')
@@ -204,8 +220,9 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
           <tr
             v-for="bid in filteredBids"
             :key="bid.id"
-            class="hover:bg-surface-el transition-colors"
+            class="hover:bg-surface-el transition-colors cursor-pointer"
             :data-test="`bid-row-${bid.id}`"
+            @click="detailBid = bid"
           >
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
@@ -233,7 +250,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
                   :disabled="props.loadingBidId === bid.id"
                   class="p-1.5 rounded-btn text-success hover:bg-success/10 transition-colors disabled:opacity-50"
                   :data-test="`accept-${bid.id}`"
-                  @click="emit('accept', bid.id)"
+                  @click.stop="emit('accept', bid.id)"
                 >
                   <CheckCircle class="w-4 h-4" />
                 </button>
@@ -241,7 +258,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
                   :disabled="props.loadingBidId === bid.id"
                   class="p-1.5 rounded-btn text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
                   :data-test="`reject-${bid.id}`"
-                  @click="emit('reject', bid.id)"
+                  @click.stop="emit('reject', bid.id)"
                 >
                   <XCircle class="w-4 h-4" />
                 </button>
@@ -251,7 +268,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
                   :disabled="props.loadingBidId === bid.id"
                   class="flex items-center gap-1 px-2 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
                   :data-test="`confirm-delivery-${bid.id}`"
-                  @click="openConfirmModal(bid)"
+                  @click.stop="openConfirmModal(bid)"
                 >
                   <PackageCheck class="w-3.5 h-3.5" />
                   Livraison
@@ -268,8 +285,9 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
       <div
         v-for="bid in filteredBids"
         :key="bid.id"
-        class="rounded-el border border-border bg-surface p-4 shadow-card space-y-3"
+        class="rounded-el border border-border bg-surface p-4 shadow-card space-y-3 cursor-pointer hover:border-primary/40 transition-colors"
         :data-test="`bid-card-${bid.id}`"
+        @click="detailBid = bid"
       >
         <!-- Sender + status -->
         <div class="flex items-center justify-between gap-3">
@@ -314,7 +332,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
             :disabled="props.loadingBidId === bid.id"
             class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn bg-success text-on-primary text-xs font-medium hover:bg-success/90 transition-colors disabled:opacity-50"
             :data-test="`accept-card-${bid.id}`"
-            @click="emit('accept', bid.id)"
+            @click.stop="emit('accept', bid.id)"
           >
             <CheckCircle class="w-3.5 h-3.5" />
             Accepter
@@ -323,7 +341,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
             :disabled="props.loadingBidId === bid.id"
             class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn border border-danger text-danger text-xs font-medium hover:bg-danger/10 transition-colors disabled:opacity-50"
             :data-test="`reject-card-${bid.id}`"
-            @click="emit('reject', bid.id)"
+            @click.stop="emit('reject', bid.id)"
           >
             <XCircle class="w-3.5 h-3.5" />
             Refuser
@@ -336,7 +354,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
             :disabled="props.loadingBidId === bid.id"
             class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn border border-primary/50 text-primary text-xs font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
             :data-test="`confirm-delivery-card-${bid.id}`"
-            @click="openConfirmModal(bid)"
+            @click.stop="openConfirmModal(bid)"
           >
             <PackageCheck class="w-3.5 h-3.5" />
             Confirmer la livraison
@@ -350,6 +368,19 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
       <span class="font-mono tabular-nums">{{ filteredBids.length }}</span> colis affichés · <span class="font-mono tabular-nums">{{ props.bids.length }}</span> au total
     </p>
   </div>
+
+  <!-- Panneau détail d'un colis + actions -->
+  <TripBidDetailPanel
+    :bid="detailBid"
+    :loading-bid-id="loadingBidId"
+    @close="detailBid = null"
+    @accept="(id) => forwardAndClose(() => emit('accept', id))"
+    @reject="(id) => forwardAndClose(() => emit('reject', id))"
+    @confirm-presence="(id) => forwardAndClose(() => emit('confirm-presence', id))"
+    @refuse-parcel="(id, reason) => forwardAndClose(() => emit('refuse-parcel', id, reason))"
+    @cancel="(id) => forwardAndClose(() => emit('cancel', id))"
+    @request-delivery="onPanelRequestDelivery"
+  />
 
   <!-- Modale confirmation de livraison -->
   <Teleport to="body">

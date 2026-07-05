@@ -31,8 +31,18 @@ const loadingBidId = ref<string | null>(null)
 const {
   trip, bids, isLoading, bidsLoading, error,
   deleteLoading, kpis,
-  fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, confirmDelivery, exportBidsCsv,
+  fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, confirmDelivery,
+  confirmPresence, refuseParcel, cancelBid, exportBidsCsv,
 } = useTripDetail(tripId)
+
+async function withBidLoading(bidId: string, fn: () => Promise<void>) {
+  loadingBidId.value = bidId
+  try {
+    await fn()
+  } finally {
+    loadingBidId.value = null
+  }
+}
 
 onMounted(async () => {
   await fetchTrip()
@@ -68,6 +78,18 @@ async function onConfirmDelivery(bidId: string, code: string) {
   } finally {
     loadingBidId.value = null
   }
+}
+
+function onConfirmPresence(bidId: string) {
+  return withBidLoading(bidId, () => confirmPresence(bidId))
+}
+
+function onRefuseParcel(bidId: string, reason: string) {
+  return withBidLoading(bidId, () => refuseParcel(bidId, reason))
+}
+
+function onCancelBid(bidId: string) {
+  return withBidLoading(bidId, () => cancelBid(bidId))
 }
 
 function onExportCsv() {
@@ -138,6 +160,9 @@ function onExportCsv() {
         @accept="onAcceptBid"
         @reject="onRejectBid"
         @confirm-delivery="onConfirmDelivery"
+        @confirm-presence="onConfirmPresence"
+        @refuse-parcel="onRefuseParcel"
+        @cancel="onCancelBid"
         @export-csv="onExportCsv"
       />
 
