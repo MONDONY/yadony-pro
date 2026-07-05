@@ -88,7 +88,7 @@ function handleExport(format: FiscalExportFormat, type: FiscalExportType): void 
       <section>
         <div class="mb-4">
           <SectionLabel as="h2">Détail transactions</SectionLabel>
-          <p class="text-xs text-text-muted mt-1">Tous les trajets de la période avec ventilation revenus.</p>
+          <p class="text-xs text-text-muted mt-1">Trajets ayant généré des revenus versés sur la période — total réconcilié avec les revenus nets.</p>
         </div>
         <div v-if="isLoading" class="h-48 rounded-el border border-border bg-surface shadow-card animate-pulse" />
         <div v-else class="rounded-el border border-border bg-surface p-5 shadow-card">

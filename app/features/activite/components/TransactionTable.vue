@@ -38,8 +38,13 @@ function formatDate(iso: string): string {
         <td class="font-mono tabular-nums text-text-muted">{{ formatDate(row.departureDate) }}</td>
         <td class="num">{{ row.parcelCount }}</td>
         <td class="num">{{ formatEuros(row.grossRevenue) }}</td>
-        <td class="num text-danger">-{{ formatEuros(row.commission) }}</td>
-        <td class="num font-semibold text-success">{{ formatEuros(row.netRevenue) }}</td>
+        <td class="num" :class="row.commission > 0 ? 'text-danger' : 'text-text-muted'">
+          {{ row.commission > 0 ? `-${formatEuros(row.commission)}` : formatEuros(0) }}
+        </td>
+        <td
+          class="num font-semibold"
+          :class="row.netRevenue > 0 ? 'text-success' : 'text-text-muted'"
+        >{{ formatEuros(row.netRevenue) }}</td>
       </tr>
       <tr v-if="transactions.length === 0">
         <td colspan="6" class="py-8 text-center text-sm text-text-muted">
