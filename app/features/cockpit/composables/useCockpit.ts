@@ -119,7 +119,7 @@ export function useCockpit() {
       { id: 'trips-completed', label: 'Trajets réalisés', value: String(s.totalTripsCompleted) },
       { id: 'active-trips', label: 'Trajets actifs', value: String(s.activeTrips), subLabel: 'en ligne' },
       { id: 'parcels-delivered', label: 'Colis livrés', value: String(s.totalParcelsDelivered) },
-      { id: 'parcels-transit', label: 'Colis en transit', value: String(s.parcelsInTransit), subLabel: 'en cours' },
+      { id: 'parcels-transit', label: 'Colis en cours', value: String(s.parcelsInTransit), subLabel: 'remis ou en transit' },
       { id: 'acceptance', label: 'Taux acceptation', value: `${acceptancePct}%` },
       {
         id: 'rating',

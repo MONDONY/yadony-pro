@@ -54,7 +54,7 @@ function onModifier(id: string) {
         <SectionLabel as="h2" class="mb-4">Vue d'ensemble</SectionLabel>
         <div v-if="isLoading" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <div
-            v-for="i in 5"
+            v-for="i in 9"
             :key="i"
             class="h-28 rounded-el border border-border bg-surface p-[18px] shadow-card animate-pulse"
           >
