@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
 import { getAuth, onAuthStateChanged, type Auth } from 'firebase/auth'
+import { getFirestore, type Firestore } from 'firebase/firestore'
 import { useAuthStore, type AuthUser } from '@/stores/auth'
 import { isCurrentDeviceRegistered } from '@/composables/useDeviceRegistration'
 
@@ -16,6 +17,7 @@ export default defineNuxtPlugin(async () => {
 
   const app: FirebaseApp = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig)
   const auth: Auth = getAuth(app)
+  const firestore: Firestore = getFirestore(app)
   const authStore = useAuthStore()
 
   // Await Firebase's initial auth-state check — it reads its IndexedDB storage
@@ -71,5 +73,5 @@ export default defineNuxtPlugin(async () => {
     }
   })
 
-  return { provide: { firebaseApp: app, firebaseAuth: auth } }
+  return { provide: { firebaseApp: app, firebaseAuth: auth, firebaseFirestore: firestore } }
 })

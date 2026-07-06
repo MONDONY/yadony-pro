@@ -3,9 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockGet = vi.fn()
 
 vi.mock('@/composables/useApi', () => ({
-  useApi: () => ({
-    get: mockGet,
-  }),
+  useApi: () => mockGet,
 }))
 
 async function importService() {
@@ -31,7 +29,7 @@ describe('activityService', () => {
     const svc = activityService()
     await svc.fetchAnalytics('month')
     expect(mockGet).toHaveBeenCalledWith('/travelers/me/analytics', {
-      params: { period: 'month' },
+      query: { period: 'month' },
     })
   })
 
@@ -50,7 +48,7 @@ describe('activityService', () => {
     const svc = activityService()
     await svc.fetchAnalytics('quarter')
     expect(mockGet).toHaveBeenCalledWith('/travelers/me/analytics', {
-      params: { period: 'quarter' },
+      query: { period: 'quarter' },
     })
   })
 
@@ -61,7 +59,7 @@ describe('activityService', () => {
     const svc = activityService()
     await svc.downloadFiscalExport(2026, 'pdf', 'summary')
     expect(mockGet).toHaveBeenCalledWith('/travelers/me/fiscal-export', {
-      params: { year: 2026, format: 'pdf', type: 'summary' },
+      query: { year: 2026, format: 'pdf', type: 'summary' },
       responseType: 'blob',
     })
   })

@@ -1,5 +1,7 @@
 import { useApi } from '@/composables/useApi'
 import type {
+  TrackingEvent,
+  QrCode,
   Trip,
   TripBid,
   TripPage,
@@ -102,7 +104,7 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     acceptedCategories: a.acceptedContentTypes,
     refusedCategories: a.refusedTypes,
     senderNote: a.senderNote ?? null,
-    cashAccepted: a.cashAccepted,
+    cashAccepted: a.cashAccepted ?? (a.acceptedPaymentMethods?.includes('CASH') ?? false),
     confirmedParcelCount: a.confirmedParcelCount,
     pendingBidCount: a.pendingBidCount,
     reservedRevenueEuros: 0,
@@ -111,8 +113,8 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
 }
 
 function mapBidResponseToTripBid(b: BackendBidResponse): TripBid {
-  const weightKg = Number(b.weightKg)
-  const pricePerKg = Number(b.pricePerKg)
+  const weightKg = Number(b.weightKg) || 0
+  const pricePerKg = Number(b.pricePerKg) || 0
   const paymentAmountEuros = Math.round(pricePerKg * weightKg * 100) / 100
   const earningsEuros = Math.round(paymentAmountEuros * 0.88 * 100) / 100
   const senderName = b.senderName ?? 'Expéditeur'
@@ -212,7 +214,23 @@ export function tripsService() {
     await api<void>(`/tracking/${bidId}/confirm-delivery`, { method: 'POST', body: { confirmationCode: code } })
   }
 
-  return { listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement, updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid, confirmDelivery }
+  async function postTrackingEvent(bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE'): Promise<void> {
+    await api<void>('/tracking/events', { method: 'POST', body: { bidId, eventType } })
+  }
+
+  async function getTrackingEvents(bidId: string): Promise<TrackingEvent[]> {
+    return api<TrackingEvent[]>(`/tracking/${bidId}/events`, {})
+  }
+
+  async function getQrCode(bidId: string): Promise<QrCode> {
+    return api<QrCode>(`/tracking/${bidId}/qr-code`, {})
+  }
+
+  return {
+    listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement,
+    updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
+    confirmDelivery, postTrackingEvent, getTrackingEvents, getQrCode,
+  }
 }
 
 function filterToStatus(filter: TripFilter): string {

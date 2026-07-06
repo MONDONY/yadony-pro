@@ -184,6 +184,33 @@ describe('useAnnouncementForm', () => {
     expect(form.capacityUnit).toBe('SUITCASE_23KG')
   })
 
+  it('applyQuickTemplate pre-fills corridor/price/content but leaves date and addresses empty', async () => {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, applyQuickTemplate } = useAnnouncementForm()
+    applyQuickTemplate({
+      id: 'paris-dakar',
+      label: 'Paris → Dakar',
+      emoji: '🇸🇳',
+      departureCity: { placeId: '', label: 'Paris', lat: 48.8566, lng: 2.3522 },
+      arrivalCity: { placeId: '', label: 'Dakar', lat: 14.7167, lng: -17.4677 },
+      transportMode: 'PLANE',
+      capacityUnit: 'SUITCASE_23KG',
+      availableWeightKg: 23,
+      pricePerKg: 8,
+      acceptedCategories: ['Vêtements', 'Documents'],
+    })
+    expect(form.departureCity?.label).toBe('Paris')
+    expect(form.arrivalCity?.label).toBe('Dakar')
+    expect(form.transportMode).toBe('PLANE')
+    expect(form.availableWeightKg).toBe(23)
+    expect(form.pricePerKg).toBe(8)
+    expect(form.acceptedCategories).toEqual(['Vêtements', 'Documents'])
+    // Champs personnels laissés vides
+    expect(form.departureDate).toBe('')
+    expect(form.pickupPlace).toBeNull()
+    expect(form.dropoffPlace).toBeNull()
+  })
+
   it('netPrice computes 88% of pricePerKg correctly', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, netPrice } = useAnnouncementForm()

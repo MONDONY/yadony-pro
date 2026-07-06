@@ -86,4 +86,65 @@ describe('DemandFilters', () => {
     const emitted = wrapper.emitted('update:filters')
     expect((emitted![0][0] as FilterState).minBudgetPerKg).toBe(8)
   })
+
+  it('emits update:filters with contentType when a type option is selected', async () => {
+    const wrapper = mount(DemandFilters, {
+      props: { filters: defaultFilters, resultCount: 5, availableContentTypes: ['Vêtements'], viewMode: 'card' },
+    })
+    await wrapper.find('[data-test="filter-type"]').trigger('click')
+    await wrapper.find('[data-test="type-option-Vêtements"]').trigger('click')
+    const emitted = wrapper.emitted('update:filters')
+    expect((emitted![0][0] as FilterState).contentType).toBe('Vêtements')
+  })
+
+  it('shows an "Effacer" button in the weight picker that resets maxWeightKg to null', async () => {
+    const active: FilterState = { ...defaultFilters, maxWeightKg: 10 }
+    const wrapper = mount(DemandFilters, {
+      props: { filters: active, resultCount: 5, availableContentTypes: [], viewMode: 'card' },
+    })
+    await wrapper.find('[data-test="filter-weight"]').trigger('click')
+    const clearBtn = wrapper.findAll('button').find((b) => b.text() === 'Effacer')
+    expect(clearBtn).toBeTruthy()
+    await clearBtn!.trigger('click')
+    const emitted = wrapper.emitted('update:filters')
+    expect((emitted![0][0] as FilterState).maxWeightKg).toBeNull()
+  })
+
+  it('emits update:viewMode when the view toggle buttons are clicked', async () => {
+    const wrapper = mount(DemandFilters, {
+      props: { filters: defaultFilters, resultCount: 5, availableContentTypes: [], viewMode: 'card' },
+    })
+    await wrapper.find('[aria-label="Vue liste"]').trigger('click')
+    await wrapper.find('[aria-label="Vue cartes"]').trigger('click')
+    const emitted = wrapper.emitted('update:viewMode')
+    expect(emitted).toBeTruthy()
+    expect(emitted![0][0]).toBe('list')
+    expect(emitted![1][0]).toBe('card')
+  })
+
+  it('closes the open picker when Escape is pressed', async () => {
+    const wrapper = mount(DemandFilters, {
+      attachTo: document.body,
+      props: { filters: defaultFilters, resultCount: 5, availableContentTypes: [], viewMode: 'card' },
+    })
+    await wrapper.find('[data-test="filter-weight"]').trigger('click')
+    expect(wrapper.find('[data-test="weight-option-5"]').exists()).toBe(true)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-test="weight-option-5"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('closes the open picker when clicking outside the container', async () => {
+    const wrapper = mount(DemandFilters, {
+      attachTo: document.body,
+      props: { filters: defaultFilters, resultCount: 5, availableContentTypes: [], viewMode: 'card' },
+    })
+    await wrapper.find('[data-test="filter-weight"]').trigger('click')
+    expect(wrapper.find('[data-test="weight-option-5"]').exists()).toBe(true)
+    document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-test="weight-option-5"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
 })

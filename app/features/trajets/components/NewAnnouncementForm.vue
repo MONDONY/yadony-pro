@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ChevronDown, LayoutTemplate } from 'lucide-vue-next'
+import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
 import { useTrips } from '@/features/trajets/composables/useTrips'
 import { configService } from '@/features/trajets/services/configService'
+import { tripTemplateService } from '@/features/trajets/services/tripTemplateService'
+import type { UserTripTemplate } from '@/features/trajets/types/index'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
 import TransportModeChips from '@/features/trajets/components/TransportModeChips.vue'
 import WeightSlider from '@/features/trajets/components/WeightSlider.vue'
@@ -11,6 +13,7 @@ import CapacitySelector from '@/features/trajets/components/CapacitySelector.vue
 import PriceOptionCards from '@/features/trajets/components/PriceOptionCards.vue'
 import ContentTagChips from '@/features/trajets/components/ContentTagChips.vue'
 import { Button } from '@/components/ui/button'
+import { TRIP_TEMPLATES, type TripTemplate } from '@/features/trajets/data/tripTemplates'
 import type { Trip, ValidationErrors } from '@/features/trajets/types/index'
 
 const emit = defineEmits<{
@@ -25,12 +28,20 @@ const props = withDefaults(defineProps<{
   editTripId: undefined,
 })
 
-const { form, netPrice, validate, submit, submitEdit, applyTemplate } = useAnnouncementForm()
+const { form, netPrice, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
 const { fetchTemplates } = useTrips()
 const { fetchContentCategories } = configService()
+const tplSvc = tripTemplateService()
 
 const errors = ref<ValidationErrors>({})
 const isSubmitting = ref(false)
+const quickTemplates = TRIP_TEMPLATES
+const selectedQuickTemplateId = ref<string | null>(null)
+const myTemplates = ref<UserTripTemplate[]>([])
+const selectedMyTemplateId = ref<string | null>(null)
+const isSavingTemplate = ref(false)
+const showSaveTemplate = ref(false)
+const newTemplateLabel = ref('')
 const templates = ref<Trip[]>([])
 const showTemplates = ref(false)
 const selectedTemplateId = ref<string | null>(null)
@@ -51,12 +62,14 @@ const maxDate = computed(() => {
 const REFUSED_PRESETS: string[] = []
 
 onMounted(async () => {
-  const [fetchedTemplates, fetchedCategories] = await Promise.all([
+  const [fetchedTemplates, fetchedCategories, fetchedMyTemplates] = await Promise.all([
     fetchTemplates(),
     fetchContentCategories(),
+    tplSvc.list().catch(() => [] as UserTripTemplate[]),
   ])
   templates.value = fetchedTemplates
   acceptedPresets.value = fetchedCategories
+  myTemplates.value = fetchedMyTemplates
   if (props.prefill) {
     applyTemplate(props.prefill)
   }
@@ -66,6 +79,44 @@ function onSelectTemplate(trip: Trip) {
   applyTemplate(trip)
   selectedTemplateId.value = trip.id
   showTemplates.value = false
+}
+
+function onSelectQuickTemplate(t: TripTemplate) {
+  applyQuickTemplate(t)
+  selectedQuickTemplateId.value = t.id
+}
+
+function onSelectMyTemplate(t: UserTripTemplate) {
+  applyQuickTemplate(t)
+  selectedMyTemplateId.value = t.id
+}
+
+async function onDeleteMyTemplate(t: UserTripTemplate) {
+  myTemplates.value = myTemplates.value.filter((x) => x.id !== t.id)
+  if (selectedMyTemplateId.value === t.id) selectedMyTemplateId.value = null
+  try {
+    await tplSvc.remove(t.id)
+  } catch {
+    myTemplates.value = [...myTemplates.value, t]
+  }
+}
+
+const canSaveTemplate = computed(() => !!form.departureCity && !!form.arrivalCity)
+
+async function onSaveTemplate() {
+  const label = newTemplateLabel.value.trim()
+  if (!label || !canSaveTemplate.value) return
+  isSavingTemplate.value = true
+  try {
+    const created = await tplSvc.create(buildTemplatePayload(label))
+    myTemplates.value = [created, ...myTemplates.value]
+    newTemplateLabel.value = ''
+    showSaveTemplate.value = false
+  } catch {
+    errors.value.global = "Impossible d'enregistrer le modèle."
+  } finally {
+    isSavingTemplate.value = false
+  }
 }
 
 async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
@@ -89,6 +140,109 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
 
 <template>
   <div class="max-w-2xl space-y-8">
+
+    <!-- Mes modèles (configurables, synchronisés via le backend) -->
+    <div v-if="!editTripId" class="bg-surface border border-border rounded-card p-4" data-test="my-templates">
+      <div class="flex items-center justify-between mb-3">
+        <p class="flex items-center gap-2 text-sm font-medium text-text">
+          <LayoutTemplate class="w-4 h-4 text-primary" />
+          Mes modèles
+          <span class="text-xs font-normal text-text-muted">— tes trajets enregistrés</span>
+        </p>
+        <button
+          type="button"
+          data-test="open-save-template"
+          class="flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="!canSaveTemplate"
+          @click="showSaveTemplate = !showSaveTemplate"
+        >
+          <BookmarkPlus class="w-3.5 h-3.5" />
+          Enregistrer ce trajet
+        </button>
+      </div>
+
+      <div v-if="myTemplates.length > 0" class="flex flex-wrap gap-2">
+        <div
+          v-for="t in myTemplates"
+          :key="t.id"
+          :data-test="`my-template-${t.id}`"
+          :class="[
+            'group flex items-center gap-1 pl-3 pr-1.5 py-1.5 rounded-full border text-sm transition-colors',
+            selectedMyTemplateId === t.id
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-border hover:border-primary/50 text-text-muted hover:text-text',
+          ]"
+        >
+          <button type="button" class="flex items-center gap-1" @click="onSelectMyTemplate(t)">
+            <span v-if="t.emoji">{{ t.emoji }}</span>
+            {{ t.label }} · {{ t.pricePerKg }}€/kg
+          </button>
+          <button
+            type="button"
+            :data-test="`delete-my-template-${t.id}`"
+            class="ml-0.5 rounded-full p-0.5 text-text-muted hover:text-danger hover:bg-danger/10"
+            :aria-label="`Supprimer le modèle ${t.label}`"
+            @click.stop="onDeleteMyTemplate(t)"
+          >
+            <X class="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+      <p v-else class="text-xs text-text-muted" data-test="my-templates-empty">
+        Aucun modèle enregistré. Remplis un trajet puis « Enregistrer ce trajet » pour le réutiliser.
+      </p>
+
+      <!-- Formulaire d'enregistrement -->
+      <div v-if="showSaveTemplate" class="mt-3 flex items-center gap-2" data-test="save-template-form">
+        <input
+          v-model="newTemplateLabel"
+          type="text"
+          maxlength="60"
+          placeholder="Nom du modèle (ex. Mon Paris → Dakar)"
+          data-test="save-template-label"
+          class="flex-1 rounded-lg border border-border bg-surface-elevated px-3 py-1.5 text-sm text-text focus:border-primary focus:outline-none"
+          @keyup.enter="onSaveTemplate"
+        >
+        <Button
+          type="button"
+          size="sm"
+          data-test="save-template-submit"
+          :disabled="!newTemplateLabel.trim() || isSavingTemplate"
+          @click="onSaveTemplate"
+        >
+          {{ isSavingTemplate ? '…' : 'Enregistrer' }}
+        </Button>
+      </div>
+    </div>
+
+    <!-- Suggestions de corridors prédéfinis -->
+    <div v-if="!editTripId" class="bg-surface border border-border rounded-card p-4" data-test="quick-templates">
+      <p class="flex items-center gap-2 text-sm font-medium text-text mb-3">
+        <LayoutTemplate class="w-4 h-4 text-primary" />
+        Suggestions
+        <span class="text-xs font-normal text-text-muted">— corridors courants pré-remplis</span>
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="t in quickTemplates"
+          :key="t.id"
+          type="button"
+          :data-test="`quick-template-${t.id}`"
+          :class="[
+            'px-3 py-1.5 rounded-full border text-sm transition-colors',
+            selectedQuickTemplateId === t.id
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-border hover:border-primary/50 text-text-muted hover:text-text',
+          ]"
+          @click="onSelectQuickTemplate(t)"
+        >
+          {{ t.emoji }} {{ t.label }} · {{ t.pricePerKg }}€/kg
+        </button>
+      </div>
+      <p v-if="selectedQuickTemplateId" class="text-xs text-text-muted mt-2" data-test="quick-template-hint">
+        Modèle appliqué. Complète la date et les lieux de remise / récupération, puis publie.
+      </p>
+    </div>
 
     <!-- Template picker -->
     <div v-if="templates.length > 0" class="bg-surface border border-border rounded-card p-4">

@@ -70,11 +70,6 @@ export function useBids() {
     debounceTimer = setTimeout(() => fetchBids(), 350)
   }
 
-  // Keep for backwards compat with BidFilters emit
-  function setSenderSearch(search: string): void {
-    setSearch(search)
-  }
-
   const filteredBids = computed(() => {
     const q = filters.value.search.trim().toLowerCase()
     if (!q) return bids.value
@@ -148,7 +143,6 @@ export function useBids() {
     setStatusFilter,
     setTripFilter,
     setSearch,
-    setSenderSearch,
     toggleSelection,
     selectAll,
     clearSelection,
