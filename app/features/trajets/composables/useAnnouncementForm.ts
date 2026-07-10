@@ -6,7 +6,10 @@ import type {
   Trip,
   CreateAnnouncementPayload,
   CapacityUnit,
+  UserTripTemplate,
+  SaveTripTemplatePayload,
 } from '@/features/trajets/types/index'
+import type { TripTemplate } from '@/features/trajets/data/tripTemplates'
 
 export function useAnnouncementForm() {
   const form = reactive<AnnouncementFormData>({
@@ -100,5 +103,48 @@ export function useAnnouncementForm() {
     form.cashAccepted = trip.cashAccepted
   }
 
-  return { form, netPrice, validate, submit, submitEdit, applyTemplate }
+  /**
+   * Pré-remplit le formulaire depuis un modèle prédéfini : corridor, transport,
+   * capacité, prix et contenu accepté. Laisse la date et les adresses de remise/
+   * récupération vides (personnelles au voyageur).
+   */
+  function applyQuickTemplate(t: TripTemplate | UserTripTemplate): void {
+    form.departureCity = { ...t.departureCity }
+    form.arrivalCity = { ...t.arrivalCity }
+    form.transportMode = t.transportMode
+    form.capacityUnit = t.capacityUnit
+    form.availableWeightKg = t.availableWeightKg
+    form.pricePerKg = t.pricePerKg
+    form.acceptedCategories = [...t.acceptedCategories]
+    if ('cashAccepted' in t) form.cashAccepted = t.cashAccepted
+    if ('arrivalTime' in t) form.arrivalTime = t.arrivalTime ?? ''
+  }
+
+  /**
+   * Construit le payload pour enregistrer le trajet courant comme modèle réutilisable.
+   * Requiert au minimum les villes de départ et d'arrivée.
+   */
+  function buildTemplatePayload(label: string): SaveTripTemplatePayload {
+    const dep = form.departureCity!
+    const arr = form.arrivalCity!
+    return {
+      label,
+      emoji: null,
+      departureCity: dep.label,
+      departureLat: dep.lat || null,
+      departureLng: dep.lng || null,
+      arrivalCity: arr.label,
+      arrivalLat: arr.lat || null,
+      arrivalLng: arr.lng || null,
+      transportMode: form.transportMode ?? 'PLANE',
+      capacityUnit: form.capacityUnit,
+      availableKg: form.availableWeightKg,
+      pricePerKg: form.pricePerKg,
+      acceptedCategories: [...form.acceptedCategories],
+      cashAccepted: form.cashAccepted,
+      arrivalTime: form.arrivalTime || null,
+    }
+  }
+
+  return { form, netPrice, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
 }

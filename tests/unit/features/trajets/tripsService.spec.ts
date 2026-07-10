@@ -123,6 +123,25 @@ describe('tripsService', () => {
     expect(result.usedWeightKg).toBe(5)
   })
 
+  it('getAnnouncement derives cashAccepted from acceptedPaymentMethods when the flag is absent (regression)', async () => {
+    const fakeDetail = {
+      id: 'trip-cash', travelerId: 'user-1', departureCity: 'Lyon', arrivalCity: 'Bamako',
+      departureDate: '2026-06-08', departureTime: null, arrivalTime: '18:00',
+      pickupAddress: { label: 'Part-Dieu', lat: 45.76, lng: 4.86 },
+      deliveryAddress: { label: 'Hamdallaye', lat: 12.63, lng: -8.0 },
+      availableKg: 23, totalKg: 23, pricePerKg: 8,
+      transportMode: 'PLANE', status: 'ACTIVE', pendingBidCount: 0, confirmedParcelCount: 0,
+      senderNote: null, acceptedContentTypes: [], refusedTypes: [],
+      acceptedPaymentMethods: ['STRIPE', 'CASH'],
+      // cashAccepted volontairement absent (ancien backend détail)
+      createdAt: '2026-05-27T12:00:00', updatedAt: '2026-05-27T12:00:00', bidsCount: 0, traveler: null,
+    }
+    mockApiFn.mockResolvedValue(fakeDetail)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncement('trip-cash')
+    expect(result.cashAccepted).toBe(true)
+  })
+
   it('updateAnnouncement sends PUT /announcements/:id', async () => {
     const fakeDetail = {
       id: 'trip-42', travelerId: 'u1', departureCity: 'Lyon', arrivalCity: 'Abidjan',
@@ -221,5 +240,27 @@ describe('tripsService', () => {
     const { tripsService } = await import('@/features/trajets/services/tripsService')
     await tripsService().cancelBid('bid-7')
     expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-7/cancel', { method: 'PUT' })
+  })
+
+  it('confirmDelivery POSTs the 6-digit code to /tracking/:id/confirm-delivery', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    await svc.confirmDelivery('bid-99', '123456')
+    expect(mockApiFn).toHaveBeenCalledWith('/tracking/bid-99/confirm-delivery', {
+      method: 'POST',
+      body: { confirmationCode: '123456' },
+    })
+  })
+
+  it('postTrackingEvent POSTs the event to /tracking/events', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    await svc.postTrackingEvent('bid-99', 'DEPART')
+    expect(mockApiFn).toHaveBeenCalledWith('/tracking/events', {
+      method: 'POST',
+      body: { bidId: 'bid-99', eventType: 'DEPART' },
+    })
   })
 })

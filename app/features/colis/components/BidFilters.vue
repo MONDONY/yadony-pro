@@ -12,7 +12,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:statusFilter': [value: BidFilter]
   'update:tripId': [value: string | null]
-  'update:senderSearch': [value: string]
   'update:search': [value: string]
 }>()
 

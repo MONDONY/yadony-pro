@@ -32,7 +32,7 @@ const {
   trip, bids, isLoading, bidsLoading, error,
   deleteLoading, kpis,
   fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, confirmDelivery,
-  confirmPresence, refuseParcel, cancelBid, exportBidsCsv,
+  confirmPresence, refuseParcel, cancelBid, markTrackingEvent, exportBidsCsv,
 } = useTripDetail(tripId)
 
 async function withBidLoading(bidId: string, fn: () => Promise<void>) {
@@ -90,6 +90,15 @@ function onRefuseParcel(bidId: string, reason: string) {
 
 function onCancelBid(bidId: string) {
   return withBidLoading(bidId, () => cancelBid(bidId))
+}
+
+async function onTrackingEvent(bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE') {
+  loadingBidId.value = bidId
+  try {
+    await markTrackingEvent(bidId, eventType)
+  } finally {
+    loadingBidId.value = null
+  }
 }
 
 function onExportCsv() {
@@ -163,6 +172,7 @@ function onExportCsv() {
         @confirm-presence="onConfirmPresence"
         @refuse-parcel="onRefuseParcel"
         @cancel="onCancelBid"
+        @tracking-event="onTrackingEvent"
         @export-csv="onExportCsv"
       />
 

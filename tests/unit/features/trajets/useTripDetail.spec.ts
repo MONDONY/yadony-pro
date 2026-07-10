@@ -7,6 +7,8 @@ const mockSvc = {
   deleteAnnouncement: vi.fn(),
   acceptBid: vi.fn(),
   rejectBid: vi.fn(),
+  confirmDelivery: vi.fn(),
+  postTrackingEvent: vi.fn(),
   listTrips: vi.fn(),
   createAnnouncement: vi.fn(),
   getTemplates: vi.fn(),
@@ -99,6 +101,92 @@ describe('useTripDetail', () => {
     expect(mockSvc.acceptBid).toHaveBeenCalledWith('bid-99')
     expect(mockSvc.getAnnouncementBids).toHaveBeenCalledWith('trip-1')
     expect(mockSvc.getAnnouncement).toHaveBeenCalledWith('trip-1')
+  })
+
+  it('fetchTrip sets an error message when the service rejects', async () => {
+    mockSvc.getAnnouncement.mockRejectedValue(new Error('boom'))
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { error, isLoading, fetchTrip } = useTripDetail('trip-1')
+    await fetchTrip()
+    expect(error.value).toBe('Impossible de charger ce trajet.')
+    expect(isLoading.value).toBe(false)
+  })
+
+  it('fetchBids stays silent and keeps bids empty when the service rejects', async () => {
+    mockSvc.getAnnouncementBids.mockRejectedValue(new Error('boom'))
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { bids, error, bidsLoading, fetchBids } = useTripDetail('trip-1')
+    await fetchBids()
+    expect(bids.value).toEqual([])
+    expect(error.value).toBeNull()
+    expect(bidsLoading.value).toBe(false)
+  })
+
+  it('deleteTrip sets an error and does not redirect when the service rejects', async () => {
+    mockSvc.deleteAnnouncement.mockRejectedValue(new Error('boom'))
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { error, deleteTrip } = useTripDetail('trip-1')
+    await deleteTrip()
+    expect(error.value).toBe('Impossible de supprimer ce trajet.')
+    expect(pushMock).not.toHaveBeenCalled()
+  })
+
+  it('rejectBid calls svc.rejectBid then refreshes bids and trip', async () => {
+    mockSvc.rejectBid.mockResolvedValue(undefined)
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', availableWeightKg: 20, usedWeightKg: 0, status: 'ACTIVE' })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { rejectBid } = useTripDetail('trip-1')
+    await rejectBid('bid-7')
+    expect(mockSvc.rejectBid).toHaveBeenCalledWith('bid-7')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalledWith('trip-1')
+    expect(mockSvc.getAnnouncement).toHaveBeenCalledWith('trip-1')
+  })
+
+  it('markTrackingEvent posts the event then refreshes bids and trip', async () => {
+    mockSvc.postTrackingEvent.mockResolvedValue(undefined)
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', availableWeightKg: 20, usedWeightKg: 0, status: 'ACTIVE' })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { markTrackingEvent } = useTripDetail('trip-1')
+    await markTrackingEvent('bid-1', 'DEPART')
+    expect(mockSvc.postTrackingEvent).toHaveBeenCalledWith('bid-1', 'DEPART')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalledWith('trip-1')
+    expect(mockSvc.getAnnouncement).toHaveBeenCalledWith('trip-1')
+  })
+
+  it('confirmDelivery calls svc.confirmDelivery then refreshes bids and trip', async () => {
+    mockSvc.confirmDelivery.mockResolvedValue(undefined)
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', availableWeightKg: 20, usedWeightKg: 0, status: 'ACTIVE' })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { confirmDelivery } = useTripDetail('trip-1')
+    await confirmDelivery('bid-3', 'CODE12')
+    expect(mockSvc.confirmDelivery).toHaveBeenCalledWith('bid-3', 'CODE12')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalledWith('trip-1')
+  })
+
+  it('kpis returns all zeros when no trip is loaded', async () => {
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { kpis } = useTripDetail('trip-1')
+    expect(kpis.value).toEqual({
+      fillRatePct: 0,
+      grossRevenueEuros: 0,
+      commissionEuros: 0,
+      netRevenueEuros: 0,
+      revenuePerKg: 0,
+    })
+  })
+
+  it('kpis fillRatePct and revenuePerKg fall back to 0 when capacity and usage are 0', async () => {
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1', availableWeightKg: 0, usedWeightKg: 0, status: 'ACTIVE' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { kpis, fetchTrip, fetchBids } = useTripDetail('trip-1')
+    await fetchTrip()
+    await fetchBids()
+    expect(kpis.value.fillRatePct).toBe(0)
+    expect(kpis.value.revenuePerKg).toBe(0)
   })
 
   it('exportBidsCsv returns CSV with header and one row per bid', async () => {

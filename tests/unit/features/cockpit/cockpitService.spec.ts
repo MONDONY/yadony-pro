@@ -53,4 +53,13 @@ describe('cockpitService', () => {
     expect(mockApiFn).toHaveBeenCalledWith('/travelers/me/calendar')
     expect(result).toEqual(fakeCalendar)
   })
+
+  it('fetchAutomationTodayCount returns the count field from the response', async () => {
+    mockApiFn.mockResolvedValue({ count: 7 })
+    const { cockpitService } = await import('@/features/cockpit/services/cockpitService')
+    const svc = cockpitService()
+    const result = await svc.fetchAutomationTodayCount()
+    expect(mockApiFn).toHaveBeenCalledWith('/travelers/me/automation-history/today-count')
+    expect(result).toBe(7)
+  })
 })

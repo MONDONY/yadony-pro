@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { Search, X, Loader2 } from 'lucide-vue-next'
 import { placesService } from '@/features/trajets/services/placesService'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,15 @@ onMounted(() => {
     query.value = props.modelValue.label
   }
 })
+
+// Garde le champ synchronisé quand modelValue est défini de l'extérieur
+// (prefill d'édition, modèle rapide, réinitialisation).
+watch(
+  () => props.modelValue,
+  (val) => {
+    query.value = val?.label ?? ''
+  },
+)
 
 const svc = placesService()
 

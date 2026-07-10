@@ -7,7 +7,15 @@ import {
   MessageSquareDot,
   Search,
   BarChart3,
+  Tags,
+  Bell,
+  Inbox,
+  Calculator,
+  Gift,
+  UserCircle,
+  Settings,
   Plus,
+  Repeat,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -66,6 +74,9 @@ const initials = computed(() =>
       <NavItem to="/automatisations" label="Automatisations">
         <template #icon><Bot class="w-4 h-4" /></template>
       </NavItem>
+      <NavItem to="/recurrences" label="Trajets récurrents">
+        <template #icon><Repeat class="w-4 h-4" /></template>
+      </NavItem>
       <NavItem to="/negociations" label="Négociations">
         <template #icon><MessageSquareDot class="w-4 h-4" /></template>
       </NavItem>
@@ -74,6 +85,27 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/activite" label="Mon Activité">
         <template #icon><BarChart3 class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/tarifs" label="Grille tarifaire">
+        <template #icon><Tags class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/assistant-prix" label="Assistant de prix">
+        <template #icon><Calculator class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/messages" label="Messagerie">
+        <template #icon><Inbox class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/notifications" label="Notifications">
+        <template #icon><Bell class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/parrainage" label="Parrainage">
+        <template #icon><Gift class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/mon-profil" label="Mon profil public">
+        <template #icon><UserCircle class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/parametres" label="Paramètres">
+        <template #icon><Settings class="w-4 h-4" /></template>
       </NavItem>
     </nav>
 

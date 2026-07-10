@@ -31,6 +31,79 @@ export interface SelectedPlace {
   lng: number
 }
 
+export interface UserTripTemplate {
+  id: string
+  label: string
+  emoji: string | null
+  departureCity: SelectedPlace
+  arrivalCity: SelectedPlace
+  transportMode: TransportMode
+  capacityUnit: CapacityUnit
+  availableWeightKg: number
+  pricePerKg: number
+  acceptedCategories: string[]
+  cashAccepted: boolean
+  arrivalTime: string | null
+}
+
+export interface SaveTripTemplatePayload {
+  label: string
+  emoji: string | null
+  departureCity: string
+  departureLat: number | null
+  departureLng: number | null
+  arrivalCity: string
+  arrivalLat: number | null
+  arrivalLng: number | null
+  transportMode: TransportMode
+  capacityUnit: CapacityUnit
+  availableKg: number
+  pricePerKg: number
+  acceptedCategories: string[]
+  cashAccepted: boolean
+  arrivalTime: string | null
+}
+
+export interface UserTripRecurrence {
+  id: string
+  sourceTemplateId: string | null
+  departureCity: string
+  arrivalCity: string
+  transportMode: TransportMode
+  capacityUnit: CapacityUnit
+  availableKg: number
+  pricePerKg: number
+  acceptedCategories: string[]
+  pickupAddress: SelectedPlace
+  deliveryAddress: SelectedPlace
+  departureTime: string | null
+  arrivalTime: string | null
+  cashAccepted: boolean
+  weekdays: string
+  horizonDays: number
+  active: boolean
+  lastGeneratedDate: string | null
+}
+
+export interface SaveTripRecurrencePayload {
+  sourceTemplateId: string | null
+  departureCity: string
+  arrivalCity: string
+  transportMode: TransportMode
+  capacityUnit: CapacityUnit
+  availableKg: number
+  pricePerKg: number
+  acceptedCategories: string[]
+  pickupAddress: { label: string; lat: number; lng: number }
+  deliveryAddress: { label: string; lat: number; lng: number }
+  departureTime: string | null
+  arrivalTime: string | null
+  cashAccepted: boolean
+  weekdays: string
+  horizonDays: number | null
+  active: boolean
+}
+
 export interface Trip {
   id: string
   status: TripStatus
@@ -134,4 +207,23 @@ export interface TripKpis {
   commissionEuros: number
   netRevenueEuros: number
   revenuePerKg: number
+}
+
+export type TrackingEventType = 'DEPART' | 'TRANSIT' | 'ARRIVEE'
+
+export interface TrackingEvent {
+  id: string
+  bidId: string
+  eventType: string
+  scannedAt: string | null
+  gpsLat: number | null
+  gpsLon: number | null
+  photoUrl: string | null
+  createdAt: string
+}
+
+export interface QrCode {
+  bidId: string
+  scanUrl: string
+  qrCodeBase64: string
 }
