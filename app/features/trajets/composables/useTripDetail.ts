@@ -67,6 +67,24 @@ export function useTripDetail(tripId: string) {
     await fetchTrip()
   }
 
+  async function confirmPresence(bidId: string): Promise<void> {
+    await svc.confirmPresence(bidId)
+    await fetchBids()
+    await fetchTrip()
+  }
+
+  async function refuseParcel(bidId: string, reason: string): Promise<void> {
+    await svc.refuseParcel(bidId, reason)
+    await fetchBids()
+    await fetchTrip()
+  }
+
+  async function cancelBid(bidId: string): Promise<void> {
+    await svc.cancelBid(bidId)
+    await fetchBids()
+    await fetchTrip()
+  }
+
   async function markTrackingEvent(
     bidId: string,
     eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE',
@@ -126,6 +144,9 @@ export function useTripDetail(tripId: string) {
     acceptBid,
     rejectBid,
     confirmDelivery,
+    confirmPresence,
+    refuseParcel,
+    cancelBid,
     markTrackingEvent,
     exportBidsCsv,
   }

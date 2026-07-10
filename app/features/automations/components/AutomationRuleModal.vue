@@ -121,7 +121,7 @@ function submit(): void {
         <div class="absolute inset-0 bg-black/60" @click="emit('cancel')" />
 
         <!-- Panel -->
-        <div class="relative w-full max-w-2xl bg-surface border border-border rounded-card shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="relative w-full max-w-2xl bg-surface border border-border rounded-card shadow-pop flex flex-col max-h-[90vh]">
 
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
@@ -153,7 +153,7 @@ function submit(): void {
                 data-test="rule-name-input"
                 type="text"
                 placeholder="Ex : Acceptation rapide corridors prioritaires"
-                class="w-full h-10 px-3 rounded-btn bg-bg border border-border text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors text-sm"
+                class="w-full h-10 px-3 rounded-input bg-bg border border-border text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors text-sm"
               />
             </div>
 
@@ -161,7 +161,7 @@ function submit(): void {
             <p
               v-if="validationError"
               data-test="validation-error"
-              class="text-sm text-red-400 font-medium"
+              class="text-sm text-danger font-medium"
             >
               {{ validationError }}
             </p>
@@ -186,7 +186,7 @@ function submit(): void {
 
               <div
                 v-if="conditions.length === 0"
-                class="py-6 text-center text-sm text-text-muted border border-dashed border-border rounded-card"
+                class="py-6 text-center text-sm text-text-muted border border-dashed border-border rounded-el"
               >
                 Aucune condition. Cliquez sur "Ajouter une condition".
               </div>
@@ -195,12 +195,12 @@ function submit(): void {
                 v-for="(condition, index) in conditions"
                 :key="index"
                 data-test="condition-row"
-                class="flex items-center gap-2 p-3 bg-bg border border-border rounded-btn"
+                class="flex items-center gap-2 p-3 bg-bg border border-border rounded-el"
               >
                 <select
                   v-model="condition.field"
                   :data-test="`condition-field-${index}`"
-                  class="flex-1 h-9 px-2 rounded bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                  class="flex-1 h-9 px-2 rounded-input bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
                 >
                   <option v-for="opt in conditionFieldOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
@@ -210,7 +210,7 @@ function submit(): void {
                 <select
                   v-model="condition.operator"
                   :data-test="`condition-operator-${index}`"
-                  class="w-16 h-9 px-2 rounded bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                  class="w-16 h-9 px-2 rounded-input bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
                 >
                   <option v-for="opt in conditionOperatorOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
@@ -222,12 +222,12 @@ function submit(): void {
                   :data-test="`condition-value-${index}`"
                   type="text"
                   placeholder="Valeur"
-                  class="w-28 h-9 px-2 rounded bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
+                  class="w-28 h-9 px-2 rounded-input bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
                 />
 
                 <button
                   :data-test="`delete-condition-${index}`"
-                  class="p-1.5 text-text-muted hover:text-red-400 transition-colors rounded flex-shrink-0"
+                  class="p-1.5 text-text-muted hover:text-danger transition-colors rounded flex-shrink-0"
                   type="button"
                   :aria-label="`Supprimer la condition ${index + 1}`"
                   @click="removeCondition(index)"
@@ -240,15 +240,15 @@ function submit(): void {
             <!-- Action (ALORS) -->
             <div class="space-y-3">
               <h3 class="text-sm font-semibold text-text">
-                <span class="bg-accent/15 text-accent px-2 py-0.5 rounded text-xs font-bold mr-2">ALORS</span>
+                <span class="bg-primary/15 text-primary px-2 py-0.5 rounded text-xs font-bold mr-2">ALORS</span>
                 Action
               </h3>
 
-              <div class="p-3 bg-bg border border-border rounded-btn space-y-3">
+              <div class="p-3 bg-bg border border-border rounded-el space-y-3">
                 <select
                   v-model="action.type"
                   data-test="action-type-select"
-                  class="w-full h-9 px-2 rounded bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                  class="w-full h-9 px-2 rounded-input bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
                 >
                   <option v-for="opt in actionTypeOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
@@ -262,7 +262,7 @@ function submit(): void {
                     data-test="action-message-input"
                     type="text"
                     placeholder="Ex : Poids trop élevé pour ce trajet"
-                    class="w-full h-9 px-2 rounded bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
+                    class="w-full h-9 px-2 rounded-input bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
               </div>
@@ -284,7 +284,7 @@ function submit(): void {
               data-test="modal-save-btn"
               :class="cn(
                 'h-9 px-5 rounded-btn text-sm font-semibold transition-colors',
-                'bg-primary text-white hover:bg-primary-hover',
+                'bg-primary text-on-primary hover:bg-primary-hover',
               )"
               type="button"
               @click="submit"

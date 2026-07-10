@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
+import { SectionLabel } from '@/components/ui/section-label'
 import { useAutomations } from '@/features/automations/composables/useAutomations'
 import { useAutomationHistory } from '@/features/automations/composables/useAutomationHistory'
 import PresetRuleCard from '@/features/automations/components/PresetRuleCard.vue'
@@ -84,7 +85,7 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
       v-if="rulesError"
       class="flex flex-col items-center justify-center py-16 text-center"
     >
-      <p class="text-red-400 font-medium">{{ rulesError }}</p>
+      <p class="text-danger font-medium">{{ rulesError }}</p>
       <button
         class="mt-4 px-4 py-2 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
         type="button"
@@ -98,9 +99,7 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
 
       <section>
         <div class="mb-4">
-          <h2 class="text-sm font-semibold text-text-muted uppercase tracking-wider">
-            Règles préconfigurées
-          </h2>
+          <SectionLabel as="h2">Règles préconfigurées</SectionLabel>
           <p class="text-xs text-text-muted mt-1">
             6 règles prêtes à l'emploi — activez-les en un clic.
           </p>
@@ -110,7 +109,7 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
           <div
             v-for="i in 6"
             :key="i"
-            class="h-20 bg-surface border border-border rounded-card animate-pulse"
+            class="h-20 rounded-el border border-border bg-surface shadow-card animate-pulse"
           />
         </div>
 
@@ -134,16 +133,14 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
       <section>
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h2 class="text-sm font-semibold text-text-muted uppercase tracking-wider">
-              Règles personnalisées
-            </h2>
+            <SectionLabel as="h2">Règles personnalisées</SectionLabel>
             <p class="text-xs text-text-muted mt-1">
               Construisez vos propres règles SI → ALORS.
             </p>
           </div>
           <button
             data-test="create-custom-rule-btn"
-            class="flex items-center gap-1.5 h-9 px-4 rounded-btn bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors"
+            class="flex items-center gap-1.5 h-9 px-4 rounded-btn bg-primary text-on-primary text-sm font-semibold shadow-btn hover:bg-primary-hover transition-colors"
             type="button"
             @click="openCreateModal"
           >
@@ -156,7 +153,7 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
           <div
             v-for="i in 2"
             :key="i"
-            class="h-28 bg-surface border border-border rounded-card animate-pulse"
+            class="h-28 rounded-el border border-border bg-surface shadow-card animate-pulse"
           />
         </div>
 
@@ -171,7 +168,7 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
           />
           <div
             v-if="customRules.length === 0"
-            class="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-card text-center"
+            class="flex flex-col items-center justify-center py-10 border border-dashed border-border rounded-el text-center"
           >
             <p class="text-sm text-text-muted mb-3">
               Aucune règle personnalisée. Créez la vôtre.
@@ -191,9 +188,7 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
       <section>
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h2 class="text-sm font-semibold text-text-muted uppercase tracking-wider">
-              Historique des automatisations
-            </h2>
+            <SectionLabel as="h2">Historique des automatisations</SectionLabel>
             <p class="text-xs text-text-muted mt-1">
               Les 50 dernières actions déclenchées automatiquement.
             </p>
@@ -212,14 +207,14 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
 
         <p
           v-if="historyError"
-          class="py-6 text-center text-sm text-red-400"
+          class="py-6 text-center text-sm text-danger"
         >
           {{ historyError }}
         </p>
 
         <div
           v-else-if="historyLoading"
-          class="bg-surface border border-border rounded-card divide-y divide-border"
+          class="rounded-el border border-border bg-surface shadow-card divide-y divide-border"
         >
           <div
             v-for="i in 5"
@@ -236,14 +231,14 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
 
         <p
           v-else-if="historyEntries.length === 0"
-          class="py-10 text-center text-sm text-text-muted border border-dashed border-border rounded-card"
+          class="py-10 text-center text-sm text-text-muted border border-dashed border-border rounded-el"
         >
           Aucune action automatique pour l'instant.
         </p>
 
         <div
           v-else
-          class="bg-surface border border-border rounded-card divide-y divide-border"
+          class="rounded-el border border-border bg-surface shadow-card divide-y divide-border"
         >
           <AutomationHistoryItem
             v-for="entry in historyEntries"

@@ -1,35 +1,36 @@
 <!-- app/features/cockpit/components/KpiCard.vue -->
 <script setup lang="ts">
-import { TrendingUp, TrendingDown, Minus } from 'lucide-vue-next'
+import { ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import type { KpiData } from '@/features/cockpit/types/index'
 
 const props = defineProps<KpiData>()
 
-const trendIcon = { up: TrendingUp, down: TrendingDown, neutral: Minus }
+const trendIcon = { up: ArrowUpRight, down: ArrowDownRight, neutral: ArrowUpRight }
 const trendClass = {
-  up: 'text-green-400',
-  down: 'text-red-400',
-  neutral: 'text-text-muted',
+  up: 'text-success',
+  down: 'text-danger',
+  neutral: 'text-text-subtle',
 }
 </script>
 
 <template>
   <div
     :data-test="`kpi-card-${id}`"
-    class="bg-surface border border-border rounded-card p-5 flex flex-col gap-2 hover:border-primary/30 transition-colors"
+    class="flex flex-col gap-2 rounded-el border border-border bg-surface p-[18px] shadow-card"
   >
-    <p class="text-xs font-medium text-text-muted uppercase tracking-wider">{{ label }}</p>
-    <p class="text-2xl font-bold text-text font-display">{{ value }}</p>
-    <div v-if="subLabel || trend" class="flex items-center gap-2 mt-auto">
-      <div
-        v-if="trend"
-        :class="cn('flex items-center gap-1 text-xs font-medium', trendClass[trend])"
+    <p class="text-[11px] font-medium tracking-wide text-text-muted">{{ label }}</p>
+    <p class="font-mono text-2xl font-semibold leading-none tracking-tight text-text tabular-nums">{{ value }}</p>
+    <div v-if="subLabel || (trend && trend !== 'neutral')" class="mt-0.5 flex items-center gap-2">
+      <span
+        v-if="trend && trend !== 'neutral'"
+        :class="cn('inline-flex items-center gap-0.5 font-mono text-xs tabular-nums', trendClass[trend])"
       >
-        <component :is="trendIcon[trend]" class="w-3.5 h-3.5" />
+        <component :is="trendIcon[trend]" class="h-3.5 w-3.5" aria-hidden="true" />
+        <span class="sr-only">{{ trend === 'up' ? 'en hausse' : 'en baisse' }}<template v-if="trendValue"> de </template></span>
         <span v-if="trendValue">{{ trendValue }}</span>
-      </div>
-      <span v-if="subLabel" class="text-xs text-text-muted">{{ subLabel }}</span>
+      </span>
+      <span v-if="subLabel" class="text-xs text-text-subtle">{{ subLabel }}</span>
     </div>
   </div>
 </template>

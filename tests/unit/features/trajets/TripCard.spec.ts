@@ -62,22 +62,22 @@ describe('TripCard', () => {
     expect(bar.attributes('style')).toContain('75%')
   })
 
-  it('capacity bar is green when fill >= 70%', async () => {
+  it('capacity bar is success when fill >= 70%', async () => {
     const wrapper = await mountTripCard(baseTripProps) // 75%
     const bar = wrapper.find('[data-test="capacity-bar"]')
-    expect(bar.classes().join(' ')).toContain('green')
+    expect(bar.classes().join(' ')).toContain('success')
   })
 
-  it('capacity bar is orange when fill is 30-69%', async () => {
+  it('capacity bar is warning when fill is 30-69%', async () => {
     const wrapper = await mountTripCard({ ...baseTripProps, usedWeightKg: 10 }) // 50%
     const bar = wrapper.find('[data-test="capacity-bar"]')
-    expect(bar.classes().join(' ')).toContain('amber')
+    expect(bar.classes().join(' ')).toContain('warning')
   })
 
-  it('capacity bar is red when fill < 30%', async () => {
+  it('capacity bar is danger when fill < 30%', async () => {
     const wrapper = await mountTripCard({ ...baseTripProps, usedWeightKg: 2 }) // 10%
     const bar = wrapper.find('[data-test="capacity-bar"]')
-    expect(bar.classes().join(' ')).toContain('red')
+    expect(bar.classes().join(' ')).toContain('danger')
   })
 
   it('shows confirmed parcels, pending bids, reserved revenue', async () => {

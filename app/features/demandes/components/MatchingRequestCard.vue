@@ -2,6 +2,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cn } from '@/lib/utils'
+import { Check } from 'lucide-vue-next'
+import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import PackageTypePlaceholder from '@/features/demandes/components/PackageTypePlaceholder.vue'
 import type { MatchingRequest } from '@/features/demandes/types/index'
 
@@ -16,10 +18,10 @@ const emit = defineEmits<{
   'view-detail': [request: MatchingRequest]
 }>()
 
-const scoreBadgeClass = computed(() => {
-  if (props.request.matchScore >= 85) return 'bg-green-500/15 text-green-400'
-  if (props.request.matchScore >= 60) return 'bg-amber-500/15 text-amber-400'
-  return 'bg-border text-text-muted'
+const scoreBadgeVariant = computed<BadgeVariants['variant']>(() => {
+  if (props.request.matchScore >= 85) return 'success'
+  if (props.request.matchScore >= 60) return 'warning'
+  return 'neutral'
 })
 
 const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.round(props.request.senderRating)))
@@ -28,7 +30,7 @@ const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.r
 <template>
   <div
     :data-test="`request-card-${request.id}`"
-    class="bg-surface border border-border rounded-card overflow-hidden transition-all duration-200 hover:border-primary/30 flex flex-col"
+    class="flex flex-col overflow-hidden rounded-el border border-border bg-surface shadow-card transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:shadow-pop motion-reduce:hover:translate-y-0"
   >
     <!-- Photo du colis ou placeholder -->
     <img
@@ -68,35 +70,37 @@ const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.r
               <span
                 v-for="(filled, i) in starsArray"
                 :key="i"
-                :class="['text-xs', filled ? 'text-amber-400' : 'text-border']"
+                :class="['text-xs', filled ? 'text-warning' : 'text-border']"
               >★</span>
-              <span class="text-xs text-text-muted ml-1">{{ request.senderRating.toFixed(1) }}</span>
+              <span class="text-xs text-text-muted ml-1 font-mono tabular-nums">{{ request.senderRating.toFixed(1) }}</span>
               <span class="text-border text-xs mx-1">·</span>
-              <span class="text-xs text-text-muted">{{ request.senderTotalSent }} envois</span>
+              <span class="text-xs text-text-muted"><span class="font-mono tabular-nums">{{ request.senderTotalSent }}</span> envois</span>
             </div>
           </div>
         </div>
 
         <!-- Score badge -->
-        <span
+        <Badge
           :data-test="`score-badge-${request.id}`"
-          :class="cn('flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full', scoreBadgeClass)"
+          :variant="scoreBadgeVariant"
+          size="sm"
+          class="flex-shrink-0 font-mono tabular-nums"
         >
           {{ request.matchScore }}%
-        </span>
+        </Badge>
       </div>
 
       <!-- Détails colis -->
       <div class="grid grid-cols-3 gap-2 text-xs">
-        <div class="bg-bg rounded p-2 text-center">
+        <div class="rounded-el bg-surface-el p-2 text-center">
           <p class="text-text-muted">Poids</p>
-          <p class="font-semibold text-text mt-0.5">{{ request.weightKg }} kg</p>
+          <p class="font-semibold text-text mt-0.5 font-mono tabular-nums">{{ request.weightKg }} kg</p>
         </div>
-        <div class="bg-bg rounded p-2 text-center">
+        <div class="rounded-el bg-surface-el p-2 text-center">
           <p class="text-text-muted">Budget</p>
-          <p class="font-semibold text-text mt-0.5">{{ request.budgetPerKg }} €/kg</p>
+          <p class="font-semibold text-text mt-0.5 font-mono tabular-nums">{{ request.budgetPerKg }} €/kg</p>
         </div>
-        <div class="bg-bg rounded p-2 text-center">
+        <div class="rounded-el bg-surface-el p-2 text-center">
           <p class="text-text-muted">Type</p>
           <p class="font-semibold text-text mt-0.5 truncate">{{ request.contentType }}</p>
         </div>
@@ -123,11 +127,11 @@ const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.r
         <button
           v-if="hasNegotiated"
           :data-test="`negotiated-badge-${request.id}`"
-          class="h-8 px-3 rounded-btn text-xs font-semibold text-green-400 bg-green-500/15 cursor-default"
+          class="inline-flex h-8 items-center gap-1 rounded-btn bg-success/10 px-3 text-xs font-semibold text-success cursor-default"
           type="button"
           disabled
         >
-          ✓ Envoyée
+          <Check class="h-3.5 w-3.5" aria-hidden="true" /> Envoyée
         </button>
         <button
           v-else
@@ -137,7 +141,7 @@ const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.r
             'h-8 px-4 rounded-btn text-xs font-semibold transition-colors',
             isNegotiating
               ? 'bg-border text-text-muted cursor-not-allowed'
-              : 'bg-primary text-white hover:bg-primary/90',
+              : 'bg-primary text-on-primary shadow-btn hover:bg-primary-hover',
           )"
           type="button"
           @click="emit('negotiate', request)"

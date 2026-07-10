@@ -6,10 +6,10 @@ import type { UrgentAction } from '@/features/cockpit/types/index'
 const props = defineProps<{ action: UrgentAction }>()
 
 const severityConfig = {
-  red:    { bar: 'bg-red-500',    bg: 'bg-red-500/8',    text: 'text-red-400',    link: 'text-red-300 hover:text-red-200' },
-  orange: { bar: 'bg-amber-500',  bg: 'bg-amber-500/8',  text: 'text-amber-400',  link: 'text-amber-300 hover:text-amber-200' },
-  blue:   { bar: 'bg-blue-500',   bg: 'bg-blue-500/8',   text: 'text-blue-400',   link: 'text-blue-300 hover:text-blue-200' },
-  green:  { bar: 'bg-green-500',  bg: 'bg-green-500/8',  text: 'text-green-400',  link: 'text-green-300 hover:text-green-200' },
+  red:    { bar: 'bg-danger',  text: 'text-danger' },
+  orange: { bar: 'bg-warning', text: 'text-warning' },
+  blue:   { bar: 'bg-primary', text: 'text-primary' },
+  green:  { bar: 'bg-success', text: 'text-success' },
 }
 
 const cfg = severityConfig[props.action.severity]
@@ -18,22 +18,20 @@ const cfg = severityConfig[props.action.severity]
 <template>
   <div
     :data-test="`urgent-action-${action.id}`"
-    :class="cn('flex items-start gap-3 rounded-card px-4 py-3 border border-border', cfg.bg)"
+    class="flex items-stretch gap-3 rounded-el border border-border bg-surface p-4 shadow-card"
   >
-    <!-- Color bar -->
-    <div :class="cn('w-1 rounded-full self-stretch flex-shrink-0', cfg.bar)" />
+    <!-- Filet de sévérité -->
+    <div :class="cn('w-1 shrink-0 rounded-full', cfg.bar)" />
 
-    <!-- Content -->
-    <div class="flex-1 min-w-0">
+    <div class="min-w-0 flex-1">
       <p :class="cn('text-sm font-semibold', cfg.text)">{{ action.label }}</p>
-      <p class="text-xs text-text-muted mt-0.5">{{ action.detail }}</p>
+      <p class="mt-0.5 text-xs text-text-muted">{{ action.detail }}</p>
     </div>
 
-    <!-- Link -->
     <NuxtLink
       v-if="action.actionHref && action.actionLabel"
       :to="action.actionHref"
-      :class="cn('text-xs font-medium flex-shrink-0 underline underline-offset-2 transition-colors', cfg.link)"
+      class="shrink-0 self-center text-xs font-medium text-primary transition-colors hover:text-primary-hover"
     >
       {{ action.actionLabel }}
     </NuxtLink>

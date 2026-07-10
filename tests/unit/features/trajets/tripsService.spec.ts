@@ -218,6 +218,30 @@ describe('tripsService', () => {
     expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-99/reject', { method: 'PUT' })
   })
 
+  it('confirmPresence sends PUT /bids/:id/confirm-presence', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    await tripsService().confirmPresence('bid-7')
+    expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-7/confirm-presence', { method: 'PUT' })
+  })
+
+  it('refuseParcel POSTs /bids/:id/refuse-parcel with reason', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    await tripsService().refuseParcel('bid-7', 'contenu non conforme')
+    expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-7/refuse-parcel', {
+      method: 'POST',
+      body: { reason: 'contenu non conforme', refusalPhotoUrl: null },
+    })
+  })
+
+  it('cancelBid sends PUT /bids/:id/cancel', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    await tripsService().cancelBid('bid-7')
+    expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-7/cancel', { method: 'PUT' })
+  })
+
   it('confirmDelivery POSTs the 6-digit code to /tracking/:id/confirm-delivery', async () => {
     mockApiFn.mockResolvedValue(undefined)
     const { tripsService } = await import('@/features/trajets/services/tripsService')

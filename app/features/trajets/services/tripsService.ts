@@ -214,6 +214,24 @@ export function tripsService() {
     await api<void>(`/tracking/${bidId}/confirm-delivery`, { method: 'POST', body: { confirmationCode: code } })
   }
 
+  // Le voyageur confirme sa présence pour la remise (colis ACCEPTED).
+  async function confirmPresence(bidId: string): Promise<void> {
+    await api<void>(`/bids/${bidId}/confirm-presence`, { method: 'PUT' })
+  }
+
+  // Refus du colis à l'inspection (ACCEPTED ou HANDED_OVER) → PARCEL_REFUSED.
+  async function refuseParcel(bidId: string, reason: string): Promise<void> {
+    await api<void>(`/bids/${bidId}/refuse-parcel`, {
+      method: 'POST',
+      body: { reason, refusalPhotoUrl: null },
+    })
+  }
+
+  // Le voyageur se désiste d'un colis avant remise → CANCELLED (remboursement expéditeur).
+  async function cancelBid(bidId: string): Promise<void> {
+    await api<void>(`/bids/${bidId}/cancel`, { method: 'PUT' })
+  }
+
   async function postTrackingEvent(bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE'): Promise<void> {
     await api<void>('/tracking/events', { method: 'POST', body: { bidId, eventType } })
   }
@@ -229,7 +247,8 @@ export function tripsService() {
   return {
     listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement,
     updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
-    confirmDelivery, postTrackingEvent, getTrackingEvents, getQrCode,
+    confirmDelivery, confirmPresence, refuseParcel, cancelBid,
+    postTrackingEvent, getTrackingEvents, getQrCode,
   }
 }
 

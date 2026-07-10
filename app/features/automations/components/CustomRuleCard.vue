@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { Pencil, Trash2 } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import type { CustomRule, ConditionField, ActionType } from '@/features/automations/types/index'
 
 const props = defineProps<{
@@ -57,25 +58,15 @@ const actionSummary = computed(() => {
   <div
     :data-test="`custom-rule-card-${rule.id}`"
     :class="cn(
-      'p-4 bg-surface border rounded-card space-y-3 transition-all duration-200',
+      'space-y-3 rounded-el border bg-surface p-5 shadow-card transition-all duration-200',
       rule.enabled ? 'border-primary/30' : 'border-border opacity-70',
     )"
   >
     <div class="flex items-start justify-between gap-3">
       <div class="space-y-1 flex-1 min-w-0">
         <p class="text-sm font-semibold text-text truncate">{{ rule.name }}</p>
-        <span
-          v-if="rule.enabled"
-          class="inline-block text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 font-medium"
-        >
-          Active
-        </span>
-        <span
-          v-else
-          class="inline-block text-xs px-2 py-0.5 rounded-full border border-border text-text-muted font-medium"
-        >
-          Inactive
-        </span>
+        <Badge v-if="rule.enabled" variant="success" size="sm">Active</Badge>
+        <Badge v-else variant="neutral" size="sm">Inactive</Badge>
       </div>
 
       <div class="flex items-center gap-1 flex-shrink-0">
@@ -91,7 +82,7 @@ const actionSummary = computed(() => {
         <button
           :data-test="`custom-rule-delete-${rule.id}`"
           :disabled="isDeleting"
-          class="p-1.5 text-text-muted hover:text-red-400 transition-colors rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          class="p-1.5 text-text-muted hover:text-danger transition-colors rounded disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Supprimer la règle"
           type="button"
           @click="!isDeleting && emit('delete', rule.id)"
@@ -107,7 +98,7 @@ const actionSummary = computed(() => {
         <p class="text-text-muted leading-relaxed break-words">{{ conditionSummary }}</p>
       </div>
       <div class="flex items-start gap-2 text-xs">
-        <span class="flex-shrink-0 bg-accent/15 text-accent px-2 py-0.5 rounded font-bold">ALORS</span>
+        <span class="flex-shrink-0 bg-primary/15 text-primary px-2 py-0.5 rounded font-bold">ALORS</span>
         <p class="text-text-muted leading-relaxed break-words">{{ actionSummary }}</p>
       </div>
     </div>

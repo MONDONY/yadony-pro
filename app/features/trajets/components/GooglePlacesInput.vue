@@ -116,8 +116,8 @@ function onBlur() {
     </label>
     <div
       :class="cn(
-        'flex items-center gap-2 h-10 px-3 rounded-btn border bg-surface transition-colors',
-        error ? 'border-danger' : 'border-border focus-within:border-primary',
+        'flex items-center gap-2 h-10 px-3 rounded-input border bg-surface transition-[border-color,box-shadow] duration-150',
+        error ? 'border-danger focus-within:ring-2 focus-within:ring-danger/25' : 'border-border-strong focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/25',
       )"
     >
       <Loader2 v-if="isLoading" class="w-4 h-4 text-text-muted animate-spin shrink-0" />
@@ -142,12 +142,12 @@ function onBlur() {
 
     <div
       v-if="isOpen && suggestions.length > 0"
-      class="absolute z-50 top-full mt-1 left-0 right-0 bg-surface-elevated border border-border rounded-btn shadow-lg overflow-hidden"
+      class="absolute z-50 top-full mt-1.5 left-0 right-0 bg-surface border border-border rounded-el shadow-pop overflow-hidden"
     >
       <button
         v-for="s in suggestions"
         :key="s.placeId"
-        class="w-full text-left px-4 py-2.5 hover:bg-surface transition-colors border-b border-border last:border-b-0"
+        class="w-full text-left px-4 py-2.5 hover:bg-surface-el transition-colors border-b border-border last:border-b-0"
         @mousedown.prevent="selectSuggestion(s)"
       >
         <p class="text-sm text-text font-medium">{{ s.mainText }}</p>

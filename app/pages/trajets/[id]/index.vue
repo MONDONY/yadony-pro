@@ -31,8 +31,18 @@ const loadingBidId = ref<string | null>(null)
 const {
   trip, bids, isLoading, bidsLoading, error,
   deleteLoading, kpis,
-  fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, confirmDelivery, markTrackingEvent, exportBidsCsv,
+  fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, confirmDelivery,
+  confirmPresence, refuseParcel, cancelBid, markTrackingEvent, exportBidsCsv,
 } = useTripDetail(tripId)
+
+async function withBidLoading(bidId: string, fn: () => Promise<void>) {
+  loadingBidId.value = bidId
+  try {
+    await fn()
+  } finally {
+    loadingBidId.value = null
+  }
+}
 
 onMounted(async () => {
   await fetchTrip()
@@ -68,6 +78,18 @@ async function onConfirmDelivery(bidId: string, code: string) {
   } finally {
     loadingBidId.value = null
   }
+}
+
+function onConfirmPresence(bidId: string) {
+  return withBidLoading(bidId, () => confirmPresence(bidId))
+}
+
+function onRefuseParcel(bidId: string, reason: string) {
+  return withBidLoading(bidId, () => refuseParcel(bidId, reason))
+}
+
+function onCancelBid(bidId: string) {
+  return withBidLoading(bidId, () => cancelBid(bidId))
 }
 
 async function onTrackingEvent(bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE') {
@@ -125,7 +147,7 @@ function onExportCsv() {
           :data-test="`tab-${tab.key}`"
           :class="[
             'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
-            activeTab === tab.key ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text',
+            activeTab === tab.key ? 'bg-primary text-on-primary shadow-sm' : 'text-text-muted hover:text-text',
           ]"
           @click="activeTab = tab.key"
         >
@@ -147,6 +169,9 @@ function onExportCsv() {
         @accept="onAcceptBid"
         @reject="onRejectBid"
         @confirm-delivery="onConfirmDelivery"
+        @confirm-presence="onConfirmPresence"
+        @refuse-parcel="onRefuseParcel"
+        @cancel="onCancelBid"
         @tracking-event="onTrackingEvent"
         @export-csv="onExportCsv"
       />

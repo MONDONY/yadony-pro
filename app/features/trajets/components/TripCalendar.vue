@@ -55,22 +55,22 @@ const isToday = (day: number): boolean =>
   currentYear.value === today.getFullYear()
 
 const statusDotColor: Record<string, string> = {
-  ACTIVE: 'bg-green-500',
-  FULL: 'bg-[#0B5FFF]',
-  IN_PROGRESS: 'bg-amber-500',
-  COMPLETED: 'bg-[#A8A294]',
-  CANCELLED: 'bg-[#1E2A4A]',
+  ACTIVE: 'bg-success',
+  FULL: 'bg-primary',
+  IN_PROGRESS: 'bg-warning',
+  COMPLETED: 'bg-text-subtle',
+  CANCELLED: 'bg-danger',
 }
 </script>
 
 <template>
-  <div class="bg-surface border border-border rounded-card overflow-hidden">
+  <div class="bg-surface border border-border rounded-card shadow-card overflow-hidden">
     <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-      <button class="p-1.5 rounded text-text-muted hover:text-text transition-colors" @click="prevMonth">
+      <button class="p-1.5 rounded-btn text-text-muted hover:bg-surface-el hover:text-text transition-colors" @click="prevMonth">
         <ChevronLeft class="w-4 h-4" />
       </button>
-      <h2 class="font-bold text-text">{{ MONTHS_FR[currentMonth] }} {{ currentYear }}</h2>
-      <button class="p-1.5 rounded text-text-muted hover:text-text transition-colors" @click="nextMonth">
+      <h2 class="font-display font-semibold text-text">{{ MONTHS_FR[currentMonth] }} <span class="tabular-nums">{{ currentYear }}</span></h2>
+      <button class="p-1.5 rounded-btn text-text-muted hover:bg-surface-el hover:text-text transition-colors" @click="nextMonth">
         <ChevronRight class="w-4 h-4" />
       </button>
     </div>
@@ -88,14 +88,14 @@ const statusDotColor: Record<string, string> = {
         :class="cn('min-h-[80px] p-2 border-r border-b border-border', !day && 'bg-bg/30')"
       >
         <template v-if="day !== null">
-          <span :class="cn('inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium mb-1', isToday(day) ? 'bg-primary text-white' : 'text-text-muted')">
+          <span :class="cn('inline-flex items-center justify-center w-6 h-6 rounded-full font-mono text-xs font-medium tabular-nums mb-1', isToday(day) ? 'bg-primary text-on-primary' : 'text-text-muted')">
             {{ day }}
           </span>
           <div v-if="tripsByDay.has(day)" class="space-y-0.5">
             <div
               v-for="trip in tripsByDay.get(day)"
               :key="trip.id"
-              class="flex items-center gap-1 text-xs rounded px-1.5 py-0.5 bg-bg truncate"
+              class="flex items-center gap-1 text-xs rounded-xs px-1.5 py-0.5 bg-surface-el truncate"
             >
               <span :class="cn('w-1.5 h-1.5 rounded-full shrink-0', statusDotColor[trip.status])" />
               <span class="truncate text-text-muted">{{ trip.arrivalCity.label }}</span>

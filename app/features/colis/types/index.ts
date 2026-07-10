@@ -43,12 +43,14 @@ export interface Bid {
   tripCorridor: string
   tripDepartureDate: string
   sender: SenderProfile
-  weightKg: number
+  // null quand le poids n'est pas renseigné (mode GRID, bid rejeté sans pesée) —
+  // les revenus en découlent, donc null aussi tant que le poids est inconnu.
+  weightKg: number | null
   contentDescription: string
   declaredValueEuros: number
-  earningsEuros: number
+  earningsEuros: number | null
   paymentStatus: 'PENDING' | 'ESCROWED' | 'RELEASED' | 'REFUNDED'
-  paymentAmountEuros: number
+  paymentAmountEuros: number | null
   history: BidHistoryEntry[]
   createdAt: string
   expiresAt: string | null

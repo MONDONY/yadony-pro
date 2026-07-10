@@ -73,7 +73,7 @@ function corridorValue(c: CorridorOption | null): string {
         :class="cn(
           'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
           modelValue === f.key
-            ? 'bg-primary text-white shadow-sm'
+            ? 'bg-primary text-on-primary shadow-sm'
             : 'text-text-muted hover:text-text',
         )"
         @click="emit('update:modelValue', f.key)"
@@ -82,8 +82,8 @@ function corridorValue(c: CorridorOption | null): string {
         <span
           v-if="counts?.[f.key] !== undefined && counts[f.key]! > 0"
           :class="cn(
-            'text-xs px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center',
-            modelValue === f.key ? 'bg-white/20 text-white' : 'bg-border text-text-muted',
+            'font-mono text-xs tabular-nums px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] text-center',
+            modelValue === f.key ? 'bg-on-primary/20 text-on-primary' : 'bg-surface-el text-text-muted',
           )"
         >
           {{ counts[f.key] }}
@@ -97,7 +97,7 @@ function corridorValue(c: CorridorOption | null): string {
       <select
         data-test="filter-corridor"
         :value="corridorValue(corridor)"
-        class="h-9 px-3 rounded-btn bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors min-w-[200px]"
+        class="h-9 px-3 rounded-input bg-surface border border-border-strong text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow] min-w-[200px]"
         @change="onCorridorChange"
       >
         <option value="">Tous les corridors</option>
@@ -118,7 +118,7 @@ function corridorValue(c: CorridorOption | null): string {
           data-test="filter-search"
           :value="search"
           placeholder="Rechercher par ville (Paris, Dakar…)"
-          class="w-full h-9 pl-9 pr-3 rounded-btn bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
+          class="w-full h-9 pl-9 pr-3 rounded-input bg-surface border border-border-strong text-sm text-text placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]"
           @input="emit('update:search', ($event.target as HTMLInputElement).value)"
         />
       </div>
@@ -135,7 +135,7 @@ function corridorValue(c: CorridorOption | null): string {
           :class="cn(
             'px-3 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap',
             dateMode === m.key
-              ? 'bg-primary text-white'
+              ? 'bg-primary text-on-primary'
               : 'text-text-muted hover:text-text',
           )"
           @click="emit('update:dateMode', m.key)"
@@ -151,7 +151,7 @@ function corridorValue(c: CorridorOption | null): string {
             type="date"
             data-test="filter-date"
             :value="date ?? ''"
-            class="h-9 pl-3 pr-8 rounded-btn bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
+            class="h-9 pl-3 pr-8 rounded-input bg-surface border border-border-strong text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]"
             @change="emit('update:date', ($event.target as HTMLInputElement).value || null)"
           />
           <button
@@ -173,7 +173,7 @@ function corridorValue(c: CorridorOption | null): string {
               type="date"
               data-test="filter-date-from"
               :value="dateFrom ?? ''"
-              class="h-9 pl-3 pr-8 rounded-btn bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              class="h-9 pl-3 pr-8 rounded-input bg-surface border border-border-strong text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]"
               @change="emit('update:dateFrom', ($event.target as HTMLInputElement).value || null)"
             />
             <button
@@ -192,7 +192,7 @@ function corridorValue(c: CorridorOption | null): string {
               data-test="filter-date-to"
               :value="dateTo ?? ''"
               :min="dateFrom ?? ''"
-              class="h-9 pl-3 pr-8 rounded-btn bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              class="h-9 pl-3 pr-8 rounded-input bg-surface border border-border-strong text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]"
               @change="emit('update:dateTo', ($event.target as HTMLInputElement).value || null)"
             />
             <button

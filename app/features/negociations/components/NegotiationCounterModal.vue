@@ -45,7 +45,7 @@ watch(() => props.open, (val) => {
       @click.self="emit('close')"
     >
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div class="relative w-full max-w-sm bg-surface border border-border rounded-card shadow-2xl p-6 space-y-4">
+      <div class="relative w-full max-w-sm rounded-card border border-border bg-surface p-6 shadow-pop space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="font-semibold text-text">Contre-proposition</h3>
           <button class="text-text-muted hover:text-text p-1" @click="emit('close')">
@@ -64,12 +64,12 @@ watch(() => props.open, (val) => {
               step="0.5"
               placeholder="Ex: 48.00"
               data-test="counter-price-input"
-              class="w-full h-11 px-4 pr-10 rounded-btn bg-bg border border-border text-text text-sm focus:outline-none focus:border-primary transition-colors"
+              class="w-full h-11 px-4 pr-10 rounded-input bg-bg border border-border text-text text-sm font-mono tabular-nums focus:outline-none focus:border-primary transition-colors"
             />
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-muted">€</span>
           </div>
           <p v-if="typeof price === 'number' && price > 0" class="text-xs text-text-muted">
-            soit {{ (price / weightKg).toFixed(2) }} €/kg
+            soit <span class="font-mono tabular-nums">{{ (price / weightKg).toFixed(2) }}</span> €/kg
           </p>
         </div>
 
@@ -81,24 +81,24 @@ watch(() => props.open, (val) => {
             rows="2"
             placeholder="Précisez votre offre…"
             data-test="counter-message-input"
-            class="w-full px-3 py-2 rounded-btn bg-bg border border-border text-text text-sm placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors resize-none"
+            class="w-full px-3 py-2 rounded-input bg-bg border border-border text-text text-sm placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors resize-none"
           />
         </div>
 
         <div class="flex gap-2.5 pt-1">
           <button
-            class="flex-1 h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+            class="flex-1 h-10 rounded-btn border border-border-strong text-sm text-text hover:bg-surface-el transition-colors"
             @click="emit('close')"
           >
             Annuler
           </button>
           <button
             :disabled="!canSubmit"
-            class="flex-1 flex items-center justify-center h-10 rounded-btn bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 flex items-center justify-center h-10 rounded-btn bg-primary text-on-primary text-sm font-medium shadow-btn hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-test="counter-submit-btn"
             @click="submit"
           >
-            <span v-if="isLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span v-if="isLoading" class="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
             <span v-else>Envoyer</span>
           </button>
         </div>

@@ -25,10 +25,10 @@ const options: Array<{ value: CapacityUnit; label: string; description: string }
         :key="opt.value"
         type="button"
         :class="[
-          'flex flex-col items-center gap-1 p-3 rounded-card border text-center transition-colors',
+          'flex flex-col items-center gap-1 p-3 rounded-el border text-center transition-[transform,box-shadow,border-color,color] duration-150 ease-out',
           modelValue === opt.value
-            ? 'border-primary bg-primary/5 text-primary'
-            : 'border-border bg-surface text-text-muted hover:border-primary/40 hover:text-text'
+            ? 'border-primary bg-primary/5 text-primary shadow-card'
+            : 'border-border bg-surface text-text-muted hover:-translate-y-px hover:border-primary/40 hover:text-text motion-reduce:hover:translate-y-0'
         ]"
         @click="emit('update:modelValue', opt.value)"
       >

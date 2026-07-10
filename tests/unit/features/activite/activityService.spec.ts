@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockGet = vi.fn()
+// useApi() renvoie une instance ofetch appelable directement — api(url, opts) —
+// et non un objet avec des méthodes .get/.post.
+const mockApi = vi.fn()
 
 vi.mock('@/composables/useApi', () => ({
-  useApi: () => mockGet,
+  useApi: () => mockApi,
 }))
 
 async function importService() {
@@ -20,21 +22,21 @@ const fakeAnalytics = {
 describe('activityService', () => {
   beforeEach(() => {
     vi.resetModules()
-    mockGet.mockReset()
+    mockApi.mockReset()
   })
 
   it('fetchAnalytics calls GET /travelers/me/analytics with period param', async () => {
-    mockGet.mockResolvedValue(fakeAnalytics)
+    mockApi.mockResolvedValue(fakeAnalytics)
     const activityService = await importService()
     const svc = activityService()
     await svc.fetchAnalytics('month')
-    expect(mockGet).toHaveBeenCalledWith('/travelers/me/analytics', {
+    expect(mockApi).toHaveBeenCalledWith('/travelers/me/analytics', {
       query: { period: 'month' },
     })
   })
 
   it('fetchAnalytics returns ActivityAnalytics', async () => {
-    mockGet.mockResolvedValue(fakeAnalytics)
+    mockApi.mockResolvedValue(fakeAnalytics)
     const activityService = await importService()
     const svc = activityService()
     const result = await svc.fetchAnalytics('month')
@@ -43,22 +45,22 @@ describe('activityService', () => {
   })
 
   it('fetchAnalytics passes quarter period', async () => {
-    mockGet.mockResolvedValue({ ...fakeAnalytics, period: 'quarter' })
+    mockApi.mockResolvedValue({ ...fakeAnalytics, period: 'quarter' })
     const activityService = await importService()
     const svc = activityService()
     await svc.fetchAnalytics('quarter')
-    expect(mockGet).toHaveBeenCalledWith('/travelers/me/analytics', {
+    expect(mockApi).toHaveBeenCalledWith('/travelers/me/analytics', {
       query: { period: 'quarter' },
     })
   })
 
   it('downloadFiscalExport calls GET /travelers/me/fiscal-export with correct params', async () => {
     const fakeBlob = new Blob(['data'], { type: 'application/pdf' })
-    mockGet.mockResolvedValue(fakeBlob)
+    mockApi.mockResolvedValue(fakeBlob)
     const activityService = await importService()
     const svc = activityService()
     await svc.downloadFiscalExport(2026, 'pdf', 'summary')
-    expect(mockGet).toHaveBeenCalledWith('/travelers/me/fiscal-export', {
+    expect(mockApi).toHaveBeenCalledWith('/travelers/me/fiscal-export', {
       query: { year: 2026, format: 'pdf', type: 'summary' },
       responseType: 'blob',
     })
@@ -66,7 +68,7 @@ describe('activityService', () => {
 
   it('downloadFiscalExport returns a Blob', async () => {
     const fakeBlob = new Blob(['data'], { type: 'text/csv' })
-    mockGet.mockResolvedValue(fakeBlob)
+    mockApi.mockResolvedValue(fakeBlob)
     const activityService = await importService()
     const svc = activityService()
     const result = await svc.downloadFiscalExport(2026, 'csv', 'transactions')

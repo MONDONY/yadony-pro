@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { Star, CheckCircle, XCircle, Eye, Copy } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { Bid, BidStatus } from '@/features/colis/types/index'
 
 function copyTracking(trackingNumber: string) {
@@ -36,19 +37,19 @@ const statusLabel: Record<BidStatus, string> = {
   EXPIRED: 'Expiré',
 }
 
-const statusClass: Record<BidStatus, string> = {
-  AWAITING_PAYMENT: 'bg-amber-500/15 text-amber-300',
-  PENDING: 'bg-amber-500/15 text-amber-400',
-  PAYMENT_ESCROWED: 'bg-blue-500/15 text-blue-400',
-  ACCEPTED: 'bg-green-500/15 text-green-400',
-  HANDED_OVER: 'bg-green-600/15 text-green-500',
-  IN_TRANSIT: 'bg-[#0B5FFF]/15 text-[#0B5FFF]',
-  REJECTED: 'bg-red-500/15 text-red-400',
-  CANCELLED: 'bg-[#1E2A4A] text-[#A8A294]',
-  COMPLETED: 'bg-[#0B5FFF]/15 text-[#0B5FFF]',
-  NO_SHOW: 'bg-red-700/20 text-red-300',
-  PARCEL_REFUSED: 'bg-red-700/20 text-red-300',
-  EXPIRED: 'bg-[#1E2A4A] text-[#A8A294]',
+const statusVariant: Record<BidStatus, BadgeVariants['variant']> = {
+  AWAITING_PAYMENT: 'warning',
+  PENDING: 'warning',
+  PAYMENT_ESCROWED: 'info',
+  ACCEPTED: 'success',
+  HANDED_OVER: 'success',
+  IN_TRANSIT: 'info',
+  REJECTED: 'danger',
+  CANCELLED: 'neutral',
+  COMPLETED: 'success',
+  NO_SHOW: 'danger',
+  PARCEL_REFUSED: 'danger',
+  EXPIRED: 'neutral',
 }
 
 const formattedDate = computed(() => {
@@ -64,7 +65,7 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
     :data-test="`bid-row-${bid.id}`"
     :class="cn(
       'border-b border-border transition-colors',
-      isSelected ? 'bg-primary/5' : 'hover:bg-surface',
+      isSelected ? 'bg-primary/5' : 'hover:bg-surface-el',
     )"
   >
     <!-- Checkbox -->
@@ -90,9 +91,9 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
             <Star
               v-for="i in 5"
               :key="i"
-              :class="cn('w-3 h-3', i <= ratingStars ? 'text-amber-400 fill-amber-400' : 'text-border')"
+              :class="cn('w-3 h-3', i <= ratingStars ? 'text-warning fill-warning' : 'text-border')"
             />
-            <span class="text-xs text-text-muted ml-1">{{ bid.sender.rating.toFixed(1) }}</span>
+            <span class="text-xs text-text-muted ml-1 font-mono tabular-nums">{{ bid.sender.rating.toFixed(1) }}</span>
           </div>
         </div>
       </div>
@@ -128,7 +129,8 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
 
     <!-- Weight -->
     <td class="py-3 pr-4 text-sm text-text">
-      {{ bid.weightKg }} kg
+      <template v-if="bid.weightKg !== null"><span class="font-mono tabular-nums">{{ bid.weightKg }}</span> kg</template>
+      <span v-else class="text-text-muted">—</span>
     </td>
 
     <!-- Content -->
@@ -138,14 +140,13 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
 
     <!-- Status -->
     <td class="py-3 pr-4">
-      <span :class="cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium', statusClass[bid.status])">
-        {{ statusLabel[bid.status] }}
-      </span>
+      <Badge :variant="statusVariant[bid.status]" size="sm">{{ statusLabel[bid.status] }}</Badge>
     </td>
 
     <!-- Earnings -->
-    <td class="py-3 pr-4 text-sm font-semibold text-accent whitespace-nowrap">
-      {{ bid.earningsEuros.toFixed(2) }} €
+    <td class="py-3 pr-4 text-sm font-mono font-semibold tabular-nums whitespace-nowrap">
+      <span v-if="bid.earningsEuros !== null" class="text-primary">{{ bid.earningsEuros.toFixed(2) }} €</span>
+      <span v-else class="text-text-muted">—</span>
     </td>
 
     <!-- Actions -->
@@ -162,7 +163,7 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
         <button
           v-if="bid.status === 'PAYMENT_ESCROWED'"
           :data-test="`btn-accept-${bid.id}`"
-          class="p-1.5 rounded text-green-400 hover:bg-green-500/10 transition-colors"
+          class="p-1.5 rounded text-success hover:bg-success/10 transition-colors"
           aria-label="Accepter"
           @click="emit('accept', bid.id)"
         >
@@ -171,7 +172,7 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
         <button
           v-if="bid.status === 'PAYMENT_ESCROWED'"
           :data-test="`btn-reject-${bid.id}`"
-          class="p-1.5 rounded text-red-400 hover:bg-red-500/10 transition-colors"
+          class="p-1.5 rounded text-danger hover:bg-danger/10 transition-colors"
           aria-label="Refuser"
           @click="emit('reject', bid.id)"
         >

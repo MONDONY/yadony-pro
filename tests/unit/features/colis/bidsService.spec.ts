@@ -61,4 +61,59 @@ describe('bidsService', () => {
     await svc.rejectBid('bid-1')
     expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-1/reject', { method: 'PUT' })
   })
+
+  const backendBid = (over: Record<string, unknown> = {}) => ({
+    id: 'b1',
+    announcementId: 'a1',
+    senderId: 's1',
+    senderName: 'abou',
+    senderTotalShipments: 3,
+    weightKg: 10,
+    declaredValueEur: 100,
+    description: 'Vêtements',
+    contentCategory: null,
+    status: 'COMPLETED',
+    departureCity: 'Paris',
+    arrivalCity: 'Abidjan',
+    departureDate: '2026-06-10',
+    pricePerKg: 8,
+    createdAt: '2026-06-01',
+    paymentMethod: null,
+    trackingNumber: 'DON-X',
+    trackingToken: null,
+    ...over,
+  })
+
+  async function mapFirst(over: Record<string, unknown> = {}) {
+    mockApiFn.mockResolvedValue({
+      content: [backendBid(over)],
+      totalElements: 1,
+      totalPages: 1,
+      number: 0,
+      size: 50,
+    })
+    const { bidsService } = await import('@/features/colis/services/bidsService')
+    return (await bidsService().listBids()).content[0]
+  }
+
+  it('calcule poids et revenus quand le poids est présent', async () => {
+    const bid = await mapFirst()
+    expect(bid.weightKg).toBe(10)
+    expect(bid.paymentAmountEuros).toBe(80) // 8 €/kg × 10 kg
+    expect(bid.earningsEuros).toBe(70.4) // 80 × 0,88 (commission 12 %)
+    expect(bid.sender.name).toBe('abou')
+  })
+
+  it('laisse poids et revenus à null quand le poids est absent (évite NaN)', async () => {
+    const bid = await mapFirst({ weightKg: null })
+    expect(bid.weightKg).toBeNull()
+    expect(bid.paymentAmountEuros).toBeNull()
+    expect(bid.earningsEuros).toBeNull()
+  })
+
+  it('laisse poids à null quand le champ weightKg est absent du DTO', async () => {
+    const bid = await mapFirst({ weightKg: undefined })
+    expect(bid.weightKg).toBeNull()
+    expect(bid.earningsEuros).toBeNull()
+  })
 })

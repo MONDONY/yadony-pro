@@ -9,7 +9,7 @@ defineProps<{
 <template>
   <NuxtLink
     :to="to"
-    class="flex items-center gap-3 px-4 py-2.5 rounded-btn text-text-muted hover:text-text hover:bg-surface-elevated transition-colors"
+    class="flex items-center gap-3 rounded-btn px-4 py-2.5 text-text-muted transition-colors hover:bg-surface-el hover:text-text"
     active-class="bg-primary/10 text-primary"
   >
     <slot name="icon" />
@@ -17,7 +17,7 @@ defineProps<{
     <span
       v-if="badge && badge > 0"
       data-test="badge"
-      class="text-xs font-semibold bg-primary text-white rounded-full px-2 py-0.5 min-w-[20px] text-center"
+      class="min-w-[20px] rounded-full bg-primary px-2 py-0.5 text-center font-mono text-xs font-semibold tabular-nums text-on-primary"
     >
       {{ badge }}
     </span>

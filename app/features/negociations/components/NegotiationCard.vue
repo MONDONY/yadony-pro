@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Plane, AlertTriangle } from 'lucide-vue-next'
+import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { NegotiationThread } from '@/features/negociations/types'
 
 const props = defineProps<{ thread: NegotiationThread }>()
@@ -16,22 +18,22 @@ const STATUS_LABEL: Record<string, string> = {
   EXPIRED: 'TERMINÉ',
 }
 
-const STATUS_PILL: Record<string, string> = {
-  OPEN: 'bg-primary/10 text-primary',
-  AWAITING_TRIP: 'bg-amber-500/15 text-amber-400',
-  AWAITING_PAYMENT: 'bg-purple-500/15 text-purple-400',
-  ACCEPTED: 'bg-green-500/15 text-green-400',
-  REJECTED: 'bg-red-500/15 text-red-400',
-  AUTO_REJECTED: 'bg-border text-text-muted',
-  EXPIRED: 'bg-border text-text-muted',
+const STATUS_VARIANT: Record<string, BadgeVariants['variant']> = {
+  OPEN: 'info',
+  AWAITING_TRIP: 'warning',
+  AWAITING_PAYMENT: 'warning',
+  ACCEPTED: 'success',
+  REJECTED: 'danger',
+  AUTO_REJECTED: 'neutral',
+  EXPIRED: 'neutral',
 }
 
 const STRIP_CLASS: Record<string, string> = {
   OPEN: 'bg-primary',
-  AWAITING_TRIP: 'bg-amber-400',
-  AWAITING_PAYMENT: 'bg-purple-400',
-  ACCEPTED: 'bg-green-400',
-  REJECTED: 'bg-red-400',
+  AWAITING_TRIP: 'bg-warning',
+  AWAITING_PAYMENT: 'bg-warning',
+  ACCEPTED: 'bg-success',
+  REJECTED: 'bg-danger',
   AUTO_REJECTED: 'bg-border',
   EXPIRED: 'bg-border',
 }
@@ -80,24 +82,24 @@ function timeAgo(isoDate: string): string {
 <template>
   <div
     :data-test="`neg-card-${thread.id}`"
-    class="relative overflow-hidden bg-surface border rounded-card cursor-pointer transition-all hover:border-primary/40"
-    :class="isTerminal ? 'border-border/50 opacity-70' : 'border-border'"
+    class="relative overflow-hidden cursor-pointer rounded-el border border-border bg-surface shadow-card transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:shadow-pop motion-reduce:hover:translate-y-0"
+    :class="isTerminal ? 'opacity-70' : ''"
     @click="router.push(`/negociations/${thread.id}`)"
   >
     <!-- Bande colorée gauche par statut -->
     <div
-      class="absolute left-0 top-0 bottom-0 w-1 rounded-l-card"
+      class="absolute left-0 top-0 bottom-0 w-1 rounded-l-el"
       :class="STRIP_CLASS[thread.status] ?? 'bg-border'"
     />
 
     <div class="pl-4 pr-3 py-3 space-y-2.5">
       <!-- Ligne 1 : route + prix -->
       <div class="flex items-start justify-between gap-2">
-        <p class="text-sm font-extrabold text-text tracking-tight">
+        <p class="text-sm font-semibold text-text tracking-tight">
           {{ thread.departureCity }} → {{ thread.arrivalCity }}
         </p>
         <div class="text-right flex-shrink-0">
-          <p class="text-lg font-extrabold text-text leading-none tracking-tight">
+          <p class="font-mono text-lg font-semibold text-text leading-none tracking-tight tabular-nums">
             {{ thread.currentPriceEur }} €
           </p>
           <p class="text-[10px] text-text-muted font-semibold">
@@ -112,12 +114,9 @@ function timeAgo(isoDate: string): string {
           <span class="text-[9px] font-bold text-primary">{{ senderInitials }}</span>
         </div>
         <span class="text-xs font-semibold text-text-muted truncate flex-1">{{ thread.senderName }}</span>
-        <span
-          class="flex-shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-full tracking-wide"
-          :class="STATUS_PILL[thread.status] ?? 'bg-border text-text-muted'"
-        >
+        <Badge :variant="STATUS_VARIANT[thread.status] ?? 'neutral'" size="sm" class="flex-shrink-0">
           {{ STATUS_LABEL[thread.status] ?? thread.status }}
-        </span>
+        </Badge>
       </div>
 
       <!-- Ligne 3 : rounds dots + méta + badge NOUVEAU -->
@@ -132,20 +131,21 @@ function timeAgo(isoDate: string): string {
         />
         <span class="text-[11px] text-text-muted font-medium ml-1 flex-1 truncate">
           R.{{ thread.roundsCount }}/5
-          <template v-if="runDate"> · ✈ {{ runDate }}</template>
+          <template v-if="runDate"> · <Plane class="inline-block h-3 w-3 -mt-0.5" aria-hidden="true" /> {{ runDate }}</template>
           · {{ timeAgo(thread.lastActivityAt) }}
         </span>
         <span
           v-if="isMyTurn"
-          class="flex-shrink-0 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary text-white tracking-wide"
+          class="flex-shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary text-on-primary tracking-wide"
         >
           NOUVEAU
         </span>
       </div>
 
       <!-- Ligne 4 : action requise (AWAITING_TRIP) -->
-      <p v-if="thread.status === 'AWAITING_TRIP'" class="text-xs text-amber-400 font-medium">
-        ⚠ Action requise : liez un de vos trajets
+      <p v-if="thread.status === 'AWAITING_TRIP'" class="flex items-center gap-1.5 text-xs text-warning font-medium">
+        <AlertTriangle class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        Action requise : liez un de vos trajets
       </p>
     </div>
   </div>

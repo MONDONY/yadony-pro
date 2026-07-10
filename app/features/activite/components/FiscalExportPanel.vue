@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { Download } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import type { FiscalExportFormat, FiscalExportType } from '@/features/activite/types/index'
 
 defineProps<{
@@ -27,18 +28,20 @@ const exports: Array<{ label: string; description: string; format: FiscalExportF
       :data-test="`export-btn-${exp.type}`"
       :disabled="isExporting"
       :class="cn(
-        'flex flex-col items-start gap-2 p-4 bg-surface border rounded-card text-left transition-all duration-200',
-        isExporting ? 'border-border opacity-50 cursor-not-allowed' : 'border-border hover:border-primary/40 hover:bg-primary/5',
+        'flex flex-col items-start gap-2 rounded-el border border-border bg-surface p-4 text-left shadow-card transition-[transform,box-shadow] duration-150 ease-out',
+        isExporting
+          ? 'cursor-not-allowed opacity-50'
+          : 'hover:-translate-y-px hover:shadow-pop motion-reduce:hover:translate-y-0',
       )"
       type="button"
       @click="!isExporting && emit('export', exp.format, exp.type)"
     >
       <div class="flex items-center gap-2">
-        <Download class="w-4 h-4 text-primary flex-shrink-0" />
+        <Download class="h-4 w-4 flex-shrink-0 text-primary" />
         <span class="text-sm font-semibold text-text">{{ exp.label }}</span>
-        <span class="text-xs text-text-muted border border-border rounded px-1 uppercase">{{ exp.format }}</span>
+        <Badge variant="neutral" size="sm" :dot="false" class="uppercase">{{ exp.format }}</Badge>
       </div>
-      <p class="text-xs text-text-muted leading-relaxed">{{ exp.description }}</p>
+      <p class="text-xs leading-relaxed text-text-muted">{{ exp.description }}</p>
     </button>
   </div>
 </template>

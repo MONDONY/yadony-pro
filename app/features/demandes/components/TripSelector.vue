@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { Plane, Layers, ChevronDown, Plus } from 'lucide-vue-next'
+import { SectionLabel } from '@/components/ui/section-label'
 import type { ActiveTrip } from '@/features/demandes/types/index'
 
 const props = defineProps<{
@@ -46,64 +48,63 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="containerRef" data-test="trip-selector" class="bg-green-500/5 border-b border-border px-4 py-3">
-    <p class="text-xs font-bold text-text-muted uppercase tracking-wide mb-2">Mon trajet actif</p>
+  <div ref="containerRef" data-test="trip-selector" class="bg-success/5 border-b border-border px-4 py-3">
+    <SectionLabel class="mb-2">Mon trajet actif</SectionLabel>
     <div class="flex items-center gap-3">
       <!-- Affichage du trajet sélectionné -->
       <div class="relative flex-1">
-        <div class="flex items-center justify-between bg-surface border border-primary/40 rounded-btn px-3 py-2.5">
-          <span class="text-sm font-semibold text-text">
-            {{ selectedTrip ? `✈️ ${selectedTrip.tripCorridor}` : '🗂️ Tous mes trajets' }}
-            <span class="text-text-muted font-normal text-xs ml-2">
-              {{ selectedTrip
-                ? `· ${selectedTrip.tripDepartureDate} · ${selectedTrip.tripAvailableKg} kg dispo`
-                : '' }}
+        <div class="flex items-center justify-between bg-surface border border-primary/40 rounded-input px-3 py-2.5">
+          <span class="flex items-center gap-1.5 text-sm font-semibold text-text">
+            <component :is="selectedTrip ? Plane : Layers" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            {{ selectedTrip ? selectedTrip.tripCorridor : 'Tous mes trajets' }}
+            <span v-if="selectedTrip" class="text-text-muted font-normal text-xs ml-2 font-mono tabular-nums">
+              · {{ selectedTrip.tripDepartureDate }} · {{ selectedTrip.tripAvailableKg }} kg dispo
             </span>
           </span>
           <button
             v-if="trips.length > 1"
             data-test="trip-dropdown-toggle"
-            class="text-text-muted text-xs ml-2"
+            class="text-text-muted ml-2"
             type="button"
             :aria-expanded="isOpen"
             aria-haspopup="listbox"
             aria-label="Choisir un trajet"
             @click="isOpen = !isOpen"
-          >▾</button>
+          ><ChevronDown class="h-4 w-4" aria-hidden="true" /></button>
         </div>
 
         <!-- Dropdown -->
         <div
           v-if="isOpen && trips.length > 1"
-          class="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-btn shadow-lg z-20 overflow-hidden"
+          class="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-el shadow-pop z-20 overflow-hidden"
         >
           <button
             data-test="trip-option-all"
-            class="w-full text-left px-3 py-2.5 text-sm hover:bg-bg transition-colors border-b border-border text-text-muted"
+            class="w-full text-left px-3 py-2.5 text-sm hover:bg-surface-el transition-colors border-b border-border text-text-muted flex items-center gap-2"
             type="button"
             @click="select(null)"
           >
-            🗂️ Tous mes trajets
+            <Layers class="h-4 w-4 shrink-0" aria-hidden="true" /> Tous mes trajets
           </button>
           <button
             v-for="trip in trips"
             :key="trip.tripId"
             :data-test="`trip-option-${trip.tripId}`"
-            class="w-full text-left px-3 py-2.5 text-sm hover:bg-bg transition-colors flex items-center justify-between"
+            class="w-full text-left px-3 py-2.5 text-sm hover:bg-surface-el transition-colors flex items-center justify-between gap-2"
             type="button"
             @click="select(trip.tripId)"
           >
-            <span class="font-medium text-text">✈️ {{ trip.tripCorridor }}</span>
-            <span class="text-xs text-text-muted">{{ trip.matchCount }} demande{{ trip.matchCount > 1 ? 's' : '' }}</span>
+            <span class="flex items-center gap-2 font-medium text-text"><Plane class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> {{ trip.tripCorridor }}</span>
+            <span class="text-xs text-text-muted"><span class="font-mono tabular-nums">{{ trip.matchCount }}</span> demande{{ trip.matchCount > 1 ? 's' : '' }}</span>
           </button>
         </div>
       </div>
 
-      <a
-        href="/trajets/nouveau"
-        class="shrink-0 bg-primary text-white text-xs font-semibold px-3 py-2.5 rounded-btn hover:bg-primary/90 transition-colors whitespace-nowrap"
-      >+ Nouveau</a>
+      <NuxtLink
+        to="/trajets/nouvelle-annonce"
+        class="inline-flex shrink-0 items-center gap-1 bg-primary text-on-primary text-xs font-semibold px-3 py-2.5 rounded-btn shadow-btn hover:bg-primary-hover transition-colors whitespace-nowrap"
+      ><Plus class="h-3.5 w-3.5" aria-hidden="true" /> Nouveau</NuxtLink>
     </div>
-    <p class="text-xs text-text-muted mt-1.5">{{ totalCount }} demande{{ totalCount > 1 ? 's' : '' }} trouvée{{ totalCount > 1 ? 's' : '' }}</p>
+    <p class="text-xs text-text-muted mt-1.5"><span class="font-mono tabular-nums">{{ totalCount }}</span> demande{{ totalCount > 1 ? 's' : '' }} trouvée{{ totalCount > 1 ? 's' : '' }}</p>
   </div>
 </template>

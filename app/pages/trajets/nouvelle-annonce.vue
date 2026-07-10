@@ -64,7 +64,7 @@ function goBack() {
           Retour à la liste
         </button>
         <button
-          class="px-6 py-2.5 rounded-btn bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors"
+          class="px-6 py-2.5 rounded-btn bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors"
           @click="goToTrip"
         >
           Gérer ce trajet →

@@ -7,6 +7,7 @@ defineOptions({ inheritAttrs: false })
 interface Props {
   class?: HTMLAttributes['class']
   modelValue?: string | number
+  invalid?: boolean
 }
 
 const props = defineProps<Props>()
@@ -18,9 +19,11 @@ const attrs = useAttrs()
   <input
     v-bind="attrs"
     :value="props.modelValue"
+    :aria-invalid="props.invalid || undefined"
     :class="cn(
-      'flex h-9 w-full rounded-btn border border-border bg-surface px-3 py-1 text-sm text-text shadow-sm transition-colors placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50',
-      props.class
+      'flex h-10 w-full rounded-input border bg-surface px-3 text-sm text-text transition-[border-color,box-shadow] duration-150 placeholder:text-text-subtle focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-50',
+      props.invalid ? 'border-danger focus-visible:border-danger focus-visible:ring-danger/25' : 'border-border-strong',
+      props.class,
     )"
     @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
   />

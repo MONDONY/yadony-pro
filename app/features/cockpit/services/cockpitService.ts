@@ -1,9 +1,14 @@
 // app/features/cockpit/services/cockpitService.ts
 import { useApi } from '@/composables/useApi'
-import type { Analytics, CalendarStats } from '@/features/cockpit/types/index'
+import type { Analytics, CalendarStats, TravelerStats } from '@/features/cockpit/types/index'
 
 export function cockpitService() {
   const api = useApi()
+
+  // Vue d'ensemble tout-temps du cockpit (revenus totaux, trajets, colis, taux…).
+  async function fetchStats(): Promise<TravelerStats> {
+    return api<TravelerStats>('/travelers/me/stats')
+  }
 
   async function fetchAnalytics(): Promise<Analytics> {
     return api<Analytics>('/travelers/me/analytics')
@@ -18,5 +23,5 @@ export function cockpitService() {
     return result.count
   }
 
-  return { fetchAnalytics, fetchCalendar, fetchAutomationTodayCount }
+  return { fetchStats, fetchAnalytics, fetchCalendar, fetchAutomationTodayCount }
 }

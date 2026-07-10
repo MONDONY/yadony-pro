@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { XCircle } from 'lucide-vue-next'
+import { XCircle, Plane } from 'lucide-vue-next'
+import { SectionLabel } from '@/components/ui/section-label'
 import { negotiationService } from '@/features/negociations/services/negotiationService'
 import type { MatchingRequest } from '@/features/demandes/types/index'
 
@@ -84,7 +85,7 @@ async function submit() {
       @click.self="emit('close')"
     >
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div data-test="negociation-modal" class="relative w-full max-w-md bg-surface border border-border rounded-card shadow-2xl overflow-hidden">
+      <div data-test="negociation-modal" class="relative w-full max-w-md rounded-card border border-border bg-surface shadow-pop overflow-hidden">
 
         <!-- Header -->
         <div class="flex items-start justify-between gap-3 px-5 pt-5 pb-4 border-b border-border">
@@ -99,11 +100,11 @@ async function submit() {
 
         <!-- Récap demande (lecture seule) -->
         <div class="bg-bg px-5 py-3 border-b border-border">
-          <p class="text-xs font-bold text-text-muted uppercase tracking-wide mb-2">La demande</p>
+          <SectionLabel class="mb-2">La demande</SectionLabel>
           <div class="flex gap-4 text-xs">
             <div>
               <span class="text-text-muted">Poids</span>
-              <p class="font-semibold text-text mt-0.5">{{ request.weightKg }} kg</p>
+              <p class="font-mono font-semibold text-text mt-0.5 tabular-nums">{{ request.weightKg }} kg</p>
             </div>
             <div>
               <span class="text-text-muted">Type</span>
@@ -111,17 +112,17 @@ async function submit() {
             </div>
             <div>
               <span class="text-text-muted">Budget exp.</span>
-              <p class="font-semibold text-green-400 mt-0.5">{{ suggestedPrice }} €</p>
+              <p class="font-mono font-semibold text-success mt-0.5 tabular-nums">{{ suggestedPrice }} €</p>
             </div>
           </div>
         </div>
 
         <!-- Trajet auto-sélectionné (lecture seule) -->
         <div class="px-5 py-3 border-b border-border">
-          <p class="text-xs font-bold text-text-muted uppercase tracking-wide mb-2">Mon trajet (auto-sélectionné)</p>
-          <div class="bg-green-500/5 border border-green-500/20 rounded-btn px-3 py-2 text-xs">
-            <span class="font-semibold text-text">✈️ {{ request.tripCorridor }}</span>
-            <span class="text-text-muted ml-2">· {{ request.tripDepartureDate }} · {{ request.tripAvailableKg }} kg dispo</span>
+          <SectionLabel class="mb-2">Mon trajet (auto-sélectionné)</SectionLabel>
+          <div class="bg-success/5 border border-success/20 rounded-input px-3 py-2 text-xs">
+            <span class="inline-flex items-center gap-1.5 font-semibold text-text"><Plane class="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {{ request.tripCorridor }}</span>
+            <span class="text-text-muted ml-2">· {{ request.tripDepartureDate }} · <span class="font-mono tabular-nums">{{ request.tripAvailableKg }}</span> kg dispo</span>
           </div>
         </div>
 
@@ -129,14 +130,14 @@ async function submit() {
           <!-- Prix proposé avec contrôles +/- -->
           <div class="space-y-2">
             <div class="flex items-baseline justify-between">
-              <p class="text-xs font-bold text-text-muted uppercase tracking-wide">Mon prix total</p>
-              <span class="text-xs text-text-muted">pour {{ request.weightKg }} kg</span>
+              <SectionLabel>Mon prix total</SectionLabel>
+              <span class="text-xs text-text-muted">pour <span class="font-mono tabular-nums">{{ request.weightKg }}</span> kg</span>
             </div>
             <p class="text-xs text-text-muted">
-              Budget expéditeur : <span class="font-semibold text-green-400">{{ suggestedPrice }} €</span>
-              <span class="text-text-muted/70"> ({{ request.budgetPerKg }} €/kg × {{ request.weightKg }} kg)</span>
+              Budget expéditeur : <span class="font-mono font-semibold text-success tabular-nums">{{ suggestedPrice }} €</span>
+              <span class="text-text-muted/70"> (<span class="font-mono tabular-nums">{{ request.budgetPerKg }}</span> €/kg × <span class="font-mono tabular-nums">{{ request.weightKg }}</span> kg)</span>
             </p>
-            <div class="flex items-center gap-2 bg-bg border border-border rounded-xl px-4 py-3 focus-within:border-primary transition-colors">
+            <div class="flex items-center gap-2 bg-bg border border-border rounded-input px-4 py-3 focus-within:border-primary transition-colors">
               <input
                 :value="proposedPrice"
                 type="number"
@@ -144,19 +145,19 @@ async function submit() {
                 :max="maxPrice"
                 inputmode="numeric"
                 data-test="proposed-price"
-                class="flex-1 text-center text-3xl font-bold text-text bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                class="flex-1 text-center text-3xl font-mono font-semibold text-text bg-transparent outline-none tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 @input="onPriceInput"
               />
-              <span class="text-2xl font-bold text-text-muted shrink-0">€</span>
+              <span class="text-2xl font-semibold text-text-muted shrink-0">€</span>
             </div>
             <p class="text-xs text-text-muted text-center -mt-1">
-              soit {{ request.weightKg > 0 ? (proposedPrice / request.weightKg).toFixed(2) : '—' }} €/kg
+              soit <span class="font-mono tabular-nums">{{ request.weightKg > 0 ? (proposedPrice / request.weightKg).toFixed(2) : '—' }}</span> €/kg
             </p>
             <!-- Barre min → max -->
-            <div class="h-1.5 bg-border rounded-full overflow-hidden">
+            <div class="h-1.5 bg-surface-el rounded-full overflow-hidden">
               <div class="h-full bg-primary rounded-full transition-all duration-150" :style="{ width: priceBarWidth }" />
             </div>
-            <div class="flex justify-between text-xs text-text-muted">
+            <div class="flex justify-between text-xs text-text-muted font-mono tabular-nums">
               <span>1 €</span>
               <span>Max {{ maxPrice }} €</span>
             </div>
@@ -164,36 +165,36 @@ async function submit() {
 
           <!-- Message optionnel -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-text-muted uppercase tracking-wide">Message (optionnel)</label>
+            <label class="text-2xs font-semibold uppercase tracking-[0.12em] text-text-subtle">Message (optionnel)</label>
             <textarea
               v-model="message"
               maxlength="280"
               rows="3"
               placeholder="Présentez-vous, précisez vos disponibilités…"
               data-test="negociation-message-input"
-              class="w-full px-3 py-2 rounded-btn bg-bg border border-border text-text text-sm placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors resize-none"
+              class="w-full px-3 py-2 rounded-input bg-bg border border-border text-text text-sm placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors resize-none"
             />
-            <p class="text-right text-xs text-text-muted">{{ message.length }}/280</p>
+            <p class="text-right text-xs text-text-muted font-mono tabular-nums">{{ message.length }}/280</p>
           </div>
 
           <!-- Erreur -->
-          <p v-if="errorMsg" class="text-xs text-red-400">{{ errorMsg }}</p>
+          <p v-if="errorMsg" class="text-xs text-danger">{{ errorMsg }}</p>
 
           <!-- Actions -->
           <div class="flex gap-2.5">
             <button
-              class="flex-1 h-10 rounded-btn border border-border text-sm text-text-muted hover:text-text transition-colors"
+              class="flex-1 h-10 rounded-btn border border-border-strong text-sm text-text hover:bg-surface-el transition-colors"
               type="button"
               @click="emit('close')"
             >Annuler</button>
             <button
               :disabled="!canSubmit"
               data-test="negociation-submit-btn"
-              class="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-btn bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-btn bg-primary text-on-primary text-sm font-semibold shadow-btn hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
               @click="submit"
             >
-              <span v-if="isLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span v-if="isLoading" class="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
               <span v-else>Envoyer ma proposition →</span>
             </button>
           </div>

@@ -5,7 +5,7 @@ export function activityService() {
   const api = useApi()
 
   async function fetchAnalytics(period: ActivityPeriod): Promise<ActivityAnalytics> {
-    return api('/travelers/me/analytics', { query: { period } })
+    return api<ActivityAnalytics>('/travelers/me/analytics', { query: { period } })
   }
 
   async function downloadFiscalExport(
@@ -13,7 +13,7 @@ export function activityService() {
     format: FiscalExportFormat,
     type: FiscalExportType,
   ): Promise<Blob> {
-    return api('/travelers/me/fiscal-export', {
+    return api<Blob>('/travelers/me/fiscal-export', {
       query: { year, format, type },
       responseType: 'blob',
     })

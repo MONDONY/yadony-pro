@@ -46,7 +46,7 @@ const TABS: { key: Tab; label: string; count?: () => number }[] = [
           :key="tab.key"
           class="relative px-3 py-1.5 text-xs font-semibold rounded-[6px] transition-colors"
           :class="activeTab === tab.key
-            ? 'bg-primary text-white shadow-sm'
+            ? 'bg-primary text-on-primary shadow-sm'
             : 'text-text-muted hover:text-text'"
           @click="activeTab = tab.key"
         >

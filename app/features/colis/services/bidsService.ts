@@ -47,10 +47,18 @@ function inferPaymentStatus(status: string): Bid['paymentStatus'] {
 }
 
 function mapBackendToBid(b: BackendBidResponse): Bid {
-  const weightKg = Number(b.weightKg)
+  // Le poids peut être absent (mode GRID) ou null (bid rejeté sans pesée) → on
+  // n'invente pas de 0 : weightKg reste null et les revenus qui en dépendent aussi
+  // (évite les « NaN kg » / « NaN € » à l'affichage).
+  const rawWeight = Number(b.weightKg)
+  const weightKg = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : null
   const pricePerKg = Number(b.pricePerKg)
-  const paymentAmountEuros = Math.round(pricePerKg * weightKg * 100) / 100
-  const earningsEuros = Math.round(paymentAmountEuros * 0.88 * 100) / 100
+  const paymentAmountEuros =
+    weightKg !== null && Number.isFinite(pricePerKg)
+      ? Math.round(pricePerKg * weightKg * 100) / 100
+      : null
+  const earningsEuros =
+    paymentAmountEuros !== null ? Math.round(paymentAmountEuros * 0.88 * 100) / 100 : null
   const senderName = b.senderName ?? 'Expéditeur'
 
   return {

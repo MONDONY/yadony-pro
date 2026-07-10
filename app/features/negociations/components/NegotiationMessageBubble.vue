@@ -36,15 +36,15 @@ const formattedDate = computed(() =>
         :class="[
           'rounded-2xl px-4 py-2.5 space-y-1',
           isMine
-            ? 'bg-primary text-white rounded-tr-sm'
+            ? 'bg-primary text-on-primary rounded-tr-sm'
             : 'bg-surface border border-border text-text rounded-tl-sm',
-          message.kind === 'ACCEPT' ? 'border-green-400/50 bg-green-500/10 text-green-300' : '',
-          message.kind === 'REJECT' ? 'border-red-400/50 bg-red-500/10 text-red-300' : '',
+          message.kind === 'ACCEPT' ? 'border border-success/50 bg-success/10 text-success' : '',
+          message.kind === 'REJECT' ? 'border border-danger/50 bg-danger/10 text-danger' : '',
         ]"
       >
         <p
           v-if="message.proposedPriceEur !== null"
-          class="text-lg font-bold"
+          class="font-mono text-lg font-semibold tabular-nums"
         >
           {{ message.proposedPriceEur }} €
         </p>

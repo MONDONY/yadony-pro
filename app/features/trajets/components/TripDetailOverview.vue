@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { MapPin, Calendar, Clock, Package, CreditCard, FileText } from 'lucide-vue-next'
+import { SectionLabel } from '@/components/ui/section-label'
 import type { Trip } from '@/features/trajets/types/index'
 
 const props = defineProps<{
@@ -21,7 +22,7 @@ const fillPct = computed(() =>
 )
 
 const barColor = computed(() =>
-  fillPct.value >= 80 ? 'bg-green-500' : fillPct.value >= 40 ? 'bg-amber-500' : 'bg-red-400'
+  fillPct.value >= 80 ? 'bg-success' : fillPct.value >= 40 ? 'bg-warning' : 'bg-danger'
 )
 
 const paymentMethods = computed(() => {
@@ -45,8 +46,8 @@ const capacityUnitLabel = computed(() => {
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
     <!-- Trajet info -->
-    <section class="bg-surface border border-border rounded-card p-5 space-y-4">
-      <h2 class="text-xs font-semibold text-text-muted uppercase tracking-wider">Trajet</h2>
+    <section class="rounded-el border border-border bg-surface p-5 shadow-card space-y-4">
+      <SectionLabel as="h2">Trajet</SectionLabel>
 
       <div class="space-y-3">
         <div class="flex items-start gap-3">
@@ -77,7 +78,7 @@ const capacityUnitLabel = computed(() => {
         </div>
 
         <div class="flex items-start gap-3">
-          <MapPin class="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+          <MapPin class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
           <div>
             <p class="text-xs text-text-muted">Lieu de récupération</p>
             <p class="text-sm text-text font-medium">{{ trip.dropoffPlace.label }}</p>
@@ -87,32 +88,32 @@ const capacityUnitLabel = computed(() => {
     </section>
 
     <!-- Capacité -->
-    <section class="bg-surface border border-border rounded-card p-5 space-y-4">
-      <h2 class="text-xs font-semibold text-text-muted uppercase tracking-wider">Capacité</h2>
+    <section class="rounded-el border border-border bg-surface p-5 shadow-card space-y-4">
+      <SectionLabel as="h2">Capacité</SectionLabel>
 
       <div class="space-y-3">
         <div class="space-y-1.5">
           <div class="flex justify-between text-sm">
             <span class="text-text-muted">Utilisé</span>
-            <span class="text-text font-medium">{{ trip.usedWeightKg }} / {{ trip.availableWeightKg }} kg</span>
+            <span class="font-mono tabular-nums text-text font-medium">{{ trip.usedWeightKg }} / {{ trip.availableWeightKg }} kg</span>
           </div>
-          <div class="h-2 w-full bg-border rounded-full overflow-hidden">
+          <div class="h-2 w-full bg-surface-el rounded-full overflow-hidden">
             <div
               :class="['h-full rounded-full transition-all', barColor]"
               :style="{ width: fillPct + '%' }"
             />
           </div>
-          <p class="text-xs text-text-muted text-right">{{ fillPct }}% rempli</p>
+          <p class="text-xs text-text-muted text-right"><span class="font-mono tabular-nums">{{ fillPct }}%</span> rempli</p>
         </div>
 
         <div class="grid grid-cols-2 gap-3 pt-1">
-          <div class="bg-bg rounded-btn px-3 py-2 text-center">
-            <p class="text-lg font-bold text-text">{{ trip.confirmedParcelCount }}</p>
-            <p class="text-xs text-text-muted">Colis confirmés</p>
+          <div class="bg-surface-el rounded-el px-3 py-2 text-center">
+            <p class="font-mono text-lg font-semibold tabular-nums text-text">{{ trip.confirmedParcelCount }}</p>
+            <p class="text-xs text-text-subtle">Colis confirmés</p>
           </div>
-          <div class="bg-bg rounded-btn px-3 py-2 text-center">
-            <p class="text-lg font-bold text-amber-400">{{ trip.pendingBidCount }}</p>
-            <p class="text-xs text-text-muted">Bids en attente</p>
+          <div class="bg-surface-el rounded-el px-3 py-2 text-center">
+            <p class="font-mono text-lg font-semibold tabular-nums text-warning">{{ trip.pendingBidCount }}</p>
+            <p class="text-xs text-text-subtle">Bids en attente</p>
           </div>
         </div>
 
@@ -120,7 +121,7 @@ const capacityUnitLabel = computed(() => {
           <Package class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
           <div>
             <p class="text-xs text-text-muted">Prix</p>
-            <p class="text-sm text-text font-bold">{{ trip.pricePerKg }} €/kg</p>
+            <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ trip.pricePerKg }} €/kg</p>
           </div>
         </div>
 
@@ -131,8 +132,8 @@ const capacityUnitLabel = computed(() => {
     </section>
 
     <!-- Contenu accepté/refusé -->
-    <section class="bg-surface border border-border rounded-card p-5 space-y-3">
-      <h2 class="text-xs font-semibold text-text-muted uppercase tracking-wider">Contenu</h2>
+    <section class="rounded-el border border-border bg-surface p-5 shadow-card space-y-3">
+      <SectionLabel as="h2">Contenu</SectionLabel>
 
       <div v-if="trip.acceptedCategories.length > 0">
         <p class="text-xs text-text-muted mb-1.5">Accepté</p>
@@ -140,7 +141,7 @@ const capacityUnitLabel = computed(() => {
           <span
             v-for="cat in trip.acceptedCategories"
             :key="cat"
-            class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400"
+            class="text-xs px-2 py-0.5 rounded-full bg-success/10 text-success"
           >{{ cat }}</span>
         </div>
       </div>
@@ -151,7 +152,7 @@ const capacityUnitLabel = computed(() => {
           <span
             v-for="cat in trip.refusedCategories"
             :key="cat"
-            class="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400"
+            class="text-xs px-2 py-0.5 rounded-full bg-danger/10 text-danger"
           >{{ cat }}</span>
         </div>
       </div>
@@ -162,8 +163,8 @@ const capacityUnitLabel = computed(() => {
     </section>
 
     <!-- Paiement + notes -->
-    <section class="bg-surface border border-border rounded-card p-5 space-y-4">
-      <h2 class="text-xs font-semibold text-text-muted uppercase tracking-wider">Paiement & notes</h2>
+    <section class="rounded-el border border-border bg-surface p-5 shadow-card space-y-4">
+      <SectionLabel as="h2">Paiement & notes</SectionLabel>
 
       <div class="flex items-start gap-3">
         <CreditCard class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />

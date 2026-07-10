@@ -39,7 +39,7 @@ const statusFilters: Array<{ key: BidFilter; label: string }> = [
         :class="cn(
           'flex-shrink-0 px-3 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
           modelValue.statusFilter === f.key
-            ? 'bg-primary text-white shadow-sm'
+            ? 'bg-primary text-on-primary shadow-sm'
             : 'text-text-muted hover:text-text',
         )"
         @click="emit('update:statusFilter', f.key)"
@@ -54,7 +54,7 @@ const statusFilters: Array<{ key: BidFilter; label: string }> = [
       <select
         data-test="filter-trip"
         :value="modelValue.tripId ?? ''"
-        class="h-9 px-3 rounded-btn bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors min-w-[180px]"
+        class="h-9 px-3 rounded-input bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors min-w-[180px]"
         @change="emit('update:tripId', ($event.target as HTMLSelectElement).value || null)"
       >
         <option value="">Tous les trajets</option>
@@ -75,7 +75,7 @@ const statusFilters: Array<{ key: BidFilter; label: string }> = [
           data-test="filter-search"
           :value="modelValue.search"
           placeholder="Expéditeur ou n° de suivi (DON-…)"
-          class="w-full h-9 pl-9 pr-3 rounded-btn bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
+          class="w-full h-9 pl-9 pr-3 rounded-input bg-surface border border-border text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
           @input="emit('update:search', ($event.target as HTMLInputElement).value)"
         />
       </div>

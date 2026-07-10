@@ -79,7 +79,7 @@ async function submit() {
     <button
       type="submit"
       :disabled="loading"
-      class="h-11 rounded-btn bg-primary text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors disabled:opacity-50"
+      class="h-11 rounded-btn bg-primary text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors disabled:opacity-50"
     >
       {{ loading ? 'Envoi en cours...' : 'Recevoir le code par SMS →' }}
     </button>
