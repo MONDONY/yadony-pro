@@ -1,4 +1,5 @@
 import { useApi } from '@/composables/useApi'
+import { useCommissionRate } from '@/composables/useCommissionRate'
 import type { Bid, BidPage, BidFilter, BidStatus } from '@/features/colis/types/index'
 
 interface BackendBidResponse {
@@ -46,7 +47,7 @@ function inferPaymentStatus(status: string): Bid['paymentStatus'] {
   return 'PENDING'
 }
 
-function mapBackendToBid(b: BackendBidResponse): Bid {
+function mapBackendToBid(b: BackendBidResponse, commissionRate: number): Bid {
   // Le poids peut être absent (mode GRID) ou null (bid rejeté sans pesée) → on
   // n'invente pas de 0 : weightKg reste null et les revenus qui en dépendent aussi
   // (évite les « NaN kg » / « NaN € » à l'affichage).
@@ -58,7 +59,9 @@ function mapBackendToBid(b: BackendBidResponse): Bid {
       ? Math.round(pricePerKg * weightKg * 100) / 100
       : null
   const earningsEuros =
-    paymentAmountEuros !== null ? Math.round(paymentAmountEuros * 0.88 * 100) / 100 : null
+    paymentAmountEuros !== null
+      ? Math.round(paymentAmountEuros * (1 - commissionRate) * 100) / 100
+      : null
   const senderName = b.senderName ?? 'Expéditeur'
 
   return {
@@ -98,6 +101,7 @@ export interface ListBidsParams {
 
 export function bidsService() {
   const api = useApi()
+  const { getRate } = useCommissionRate()
 
   async function listBids(params: ListBidsParams = {}): Promise<BidPage> {
     const query: Record<string, string> = {}
@@ -109,9 +113,12 @@ export function bidsService() {
     if (params.page !== undefined) query.page = String(params.page)
     if (params.size !== undefined) query.size = String(params.size)
 
-    const page = await api<BackendPage>('/travelers/me/bids', { query })
+    const [page, rate] = await Promise.all([
+      api<BackendPage>('/travelers/me/bids', { query }),
+      getRate(),
+    ])
     return {
-      content: page.content.map(mapBackendToBid),
+      content: page.content.map((b) => mapBackendToBid(b, rate)),
       totalElements: page.totalElements,
       totalPages: page.totalPages,
       number: page.number,
@@ -120,13 +127,19 @@ export function bidsService() {
   }
 
   async function acceptBid(id: string): Promise<Bid> {
-    const res = await api<BackendBidResponse>(`/bids/${id}/accept`, { method: 'PUT' })
-    return mapBackendToBid(res)
+    const [res, rate] = await Promise.all([
+      api<BackendBidResponse>(`/bids/${id}/accept`, { method: 'PUT' }),
+      getRate(),
+    ])
+    return mapBackendToBid(res, rate)
   }
 
   async function rejectBid(id: string): Promise<Bid> {
-    const res = await api<BackendBidResponse>(`/bids/${id}/reject`, { method: 'PUT' })
-    return mapBackendToBid(res)
+    const [res, rate] = await Promise.all([
+      api<BackendBidResponse>(`/bids/${id}/reject`, { method: 'PUT' }),
+      getRate(),
+    ])
+    return mapBackendToBid(res, rate)
   }
 
   return { listBids, acceptBid, rejectBid }

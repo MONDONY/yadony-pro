@@ -22,6 +22,12 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
+let mockCommissionRate = 0.12
+vi.mock('@/composables/useCommissionRate', () => ({
+  FALLBACK_COMMISSION_RATE: 0.12,
+  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
+}))
+
 async function importUseAnnouncementForm() {
   const mod = await import('@/features/trajets/composables/useAnnouncementForm')
   return mod.useAnnouncementForm
@@ -34,6 +40,7 @@ describe('useAnnouncementForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.resetModules()
+    mockCommissionRate = 0.12
     setActivePinia(createPinia())
   })
 
@@ -218,6 +225,15 @@ describe('useAnnouncementForm', () => {
     expect(netPrice.value).toBeCloseTo(7.04, 2)
     form.pricePerKg = 5
     expect(netPrice.value).toBeCloseTo(4.40, 2)
+  })
+
+  it('netPrice applique le taux de commission dynamique une fois chargé', async () => {
+    mockCommissionRate = 0.2
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, netPrice, commissionRate } = useAnnouncementForm()
+    form.pricePerKg = 10
+    await vi.waitFor(() => expect(commissionRate.value).toBe(0.2))
+    expect(netPrice.value).toBeCloseTo(8, 2) // 10 × (1 − 0,20)
   })
 
   it('submitEdit calls updateAnnouncement with tripId and correct payload', async () => {

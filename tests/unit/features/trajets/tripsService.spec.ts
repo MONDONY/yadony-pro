@@ -12,9 +12,15 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
+let mockCommissionRate = 0.12
+vi.mock('@/composables/useCommissionRate', () => ({
+  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
+}))
+
 describe('tripsService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCommissionRate = 0.12
     setActivePinia(createPinia())
   })
 
@@ -200,6 +206,23 @@ describe('tripsService', () => {
     expect(result[0].weightKg).toBe(3)
     expect(result[0].paymentAmountEuros).toBe(24)
     expect(result[0].earningsEuros).toBe(21.12)
+  })
+
+  it('getAnnouncementBids applique le taux de commission dynamique (pas de 0,88 en dur)', async () => {
+    mockCommissionRate = 0.2
+    const fakeBid = {
+      id: 'bid-1', announcementId: 'trip-42', senderId: 'sender-1',
+      senderName: 'Alice Martin', senderTotalShipments: 5,
+      weightKg: 10, declaredValueEur: 50, description: 'Vêtements',
+      contentCategory: null, status: 'PAYMENT_ESCROWED',
+      departureCity: 'Paris', arrivalCity: 'Dakar',
+      departureDate: '2026-08-01', pricePerKg: 8, createdAt: '2026-06-01T10:00:00',
+      paymentMethod: 'STRIPE',
+    }
+    mockApiFn.mockResolvedValue([fakeBid])
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncementBids('trip-42')
+    expect(result[0].earningsEuros).toBe(64) // 80 × (1 − 0,20)
   })
 
   it('acceptBid sends PUT /bids/:id/accept', async () => {

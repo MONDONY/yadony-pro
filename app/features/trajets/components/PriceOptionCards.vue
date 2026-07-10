@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils'
+import { FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 
-const props = defineProps<{
-  modelValue: number
-  error?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    modelValue: number
+    error?: string
+    commissionRate?: number
+  }>(),
+  { commissionRate: FALLBACK_COMMISSION_RATE },
+)
 
 const emit = defineEmits<{ 'update:modelValue': [v: number] }>()
 
 const options = [5, 6, 7, 8]
 
 function net(price: number): string {
-  return (Math.round(price * 0.88 * 100) / 100).toFixed(2)
+  return (Math.round(price * (1 - props.commissionRate) * 100) / 100).toFixed(2)
 }
 </script>
 

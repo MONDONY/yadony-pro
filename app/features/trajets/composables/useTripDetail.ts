@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { tripsService } from '@/features/trajets/services/tripsService'
+import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import type { Trip, TripBid, TripKpis } from '@/features/trajets/types/index'
 
 export function useTripDetail(tripId: string) {
@@ -10,15 +11,19 @@ export function useTripDetail(tripId: string) {
   const bidsLoading = ref(false)
   const error = ref<string | null>(null)
   const deleteLoading = ref(false)
+  const commissionRate = ref(FALLBACK_COMMISSION_RATE)
 
   const svc = tripsService()
   const router = useRouter()
+  const { getRate } = useCommissionRate()
 
   async function fetchTrip(): Promise<void> {
     isLoading.value = true
     error.value = null
     try {
-      trip.value = await svc.getAnnouncement(tripId)
+      const [t, rate] = await Promise.all([svc.getAnnouncement(tripId), getRate()])
+      trip.value = t
+      commissionRate.value = rate
     } catch {
       error.value = 'Impossible de charger ce trajet.'
     } finally {
@@ -101,8 +106,8 @@ export function useTripDetail(tripId: string) {
       ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'COMPLETED'].includes(b.status),
     )
     const gross = confirmed.reduce((sum, b) => sum + b.paymentAmountEuros, 0)
-    const commission = Math.round(gross * 0.12 * 100) / 100
-    const net = Math.round(gross * 0.88 * 100) / 100
+    const commission = Math.round(gross * commissionRate.value * 100) / 100
+    const net = Math.round(gross * (1 - commissionRate.value) * 100) / 100
     const used = t.usedWeightKg
     return {
       fillRatePct: t.availableWeightKg > 0 ? Math.round((used / t.availableWeightKg) * 100) : 0,

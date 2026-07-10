@@ -28,7 +28,7 @@ const props = withDefaults(defineProps<{
   editTripId: undefined,
 })
 
-const { form, netPrice, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
+const { form, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
 const { fetchTemplates } = useTrips()
 const { fetchContentCategories } = configService()
 const tplSvc = tripTemplateService()
@@ -379,7 +379,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <label class="block text-sm font-medium text-text mb-3">
           Prix par kg <span class="text-danger">*</span>
         </label>
-        <PriceOptionCards v-model="form.pricePerKg" />
+        <PriceOptionCards v-model="form.pricePerKg" :commission-rate="commissionRate" />
         <p class="mt-2 text-xs text-text-muted">
           Commission dony (12%) déduite · Vous recevez
           <span class="font-mono tabular-nums text-text font-medium">{{ netPrice.toFixed(2) }}€/kg</span>

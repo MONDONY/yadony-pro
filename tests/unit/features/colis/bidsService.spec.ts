@@ -11,9 +11,15 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
+let mockCommissionRate = 0.12
+vi.mock('@/composables/useCommissionRate', () => ({
+  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
+}))
+
 describe('bidsService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCommissionRate = 0.12
     setActivePinia(createPinia())
   })
 
@@ -115,5 +121,19 @@ describe('bidsService', () => {
     const bid = await mapFirst({ weightKg: undefined })
     expect(bid.weightKg).toBeNull()
     expect(bid.earningsEuros).toBeNull()
+  })
+
+  it('utilise le taux de commission dynamique (pas de 0,88 en dur)', async () => {
+    mockCommissionRate = 0.2
+    const bid = await mapFirst()
+    expect(bid.earningsEuros).toBe(64) // 80 × (1 − 0,20)
+  })
+
+  it('applique aussi le taux dynamique sur acceptBid', async () => {
+    mockCommissionRate = 0.2
+    mockApiFn.mockResolvedValue(backendBid())
+    const { bidsService } = await import('@/features/colis/services/bidsService')
+    const bid = await bidsService().acceptBid('b1')
+    expect(bid.earningsEuros).toBe(64)
   })
 })
