@@ -84,8 +84,8 @@ function onConfirmPresence(bidId: string) {
   return withBidLoading(bidId, () => confirmPresence(bidId))
 }
 
-function onRefuseParcel(bidId: string, reason: string) {
-  return withBidLoading(bidId, () => refuseParcel(bidId, reason))
+function onRefuseParcel(bidId: string, reason: string, photo: File | null = null) {
+  return withBidLoading(bidId, () => refuseParcel(bidId, reason, photo))
 }
 
 function onCancelBid(bidId: string) {

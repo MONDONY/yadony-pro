@@ -225,11 +225,23 @@ export function tripsService() {
   }
 
   // Refus du colis à l'inspection (ACCEPTED ou HANDED_OVER) → PARCEL_REFUSED.
-  async function refuseParcel(bidId: string, reason: string): Promise<void> {
+  async function refuseParcel(bidId: string, reason: string, refusalPhotoUrl: string | null = null): Promise<void> {
     await api<void>(`/bids/${bidId}/refuse-parcel`, {
       method: 'POST',
-      body: { reason, refusalPhotoUrl: null },
+      body: { reason, refusalPhotoUrl },
     })
+  }
+
+  // Photo de preuve jointe au refus — uploadée sous tracking/{bidId}/.
+  async function uploadRefusalPhoto(bidId: string, file: File): Promise<string> {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('bidId', bidId)
+    const res = await api<{ key: string; url: string }>('/storage/upload/tracking', {
+      method: 'POST',
+      body: form,
+    })
+    return res.url
   }
 
   // Le voyageur se désiste d'un colis avant remise → CANCELLED (remboursement expéditeur).
@@ -252,7 +264,7 @@ export function tripsService() {
   return {
     listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement,
     updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
-    confirmDelivery, confirmPresence, refuseParcel, cancelBid,
+    confirmDelivery, confirmPresence, refuseParcel, uploadRefusalPhoto, cancelBid,
     postTrackingEvent, getTrackingEvents, getQrCode,
   }
 }

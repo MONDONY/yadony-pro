@@ -78,8 +78,17 @@ export function useTripDetail(tripId: string) {
     await fetchTrip()
   }
 
-  async function refuseParcel(bidId: string, reason: string): Promise<void> {
-    await svc.refuseParcel(bidId, reason)
+  async function refuseParcel(bidId: string, reason: string, photo: File | null = null): Promise<void> {
+    let photoUrl: string | null = null
+    if (photo) {
+      try {
+        photoUrl = await svc.uploadRefusalPhoto(bidId, photo)
+      } catch {
+        // La photo est une preuve optionnelle : un échec d'upload ne doit pas bloquer le refus.
+        photoUrl = null
+      }
+    }
+    await svc.refuseParcel(bidId, reason, photoUrl)
     await fetchBids()
     await fetchTrip()
   }

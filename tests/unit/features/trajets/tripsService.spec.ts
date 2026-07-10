@@ -258,6 +258,30 @@ describe('tripsService', () => {
     })
   })
 
+  it('refuseParcel transmet la refusalPhotoUrl quand elle est fournie', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    await tripsService().refuseParcel('bid-7', 'colis endommagé', 'https://s3/photo.jpg')
+    expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-7/refuse-parcel', {
+      method: 'POST',
+      body: { reason: 'colis endommagé', refusalPhotoUrl: 'https://s3/photo.jpg' },
+    })
+  })
+
+  it('uploadRefusalPhoto POSTe le fichier en multipart et renvoie l’URL', async () => {
+    mockApiFn.mockResolvedValue({ key: 'tracking/bid-7/x.jpg', url: 'https://s3/presigned.jpg' })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const file = new File(['x'], 'photo.jpg', { type: 'image/jpeg' })
+    const url = await tripsService().uploadRefusalPhoto('bid-7', file)
+    expect(url).toBe('https://s3/presigned.jpg')
+    const [path, opts] = mockApiFn.mock.calls[0]
+    expect(path).toBe('/storage/upload/tracking')
+    expect(opts.method).toBe('POST')
+    expect(opts.body).toBeInstanceOf(FormData)
+    expect(opts.body.get('bidId')).toBe('bid-7')
+    expect(opts.body.get('file')).toBe(file)
+  })
+
   it('cancelBid sends PUT /bids/:id/cancel', async () => {
     mockApiFn.mockResolvedValue(undefined)
     const { tripsService } = await import('@/features/trajets/services/tripsService')

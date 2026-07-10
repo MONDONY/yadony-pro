@@ -8,6 +8,10 @@ const mockSvc = {
   acceptBid: vi.fn(),
   rejectBid: vi.fn(),
   confirmDelivery: vi.fn(),
+  confirmPresence: vi.fn(),
+  refuseParcel: vi.fn(),
+  uploadRefusalPhoto: vi.fn(),
+  cancelBid: vi.fn(),
   postTrackingEvent: vi.fn(),
   listTrips: vi.fn(),
   createAnnouncement: vi.fn(),
@@ -87,6 +91,42 @@ describe('useTripDetail', () => {
     expect(kpis.value.commissionEuros).toBe(9.6)
     expect(kpis.value.netRevenueEuros).toBe(70.4)
     expect(kpis.value.revenuePerKg).toBe(7.04)
+  })
+
+  it('refuseParcel sans photo appelle le service avec une URL nulle', async () => {
+    mockSvc.refuseParcel.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { refuseParcel } = useTripDetail('trip-1')
+    await refuseParcel('bid-7', 'non conforme')
+    expect(mockSvc.uploadRefusalPhoto).not.toHaveBeenCalled()
+    expect(mockSvc.refuseParcel).toHaveBeenCalledWith('bid-7', 'non conforme', null)
+  })
+
+  it('refuseParcel avec photo uploade puis refuse avec l’URL', async () => {
+    mockSvc.uploadRefusalPhoto.mockResolvedValue('https://s3/p.jpg')
+    mockSvc.refuseParcel.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { refuseParcel } = useTripDetail('trip-1')
+    const file = new File(['x'], 'p.jpg', { type: 'image/jpeg' })
+    await refuseParcel('bid-7', 'endommagé', file)
+    expect(mockSvc.uploadRefusalPhoto).toHaveBeenCalledWith('bid-7', file)
+    expect(mockSvc.refuseParcel).toHaveBeenCalledWith('bid-7', 'endommagé', 'https://s3/p.jpg')
+  })
+
+  it('refuseParcel refuse quand même sans photo si l’upload échoue', async () => {
+    mockSvc.uploadRefusalPhoto.mockRejectedValue(new Error('s3 down'))
+    mockSvc.refuseParcel.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { refuseParcel } = useTripDetail('trip-1')
+    const file = new File(['x'], 'p.jpg', { type: 'image/jpeg' })
+    await refuseParcel('bid-7', 'endommagé', file)
+    expect(mockSvc.refuseParcel).toHaveBeenCalledWith('bid-7', 'endommagé', null)
   })
 
   it('kpis applique le taux de commission dynamique (pas de 0,12 en dur)', async () => {

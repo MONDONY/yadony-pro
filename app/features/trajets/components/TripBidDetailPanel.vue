@@ -15,7 +15,7 @@ const emit = defineEmits<{
   accept: [bidId: string]
   reject: [bidId: string]
   'confirm-presence': [bidId: string]
-  'refuse-parcel': [bidId: string, reason: string]
+  'refuse-parcel': [bidId: string, reason: string, photo: File | null]
   cancel: [bidId: string]
   'request-delivery': [bid: TripBid]
 }>()
@@ -50,20 +50,27 @@ const STATUS_VARIANT: Record<string, BadgeVariants['variant']> = {
 // Sous-formulaires (raison de refus, confirmation d'annulation)
 const refuseMode = ref(false)
 const refuseReason = ref('')
+const refusePhoto = ref<File | null>(null)
 const cancelMode = ref(false)
 
 // Réinitialise les sous-formulaires quand on change de colis / ferme.
 watch(() => props.bid?.id, () => {
   refuseMode.value = false
   refuseReason.value = ''
+  refusePhoto.value = null
   cancelMode.value = false
 })
 
 const isBusy = computed(() => !!props.bid && props.loadingBidId === props.bid.id)
 
+function onRefusePhotoChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  refusePhoto.value = input.files?.[0] ?? null
+}
+
 function submitRefuse() {
   if (!props.bid || refuseReason.value.trim().length < 3) return
-  emit('refuse-parcel', props.bid.id, refuseReason.value.trim())
+  emit('refuse-parcel', props.bid.id, refuseReason.value.trim(), refusePhoto.value)
 }
 </script>
 
@@ -214,6 +221,17 @@ function submitRefuse() {
               data-test="refuse-reason-input"
               class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-sm text-text placeholder:text-text-subtle focus:outline-none focus:border-danger transition-colors resize-none"
             />
+            <label class="text-xs font-medium text-text-muted">Photo de preuve (optionnel)</label>
+            <input
+              type="file"
+              accept="image/*"
+              data-test="refuse-photo-input"
+              class="w-full text-xs text-text-muted file:mr-3 file:rounded-btn file:border file:border-border file:bg-surface-el file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-text-muted hover:file:text-text file:cursor-pointer"
+              @change="onRefusePhotoChange"
+            />
+            <p v-if="refusePhoto" class="text-2xs text-text-subtle truncate" data-test="refuse-photo-name">
+              {{ refusePhoto.name }}
+            </p>
             <button
               :disabled="refuseReason.trim().length < 3 || isBusy"
               class="w-full h-9 rounded-btn bg-danger text-on-danger text-xs font-semibold hover:bg-danger-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

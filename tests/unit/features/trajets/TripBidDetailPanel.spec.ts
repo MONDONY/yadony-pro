@@ -50,14 +50,27 @@ describe('TripBidDetailPanel', () => {
     expect(wrapper.emitted('confirm-presence')?.[0]).toEqual(['b1'])
   })
 
-  it('refuser : révèle le champ raison puis émet refuse-parcel avec la raison', async () => {
+  it('refuser : révèle le champ raison puis émet refuse-parcel avec la raison (photo nulle)', async () => {
     const wrapper = mountPanel(bid({ status: 'ACCEPTED' }))
     await wrapper.find('[data-test="detail-refuse-parcel"]').trigger('click')
     const input = wrapper.find('[data-test="refuse-reason-input"]')
     expect(input.exists()).toBe(true)
     await input.setValue('contenu non conforme')
     await wrapper.find('[data-test="refuse-submit"]').trigger('click')
-    expect(wrapper.emitted('refuse-parcel')?.[0]).toEqual(['b1', 'contenu non conforme'])
+    expect(wrapper.emitted('refuse-parcel')?.[0]).toEqual(['b1', 'contenu non conforme', null])
+  })
+
+  it('refuser : propose un champ photo optionnel et émet le fichier choisi', async () => {
+    const wrapper = mountPanel(bid({ status: 'ACCEPTED' }))
+    await wrapper.find('[data-test="detail-refuse-parcel"]').trigger('click')
+    const photoInput = wrapper.find('[data-test="refuse-photo-input"]')
+    expect(photoInput.exists()).toBe(true)
+    const file = new File(['x'], 'preuve.jpg', { type: 'image/jpeg' })
+    Object.defineProperty(photoInput.element, 'files', { value: [file] })
+    await photoInput.trigger('change')
+    await wrapper.find('[data-test="refuse-reason-input"]').setValue('colis endommagé')
+    await wrapper.find('[data-test="refuse-submit"]').trigger('click')
+    expect(wrapper.emitted('refuse-parcel')?.[0]).toEqual(['b1', 'colis endommagé', file])
   })
 
   it('PAYMENT_ESCROWED : montre accepter et refuser', () => {
