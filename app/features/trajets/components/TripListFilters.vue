@@ -33,6 +33,7 @@ const statusFilters: Array<{ key: TripFilter; label: string }> = [
   { key: 'EN_COURS', label: 'En cours' },
   { key: 'TERMINES', label: 'Terminés' },
   { key: 'ANNULES', label: 'Annulés' },
+  { key: 'BROUILLONS', label: 'Brouillons' },
 ]
 
 const dateModes: Array<{ key: DateMode; label: string }> = [

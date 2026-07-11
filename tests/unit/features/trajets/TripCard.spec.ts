@@ -126,4 +126,9 @@ describe('TripCard', () => {
     const wrapper = await mountTripCard(baseTripProps)
     expect(wrapper.text()).not.toContain('valise')
   })
+
+  it('affiche le badge Brouillon en variante warning pour un trajet DRAFT', async () => {
+    const wrapper = await mountTripCard({ ...baseTripProps, status: 'DRAFT' })
+    expect(wrapper.text()).toContain('Brouillon')
+  })
 })

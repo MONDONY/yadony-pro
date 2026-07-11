@@ -17,11 +17,12 @@ const transportIcon: Record<TransportMode, typeof Plane> = {
 }
 
 const statusLabel: Record<string, string> = {
-  ACTIVE: 'Actif', FULL: 'Complet', IN_PROGRESS: 'En cours',
+  DRAFT: 'Brouillon', ACTIVE: 'Actif', FULL: 'Complet', IN_PROGRESS: 'En cours',
   COMPLETED: 'Terminé', CANCELLED: 'Annulé',
 }
 
 const statusVariant: Record<string, BadgeVariants['variant']> = {
+  DRAFT: 'warning',
   ACTIVE: 'success',
   FULL: 'info',
   IN_PROGRESS: 'warning',

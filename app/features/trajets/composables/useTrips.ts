@@ -4,8 +4,8 @@ import type { Trip, TripFilter, ViewMode, DateMode, CorridorOption } from '@/fea
 
 const PAGE_SIZE = 12
 
-export function useTrips() {
-  const activeFilter = ref<TripFilter>('TOUS')
+export function useTrips(initialFilter?: TripFilter) {
+  const activeFilter = ref<TripFilter>(initialFilter ?? 'TOUS')
   const viewMode = ref<ViewMode>('list')
   const search = ref('')
   const dateMode = ref<DateMode>('none')

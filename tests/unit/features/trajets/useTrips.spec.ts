@@ -49,6 +49,18 @@ describe('useTrips', () => {
     expect(viewMode.value).toBe('list')
   })
 
+  it('initialise activeFilter depuis l’argument initialFilter', async () => {
+    const useTrips = await importUseTrips()
+    const { activeFilter } = useTrips('BROUILLONS')
+    expect(activeFilter.value).toBe('BROUILLONS')
+  })
+
+  it('activeFilter vaut TOUS par défaut', async () => {
+    const useTrips = await importUseTrips()
+    const { activeFilter } = useTrips()
+    expect(activeFilter.value).toBe('TOUS')
+  })
+
   it('fetch populates trips and sets loading states correctly', async () => {
     const tripA = { id: 'a', status: 'ACTIVE' }
     mockListTrips.mockResolvedValue({ content: [tripA], totalElements: 1, totalPages: 1, number: 0, size: 20 })
