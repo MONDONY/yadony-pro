@@ -1,11 +1,12 @@
 import { ref } from 'vue'
 import { pricingService } from '@/features/pricing/services/pricingService'
-import type { MarketPrice } from '@/features/pricing/types/index'
+import type { MarketPrice, PricingCorridor } from '@/features/pricing/types/index'
 
 export function usePricing() {
   const corridorKey = ref<string | null>(null)
   const marketPrice = ref<MarketPrice | null>(null)
   const commissionRate = ref(0.12)
+  const corridors = ref<PricingCorridor[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -18,6 +19,11 @@ export function usePricing() {
     } catch {
       /* garde la valeur par défaut 0.12 si indisponible */
     }
+  }
+
+  async function loadCorridors(): Promise<void> {
+    // fetchCorridors gère déjà son fallback statique en cas d'échec.
+    corridors.value = await svc.fetchCorridors()
   }
 
   async function selectCorridor(key: string): Promise<void> {
@@ -34,5 +40,5 @@ export function usePricing() {
     }
   }
 
-  return { corridorKey, marketPrice, commissionRate, isLoading, error, loadCommissionRate, selectCorridor }
+  return { corridorKey, marketPrice, commissionRate, corridors, isLoading, error, loadCommissionRate, loadCorridors, selectCorridor }
 }

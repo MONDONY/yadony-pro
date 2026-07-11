@@ -50,20 +50,66 @@ describe('TripBidDetailPanel', () => {
     expect(wrapper.emitted('confirm-presence')?.[0]).toEqual(['b1'])
   })
 
-  it('refuser : révèle le champ raison puis émet refuse-parcel avec la raison', async () => {
+  it('refuser : révèle le champ raison puis émet refuse-parcel avec la raison (photo nulle)', async () => {
     const wrapper = mountPanel(bid({ status: 'ACCEPTED' }))
     await wrapper.find('[data-test="detail-refuse-parcel"]').trigger('click')
     const input = wrapper.find('[data-test="refuse-reason-input"]')
     expect(input.exists()).toBe(true)
     await input.setValue('contenu non conforme')
     await wrapper.find('[data-test="refuse-submit"]').trigger('click')
-    expect(wrapper.emitted('refuse-parcel')?.[0]).toEqual(['b1', 'contenu non conforme'])
+    expect(wrapper.emitted('refuse-parcel')?.[0]).toEqual(['b1', 'contenu non conforme', null])
+  })
+
+  it('refuser : propose un champ photo optionnel et émet le fichier choisi', async () => {
+    const wrapper = mountPanel(bid({ status: 'ACCEPTED' }))
+    await wrapper.find('[data-test="detail-refuse-parcel"]').trigger('click')
+    const photoInput = wrapper.find('[data-test="refuse-photo-input"]')
+    expect(photoInput.exists()).toBe(true)
+    const file = new File(['x'], 'preuve.jpg', { type: 'image/jpeg' })
+    Object.defineProperty(photoInput.element, 'files', { value: [file] })
+    await photoInput.trigger('change')
+    await wrapper.find('[data-test="refuse-reason-input"]').setValue('colis endommagé')
+    await wrapper.find('[data-test="refuse-submit"]').trigger('click')
+    expect(wrapper.emitted('refuse-parcel')?.[0]).toEqual(['b1', 'colis endommagé', file])
   })
 
   it('PAYMENT_ESCROWED : montre accepter et refuser', () => {
     const wrapper = mountPanel(bid({ status: 'PAYMENT_ESCROWED' }))
     expect(wrapper.find('[data-test="detail-accept"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="detail-reject"]').exists()).toBe(true)
+  })
+
+  it('ACCEPTED : « Expéditeur absent » demande confirmation puis émet report-noshow', async () => {
+    const wrapper = mountPanel(bid({ status: 'ACCEPTED' }))
+    await wrapper.find('[data-test="detail-report-noshow"]').trigger('click')
+    expect(wrapper.emitted('report-noshow')).toBeUndefined() // pas encore : confirmation d'abord
+    await wrapper.find('[data-test="noshow-submit"]').trigger('click')
+    expect(wrapper.emitted('report-noshow')?.[0]).toEqual(['b1'])
+  })
+
+  it('IN_TRANSIT : « Annuler après remise » demande confirmation puis émet cancel-after-handover', async () => {
+    const wrapper = mountPanel(bid({ status: 'IN_TRANSIT' }))
+    await wrapper.find('[data-test="detail-cancel-after-handover"]').trigger('click')
+    expect(wrapper.emitted('cancel-after-handover')).toBeUndefined()
+    await wrapper.find('[data-test="cancel-after-handover-submit"]').trigger('click')
+    expect(wrapper.emitted('cancel-after-handover')?.[0]).toEqual(['b1'])
+  })
+
+  it('CANCELLED : saisie du code de retour à 6 chiffres puis émet confirm-return', async () => {
+    const wrapper = mountPanel(bid({ status: 'CANCELLED' }))
+    await wrapper.find('[data-test="detail-confirm-return"]').trigger('click')
+    const input = wrapper.find('[data-test="return-code-input"]')
+    expect(input.exists()).toBe(true)
+    await input.setValue('123456')
+    await wrapper.find('[data-test="return-submit"]').trigger('click')
+    expect(wrapper.emitted('confirm-return')?.[0]).toEqual(['b1', '123456'])
+  })
+
+  it('CANCELLED : le bouton retour est désactivé tant que le code n’a pas 6 chiffres', async () => {
+    const wrapper = mountPanel(bid({ status: 'CANCELLED' }))
+    await wrapper.find('[data-test="detail-confirm-return"]').trigger('click')
+    await wrapper.find('[data-test="return-code-input"]').setValue('123')
+    expect(wrapper.find('[data-test="return-submit"]').attributes('disabled')).toBeDefined()
   })
 
   it('IN_TRANSIT : émet request-delivery', async () => {

@@ -8,6 +8,10 @@ const mockSvc = {
   acceptBid: vi.fn(),
   rejectBid: vi.fn(),
   confirmDelivery: vi.fn(),
+  confirmPresence: vi.fn(),
+  refuseParcel: vi.fn(),
+  uploadRefusalPhoto: vi.fn(),
+  cancelBid: vi.fn(),
   postTrackingEvent: vi.fn(),
   listTrips: vi.fn(),
   createAnnouncement: vi.fn(),
@@ -17,6 +21,16 @@ const mockSvc = {
 
 vi.mock('@/features/trajets/services/tripsService', () => ({
   tripsService: () => mockSvc,
+}))
+
+const mockCancellationSvc = {
+  reportNoShow: vi.fn(),
+  cancelAfterHandover: vi.fn(),
+  confirmReturn: vi.fn(),
+}
+
+vi.mock('@/features/cancellation/services/cancellationService', () => ({
+  cancellationService: () => mockCancellationSvc,
 }))
 
 const pushMock = vi.fn()
@@ -33,9 +47,16 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
+let mockCommissionRate = 0.12
+vi.mock('@/composables/useCommissionRate', () => ({
+  FALLBACK_COMMISSION_RATE: 0.12,
+  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
+}))
+
 describe('useTripDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCommissionRate = 0.12
     setActivePinia(createPinia())
   })
 
@@ -80,6 +101,90 @@ describe('useTripDetail', () => {
     expect(kpis.value.commissionEuros).toBe(9.6)
     expect(kpis.value.netRevenueEuros).toBe(70.4)
     expect(kpis.value.revenuePerKg).toBe(7.04)
+  })
+
+  it('refuseParcel sans photo appelle le service avec une URL nulle', async () => {
+    mockSvc.refuseParcel.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { refuseParcel } = useTripDetail('trip-1')
+    await refuseParcel('bid-7', 'non conforme')
+    expect(mockSvc.uploadRefusalPhoto).not.toHaveBeenCalled()
+    expect(mockSvc.refuseParcel).toHaveBeenCalledWith('bid-7', 'non conforme', null)
+  })
+
+  it('refuseParcel avec photo uploade puis refuse avec l’URL', async () => {
+    mockSvc.uploadRefusalPhoto.mockResolvedValue('https://s3/p.jpg')
+    mockSvc.refuseParcel.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { refuseParcel } = useTripDetail('trip-1')
+    const file = new File(['x'], 'p.jpg', { type: 'image/jpeg' })
+    await refuseParcel('bid-7', 'endommagé', file)
+    expect(mockSvc.uploadRefusalPhoto).toHaveBeenCalledWith('bid-7', file)
+    expect(mockSvc.refuseParcel).toHaveBeenCalledWith('bid-7', 'endommagé', 'https://s3/p.jpg')
+  })
+
+  it('refuseParcel refuse quand même sans photo si l’upload échoue', async () => {
+    mockSvc.uploadRefusalPhoto.mockRejectedValue(new Error('s3 down'))
+    mockSvc.refuseParcel.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { refuseParcel } = useTripDetail('trip-1')
+    const file = new File(['x'], 'p.jpg', { type: 'image/jpeg' })
+    await refuseParcel('bid-7', 'endommagé', file)
+    expect(mockSvc.refuseParcel).toHaveBeenCalledWith('bid-7', 'endommagé', null)
+  })
+
+  it('reportNoShow signale le no-show puis rafraîchit colis et trajet', async () => {
+    mockCancellationSvc.reportNoShow.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { reportNoShow } = useTripDetail('trip-1')
+    await reportNoShow('bid-7')
+    expect(mockCancellationSvc.reportNoShow).toHaveBeenCalledWith('bid-7')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
+    expect(mockSvc.getAnnouncement).toHaveBeenCalled()
+  })
+
+  it('cancelAfterHandover annule après remise puis rafraîchit', async () => {
+    mockCancellationSvc.cancelAfterHandover.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { cancelAfterHandover } = useTripDetail('trip-1')
+    await cancelAfterHandover('bid-7')
+    expect(mockCancellationSvc.cancelAfterHandover).toHaveBeenCalledWith('bid-7')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
+  })
+
+  it('confirmReturn transmet le code puis rafraîchit', async () => {
+    mockCancellationSvc.confirmReturn.mockResolvedValue({ returnCode: null, returnDeadline: null, returnedAt: '2026-07-12' })
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { confirmReturn } = useTripDetail('trip-1')
+    await confirmReturn('bid-7', '654321')
+    expect(mockCancellationSvc.confirmReturn).toHaveBeenCalledWith('bid-7', '654321')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
+  })
+
+  it('kpis applique le taux de commission dynamique (pas de 0,12 en dur)', async () => {
+    mockCommissionRate = 0.2
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1', availableWeightKg: 20, usedWeightKg: 10, confirmedParcelCount: 2, pendingBidCount: 0, status: 'ACTIVE' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([
+      { id: 'b1', status: 'ACCEPTED', paymentAmountEuros: 80, earningsEuros: 64 },
+    ])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { kpis, fetchTrip, fetchBids } = useTripDetail('trip-1')
+    await fetchTrip()
+    await fetchBids()
+    expect(kpis.value.commissionEuros).toBe(16) // 80 × 0,20
+    expect(kpis.value.netRevenueEuros).toBe(64) // 80 × 0,80
   })
 
   it('deleteTrip calls deleteAnnouncement and redirects to /trajets', async () => {

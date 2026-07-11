@@ -1,5 +1,6 @@
-import { reactive, computed } from 'vue'
+import { reactive, computed, ref } from 'vue'
 import { tripsService } from '@/features/trajets/services/tripsService'
+import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import type {
   AnnouncementFormData,
   ValidationErrors,
@@ -30,7 +31,16 @@ export function useAnnouncementForm() {
     cashAccepted: false,
   })
 
-  const netPrice = computed(() => Math.round(form.pricePerKg * 0.88 * 100) / 100)
+  const commissionRate = ref(FALLBACK_COMMISSION_RATE)
+  const { getRate } = useCommissionRate()
+  // Chargement non bloquant : le fallback s'affiche puis le taux réel prend le relais.
+  getRate().then((rate) => {
+    commissionRate.value = rate
+  })
+
+  const netPrice = computed(
+    () => Math.round(form.pricePerKg * (1 - commissionRate.value) * 100) / 100,
+  )
 
   const svc = tripsService()
 
@@ -146,5 +156,5 @@ export function useAnnouncementForm() {
     }
   }
 
-  return { form, netPrice, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
+  return { form, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
 }

@@ -2,7 +2,6 @@
 import { onMounted } from 'vue'
 import { usePricing } from '@/features/pricing/composables/usePricing'
 import PricingAssistant from '@/features/pricing/components/PricingAssistant.vue'
-import { PRICING_CORRIDORS } from '@/features/pricing/types/index'
 
 definePageMeta({
   middleware: ['pro-only'],
@@ -10,10 +9,11 @@ definePageMeta({
   pageSubtitle: 'Positionne tes tarifs par rapport au marché',
 })
 
-const { marketPrice, commissionRate, isLoading, error, loadCommissionRate, selectCorridor } = usePricing()
+const { marketPrice, commissionRate, corridors, isLoading, error, loadCommissionRate, loadCorridors, selectCorridor } = usePricing()
 
 onMounted(() => {
   loadCommissionRate()
+  loadCorridors()
 })
 </script>
 
@@ -30,7 +30,7 @@ onMounted(() => {
       <p v-if="error" class="mb-3 text-sm text-danger" data-test="pricing-error">{{ error }}</p>
 
       <PricingAssistant
-        :corridors="PRICING_CORRIDORS"
+        :corridors="corridors"
         :market-price="marketPrice"
         :commission-rate="commissionRate"
         :is-loading="isLoading"

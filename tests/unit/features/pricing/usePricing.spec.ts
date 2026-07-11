@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockFetchMarketPrice = vi.fn()
 const mockFetchCommissionRate = vi.fn()
+const mockFetchCorridors = vi.fn()
 
 vi.mock('@/features/pricing/services/pricingService', () => ({
   pricingService: () => ({
     fetchMarketPrice: mockFetchMarketPrice,
     fetchCommissionRate: mockFetchCommissionRate,
+    fetchCorridors: mockFetchCorridors,
   }),
 }))
 
@@ -49,5 +51,17 @@ describe('usePricing', () => {
     await selectCorridor('PARIS_DAKAR')
     expect(marketPrice.value).toBeNull()
     expect(error.value).toBe('Impossible de récupérer le prix de marché pour ce corridor.')
+  })
+
+  it('loadCorridors expose les corridors du back', async () => {
+    mockFetchCorridors.mockResolvedValue([
+      { key: 'PARIS_DAKAR', label: 'Paris → Dakar' },
+      { key: 'LYON_ABIDJAN', label: 'Lyon → Abidjan' },
+    ])
+    const { corridors, loadCorridors } = (await importComposable())()
+    expect(corridors.value).toEqual([])
+    await loadCorridors()
+    expect(corridors.value).toHaveLength(2)
+    expect(corridors.value[0]).toEqual({ key: 'PARIS_DAKAR', label: 'Paris → Dakar' })
   })
 })

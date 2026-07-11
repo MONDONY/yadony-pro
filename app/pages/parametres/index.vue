@@ -8,6 +8,8 @@ import ProfileInfoCard from '@/features/parametres/components/ProfileInfoCard.vu
 import BusinessPreferencesForm from '@/features/parametres/components/BusinessPreferencesForm.vue'
 import KycStatusCard from '@/features/kyc/components/KycStatusCard.vue'
 import PayoutCard from '@/features/payout/components/PayoutCard.vue'
+import WalletCard from '@/features/wallet/components/WalletCard.vue'
+import CashCommissionCard from '@/features/cash/components/CashCommissionCard.vue'
 import type { BusinessPreferences } from '@/features/parametres/types/index'
 
 definePageMeta({
@@ -87,6 +89,10 @@ async function onSetupPayout() {
       @setup="onSetupPayout"
       @refresh="refreshPayout"
     />
+
+    <WalletCard />
+
+    <CashCommissionCard />
 
     <section class="bg-surface border border-border rounded-card p-5">
       <header class="mb-4">

@@ -32,7 +32,8 @@ const {
   trip, bids, isLoading, bidsLoading, error,
   deleteLoading, kpis,
   fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, confirmDelivery,
-  confirmPresence, refuseParcel, cancelBid, markTrackingEvent, exportBidsCsv,
+  confirmPresence, refuseParcel, cancelBid, markTrackingEvent,
+  reportNoShow, cancelAfterHandover, confirmReturn, exportBidsCsv,
 } = useTripDetail(tripId)
 
 async function withBidLoading(bidId: string, fn: () => Promise<void>) {
@@ -84,12 +85,24 @@ function onConfirmPresence(bidId: string) {
   return withBidLoading(bidId, () => confirmPresence(bidId))
 }
 
-function onRefuseParcel(bidId: string, reason: string) {
-  return withBidLoading(bidId, () => refuseParcel(bidId, reason))
+function onRefuseParcel(bidId: string, reason: string, photo: File | null = null) {
+  return withBidLoading(bidId, () => refuseParcel(bidId, reason, photo))
 }
 
 function onCancelBid(bidId: string) {
   return withBidLoading(bidId, () => cancelBid(bidId))
+}
+
+function onReportNoShow(bidId: string) {
+  return withBidLoading(bidId, () => reportNoShow(bidId))
+}
+
+function onCancelAfterHandover(bidId: string) {
+  return withBidLoading(bidId, () => cancelAfterHandover(bidId))
+}
+
+function onConfirmReturn(bidId: string, returnCode: string) {
+  return withBidLoading(bidId, () => confirmReturn(bidId, returnCode))
 }
 
 async function onTrackingEvent(bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE') {
@@ -172,6 +185,9 @@ function onExportCsv() {
         @confirm-presence="onConfirmPresence"
         @refuse-parcel="onRefuseParcel"
         @cancel="onCancelBid"
+        @report-noshow="onReportNoShow"
+        @cancel-after-handover="onCancelAfterHandover"
+        @confirm-return="onConfirmReturn"
         @tracking-event="onTrackingEvent"
         @export-csv="onExportCsv"
       />

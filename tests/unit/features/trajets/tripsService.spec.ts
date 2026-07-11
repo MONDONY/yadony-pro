@@ -12,9 +12,15 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
+let mockCommissionRate = 0.12
+vi.mock('@/composables/useCommissionRate', () => ({
+  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
+}))
+
 describe('tripsService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCommissionRate = 0.12
     setActivePinia(createPinia())
   })
 
@@ -202,6 +208,23 @@ describe('tripsService', () => {
     expect(result[0].earningsEuros).toBe(21.12)
   })
 
+  it('getAnnouncementBids applique le taux de commission dynamique (pas de 0,88 en dur)', async () => {
+    mockCommissionRate = 0.2
+    const fakeBid = {
+      id: 'bid-1', announcementId: 'trip-42', senderId: 'sender-1',
+      senderName: 'Alice Martin', senderTotalShipments: 5,
+      weightKg: 10, declaredValueEur: 50, description: 'Vêtements',
+      contentCategory: null, status: 'PAYMENT_ESCROWED',
+      departureCity: 'Paris', arrivalCity: 'Dakar',
+      departureDate: '2026-08-01', pricePerKg: 8, createdAt: '2026-06-01T10:00:00',
+      paymentMethod: 'STRIPE',
+    }
+    mockApiFn.mockResolvedValue([fakeBid])
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncementBids('trip-42')
+    expect(result[0].earningsEuros).toBe(64) // 80 × (1 − 0,20)
+  })
+
   it('acceptBid sends PUT /bids/:id/accept', async () => {
     mockApiFn.mockResolvedValue(undefined)
     const { tripsService } = await import('@/features/trajets/services/tripsService')
@@ -233,6 +256,30 @@ describe('tripsService', () => {
       method: 'POST',
       body: { reason: 'contenu non conforme', refusalPhotoUrl: null },
     })
+  })
+
+  it('refuseParcel transmet la refusalPhotoUrl quand elle est fournie', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    await tripsService().refuseParcel('bid-7', 'colis endommagé', 'https://s3/photo.jpg')
+    expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-7/refuse-parcel', {
+      method: 'POST',
+      body: { reason: 'colis endommagé', refusalPhotoUrl: 'https://s3/photo.jpg' },
+    })
+  })
+
+  it('uploadRefusalPhoto POSTe le fichier en multipart et renvoie l’URL', async () => {
+    mockApiFn.mockResolvedValue({ key: 'tracking/bid-7/x.jpg', url: 'https://s3/presigned.jpg' })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const file = new File(['x'], 'photo.jpg', { type: 'image/jpeg' })
+    const url = await tripsService().uploadRefusalPhoto('bid-7', file)
+    expect(url).toBe('https://s3/presigned.jpg')
+    const [path, opts] = mockApiFn.mock.calls[0]
+    expect(path).toBe('/storage/upload/tracking')
+    expect(opts.method).toBe('POST')
+    expect(opts.body).toBeInstanceOf(FormData)
+    expect(opts.body.get('bidId')).toBe('bid-7')
+    expect(opts.body.get('file')).toBe(file)
   })
 
   it('cancelBid sends PUT /bids/:id/cancel', async () => {

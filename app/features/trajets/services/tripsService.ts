@@ -1,4 +1,5 @@
 import { useApi } from '@/composables/useApi'
+import { useCommissionRate } from '@/composables/useCommissionRate'
 import type {
   TrackingEvent,
   QrCode,
@@ -112,11 +113,11 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
   }
 }
 
-function mapBidResponseToTripBid(b: BackendBidResponse): TripBid {
+function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number): TripBid {
   const weightKg = Number(b.weightKg) || 0
   const pricePerKg = Number(b.pricePerKg) || 0
   const paymentAmountEuros = Math.round(pricePerKg * weightKg * 100) / 100
-  const earningsEuros = Math.round(paymentAmountEuros * 0.88 * 100) / 100
+  const earningsEuros = Math.round(paymentAmountEuros * (1 - commissionRate) * 100) / 100
   const senderName = b.senderName ?? 'Expéditeur'
   const senderInitials = senderName
     .split(' ')
@@ -143,6 +144,7 @@ function mapBidResponseToTripBid(b: BackendBidResponse): TripBid {
 
 export function tripsService() {
   const api = useApi()
+  const { getRate } = useCommissionRate()
 
   async function getCorridors(): Promise<CorridorOption[]> {
     const result = await api<Array<{ departure: string; arrival: string }>>('/announcements/my/corridors', {})
@@ -198,8 +200,11 @@ export function tripsService() {
   }
 
   async function getAnnouncementBids(id: string): Promise<TripBid[]> {
-    const bids = await api<BackendBidResponse[]>(`/announcements/${id}/bids`, {})
-    return bids.map(mapBidResponseToTripBid)
+    const [bids, rate] = await Promise.all([
+      api<BackendBidResponse[]>(`/announcements/${id}/bids`, {}),
+      getRate(),
+    ])
+    return bids.map((b) => mapBidResponseToTripBid(b, rate))
   }
 
   async function acceptBid(bidId: string): Promise<void> {
@@ -220,11 +225,23 @@ export function tripsService() {
   }
 
   // Refus du colis à l'inspection (ACCEPTED ou HANDED_OVER) → PARCEL_REFUSED.
-  async function refuseParcel(bidId: string, reason: string): Promise<void> {
+  async function refuseParcel(bidId: string, reason: string, refusalPhotoUrl: string | null = null): Promise<void> {
     await api<void>(`/bids/${bidId}/refuse-parcel`, {
       method: 'POST',
-      body: { reason, refusalPhotoUrl: null },
+      body: { reason, refusalPhotoUrl },
     })
+  }
+
+  // Photo de preuve jointe au refus — uploadée sous tracking/{bidId}/.
+  async function uploadRefusalPhoto(bidId: string, file: File): Promise<string> {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('bidId', bidId)
+    const res = await api<{ key: string; url: string }>('/storage/upload/tracking', {
+      method: 'POST',
+      body: form,
+    })
+    return res.url
   }
 
   // Le voyageur se désiste d'un colis avant remise → CANCELLED (remboursement expéditeur).
@@ -247,7 +264,7 @@ export function tripsService() {
   return {
     listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement,
     updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
-    confirmDelivery, confirmPresence, refuseParcel, cancelBid,
+    confirmDelivery, confirmPresence, refuseParcel, uploadRefusalPhoto, cancelBid,
     postTrackingEvent, getTrackingEvents, getQrCode,
   }
 }

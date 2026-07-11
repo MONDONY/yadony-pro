@@ -1,6 +1,8 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { tripsService } from '@/features/trajets/services/tripsService'
+import { cancellationService } from '@/features/cancellation/services/cancellationService'
+import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import type { Trip, TripBid, TripKpis } from '@/features/trajets/types/index'
 
 export function useTripDetail(tripId: string) {
@@ -10,15 +12,20 @@ export function useTripDetail(tripId: string) {
   const bidsLoading = ref(false)
   const error = ref<string | null>(null)
   const deleteLoading = ref(false)
+  const commissionRate = ref(FALLBACK_COMMISSION_RATE)
 
   const svc = tripsService()
+  const cancellationSvc = cancellationService()
   const router = useRouter()
+  const { getRate } = useCommissionRate()
 
   async function fetchTrip(): Promise<void> {
     isLoading.value = true
     error.value = null
     try {
-      trip.value = await svc.getAnnouncement(tripId)
+      const [t, rate] = await Promise.all([svc.getAnnouncement(tripId), getRate()])
+      trip.value = t
+      commissionRate.value = rate
     } catch {
       error.value = 'Impossible de charger ce trajet.'
     } finally {
@@ -73,8 +80,17 @@ export function useTripDetail(tripId: string) {
     await fetchTrip()
   }
 
-  async function refuseParcel(bidId: string, reason: string): Promise<void> {
-    await svc.refuseParcel(bidId, reason)
+  async function refuseParcel(bidId: string, reason: string, photo: File | null = null): Promise<void> {
+    let photoUrl: string | null = null
+    if (photo) {
+      try {
+        photoUrl = await svc.uploadRefusalPhoto(bidId, photo)
+      } catch {
+        // La photo est une preuve optionnelle : un échec d'upload ne doit pas bloquer le refus.
+        photoUrl = null
+      }
+    }
+    await svc.refuseParcel(bidId, reason, photoUrl)
     await fetchBids()
     await fetchTrip()
   }
@@ -94,6 +110,27 @@ export function useTripDetail(tripId: string) {
     await fetchTrip()
   }
 
+  // L'expéditeur ne s'est pas présenté à la remise → NO_SHOW.
+  async function reportNoShow(bidId: string): Promise<void> {
+    await cancellationSvc.reportNoShow(bidId)
+    await fetchBids()
+    await fetchTrip()
+  }
+
+  // Annulation d'un colis déjà remis → retour à organiser.
+  async function cancelAfterHandover(bidId: string): Promise<void> {
+    await cancellationSvc.cancelAfterHandover(bidId)
+    await fetchBids()
+    await fetchTrip()
+  }
+
+  // Confirme le retour du colis avec le code fourni par l'expéditeur.
+  async function confirmReturn(bidId: string, returnCode: string): Promise<void> {
+    await cancellationSvc.confirmReturn(bidId, returnCode)
+    await fetchBids()
+    await fetchTrip()
+  }
+
   const kpis = computed<TripKpis>(() => {
     const t = trip.value
     if (!t) return { fillRatePct: 0, grossRevenueEuros: 0, commissionEuros: 0, netRevenueEuros: 0, revenuePerKg: 0 }
@@ -101,8 +138,8 @@ export function useTripDetail(tripId: string) {
       ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'COMPLETED'].includes(b.status),
     )
     const gross = confirmed.reduce((sum, b) => sum + b.paymentAmountEuros, 0)
-    const commission = Math.round(gross * 0.12 * 100) / 100
-    const net = Math.round(gross * 0.88 * 100) / 100
+    const commission = Math.round(gross * commissionRate.value * 100) / 100
+    const net = Math.round(gross * (1 - commissionRate.value) * 100) / 100
     const used = t.usedWeightKg
     return {
       fillRatePct: t.availableWeightKg > 0 ? Math.round((used / t.availableWeightKg) * 100) : 0,
@@ -148,6 +185,9 @@ export function useTripDetail(tripId: string) {
     refuseParcel,
     cancelBid,
     markTrackingEvent,
+    reportNoShow,
+    cancelAfterHandover,
+    confirmReturn,
     exportBidsCsv,
   }
 }
