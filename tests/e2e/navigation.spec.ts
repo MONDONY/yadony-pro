@@ -21,7 +21,7 @@ async function fakeLogin(page: import('@playwright/test').Page, user = FAKE_USER
 }
 
 test('unauthenticated user is redirected to /login', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/cockpit')
   await expect(page).toHaveURL(/\/login$/)
 })
 
@@ -33,7 +33,7 @@ test('non-pro user is redirected to /upgrade', async ({ page }) => {
 
 test('pro user navigates between 6 sections', async ({ page }) => {
   await fakeLogin(page)
-  await page.goto('/')
+  await page.goto('/cockpit')
   await expect(page.locator('h1').first()).toContainText('Centre de commandes')
 
   await page.getByRole('link', { name: 'Mes Trajets' }).first().click()

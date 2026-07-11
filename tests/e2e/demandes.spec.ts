@@ -188,8 +188,8 @@ async function mockApi(page: import('@playwright/test').Page) {
 }
 
 async function gotoDemandes(page: import('@playwright/test').Page) {
-  // Navigate via home to ensure auth plugin initializes
-  await page.goto('/')
+  // Navigate via /cockpit to ensure auth plugin initializes
+  await page.goto('/cockpit')
   await expect(page.locator('h1').first()).toContainText('Centre de commandes', { timeout: 10000 })
 
   // Click sidebar link for "Demandes compatibles"

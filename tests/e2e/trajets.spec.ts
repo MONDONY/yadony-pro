@@ -76,15 +76,15 @@ async function mockApi(page: import('@playwright/test').Page) {
   })
 }
 
-/** Navigate to /trajets via client-side navigation from the home page.
- *  The home page is used as the entry point so that Firebase initialises once
+/** Navigate to /trajets via client-side navigation from the authenticated dashboard.
+ *  /cockpit is used as the entry point so that Firebase initialises once
  *  (client-side plugin) and the auth seed is picked up by expose-auth.client.ts.
  *  We then follow the sidebar "Mes Trajets" link rather than doing a hard reload
  *  of /trajets, which avoids re-triggering Firebase's internal token-refresh flow.
  *  After navigation we wait for a TripCard to confirm the API data is loaded.
  */
 async function gotoTrajets(page: import('@playwright/test').Page) {
-  await page.goto('/')
+  await page.goto('/cockpit')
   await page.getByRole('link', { name: 'Mes Trajets' }).first().click()
   await page.waitForURL(/\/trajets$/)
   // Wait for the initial fetchTrips() to complete and render at least one TripCard
@@ -95,7 +95,7 @@ async function gotoTrajets(page: import('@playwright/test').Page) {
  *  Wait for the form title heading to confirm the form has mounted.
  */
 async function gotoNouvelleAnnonce(page: import('@playwright/test').Page) {
-  await page.goto('/')
+  await page.goto('/cockpit')
   await page.locator('[data-test="btn-nouvelle-annonce"]').first().click()
   await page.waitForURL(/\/trajets\/nouvelle-annonce$/)
   // Wait for the form section headings to appear
