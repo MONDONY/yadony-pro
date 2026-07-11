@@ -79,12 +79,12 @@ export function useAnnouncementForm() {
     }
   }
 
-  async function submit(_status: 'DRAFT' | 'PUBLISHED'): Promise<Trip> {
+  async function submit(status: 'DRAFT' | 'PUBLISHED'): Promise<Trip> {
     const errors = validate()
     if (Object.keys(errors).length > 0) {
       throw new Error('Formulaire invalide')
     }
-    return svc.createAnnouncement(buildPayload())
+    return svc.createAnnouncement(buildPayload(), { saveAsDraft: status === 'DRAFT' })
   }
 
   async function submitEdit(tripId: string): Promise<Trip> {

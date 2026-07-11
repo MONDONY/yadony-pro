@@ -93,7 +93,10 @@ describe('useAnnouncementForm', () => {
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
     const result = await submit('PUBLISHED')
-    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ transportMode: 'AVION' }))
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ transportMode: 'AVION' }),
+      { saveAsDraft: false },
+    )
     expect(result.status).toBe('PUBLISHED')
   })
 
@@ -109,7 +112,10 @@ describe('useAnnouncementForm', () => {
     form.dropoffPlace = validPlace2
     form.capacityUnit = 'SUITCASE_32KG'
     await submit('PUBLISHED')
-    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ capacityUnit: 'SUITCASE_32KG' }))
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ capacityUnit: 'SUITCASE_32KG' }),
+      { saveAsDraft: false },
+    )
   })
 
   it('buildPayload defaults capacityUnit to SUITCASE_23KG when not changed', async () => {
@@ -123,7 +129,10 @@ describe('useAnnouncementForm', () => {
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
     await submit('PUBLISHED')
-    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ capacityUnit: 'SUITCASE_23KG' }))
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ capacityUnit: 'SUITCASE_23KG' }),
+      { saveAsDraft: false },
+    )
   })
 
   it('submit calls createAnnouncement with DRAFT status', async () => {
@@ -137,7 +146,10 @@ describe('useAnnouncementForm', () => {
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
     const result = await submit('DRAFT')
-    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ transportMode: 'VOITURE' }))
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ transportMode: 'VOITURE' }),
+      { saveAsDraft: true },
+    )
     expect(result.status).toBe('DRAFT')
   })
 

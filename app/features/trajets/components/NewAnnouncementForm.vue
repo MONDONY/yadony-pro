@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
+import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
 import { configService } from '@/features/trajets/services/configService'
 import { tripTemplateService } from '@/features/trajets/services/tripTemplateService'
@@ -46,6 +47,13 @@ const templates = ref<Trip[]>([])
 const showTemplates = ref(false)
 const selectedTemplateId = ref<string | null>(null)
 const acceptedPresets = ref<string[]>([])
+
+const submitErrorMessages: Record<string, string> = {
+  'draft-limit-reached': 'Limite de brouillons atteinte. Passez en PRO pour en créer davantage.',
+  'pro-limit-reached': 'Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.',
+  'kyc-not-verified': 'Vérifiez votre identité (KYC) dans les paramètres avant de publier un trajet.',
+  'publishing-suspended': 'La publication est suspendue sur votre compte. Contactez le support.',
+}
 
 const today = new Date()
 const minDate = computed(() => {
@@ -130,8 +138,10 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
       ? await submitEdit(props.editTripId)
       : await submit(status)
     emit('submitted', trip)
-  } catch {
-    errors.value.global = 'Une erreur est survenue. Veuillez réessayer.'
+  } catch (e) {
+    const { code, detail } = extractProblem(e)
+    errors.value.global =
+      (code && submitErrorMessages[code]) || detail || 'Une erreur est survenue. Réessayez.'
   } finally {
     isSubmitting.value = false
   }
