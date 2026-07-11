@@ -1,7 +1,7 @@
 <!-- app/features/trajets/components/TripBidDetailPanel.vue -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { X, CheckCircle, XCircle, UserCheck, Ban, PackageCheck } from 'lucide-vue-next'
+import { X, CheckCircle, XCircle, UserCheck, UserX, Ban, PackageCheck, Undo2 } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { TripBid } from '@/features/trajets/types/index'
 
@@ -18,6 +18,9 @@ const emit = defineEmits<{
   'refuse-parcel': [bidId: string, reason: string, photo: File | null]
   cancel: [bidId: string]
   'request-delivery': [bid: TripBid]
+  'report-noshow': [bidId: string]
+  'cancel-after-handover': [bidId: string]
+  'confirm-return': [bidId: string, returnCode: string]
 }>()
 
 const STATUS_LABELS: Record<string, string> = {
@@ -47,11 +50,15 @@ const STATUS_VARIANT: Record<string, BadgeVariants['variant']> = {
   EXPIRED: 'neutral',
 }
 
-// Sous-formulaires (raison de refus, confirmation d'annulation)
+// Sous-formulaires (raison de refus, confirmation d'annulation, incidents)
 const refuseMode = ref(false)
 const refuseReason = ref('')
 const refusePhoto = ref<File | null>(null)
 const cancelMode = ref(false)
+const noShowMode = ref(false)
+const cancelAfterHandoverMode = ref(false)
+const returnMode = ref(false)
+const returnCode = ref('')
 
 // Réinitialise les sous-formulaires quand on change de colis / ferme.
 watch(() => props.bid?.id, () => {
@@ -59,6 +66,10 @@ watch(() => props.bid?.id, () => {
   refuseReason.value = ''
   refusePhoto.value = null
   cancelMode.value = false
+  noShowMode.value = false
+  cancelAfterHandoverMode.value = false
+  returnMode.value = false
+  returnCode.value = ''
 })
 
 const isBusy = computed(() => !!props.bid && props.loadingBidId === props.bid.id)
@@ -180,11 +191,19 @@ function submitRefuse() {
                 :disabled="isBusy"
                 class="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-btn border border-border-strong text-text-muted text-xs font-medium hover:bg-surface-el hover:text-text transition-colors disabled:opacity-50"
                 data-test="detail-cancel"
-                @click="cancelMode = !cancelMode; refuseMode = false"
+                @click="cancelMode = !cancelMode; refuseMode = false; noShowMode = false"
               >
                 Annuler le colis
               </button>
             </div>
+            <button
+              :disabled="isBusy"
+              class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn border border-warning/60 text-warning text-xs font-medium hover:bg-warning/10 transition-colors disabled:opacity-50"
+              data-test="detail-report-noshow"
+              @click="noShowMode = !noShowMode; refuseMode = false; cancelMode = false"
+            >
+              <UserX class="w-3.5 h-3.5" /> Expéditeur absent
+            </button>
           </template>
 
           <!-- HANDED_OVER : refuser le colis (inspection) -->
@@ -198,15 +217,35 @@ function submitRefuse() {
             <Ban class="w-4 h-4" /> Refuser le colis
           </button>
 
-          <!-- IN_TRANSIT : confirmer la livraison (délègue à la modale code) -->
+          <!-- IN_TRANSIT : confirmer la livraison + annulation après remise -->
+          <template v-else-if="bid.status === 'IN_TRANSIT'">
+            <button
+              :disabled="isBusy"
+              class="w-full flex items-center justify-center gap-1.5 h-10 rounded-btn border border-primary/50 text-primary text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
+              data-test="detail-request-delivery"
+              @click="emit('request-delivery', bid)"
+            >
+              <PackageCheck class="w-4 h-4" /> Confirmer la livraison
+            </button>
+            <button
+              :disabled="isBusy"
+              class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn border border-danger/60 text-danger text-xs font-medium hover:bg-danger/10 transition-colors disabled:opacity-50"
+              data-test="detail-cancel-after-handover"
+              @click="cancelAfterHandoverMode = !cancelAfterHandoverMode"
+            >
+              <Undo2 class="w-3.5 h-3.5" /> Annuler après remise
+            </button>
+          </template>
+
+          <!-- CANCELLED : confirmer le retour du colis (code expéditeur) -->
           <button
-            v-else-if="bid.status === 'IN_TRANSIT'"
+            v-else-if="bid.status === 'CANCELLED'"
             :disabled="isBusy"
-            class="w-full flex items-center justify-center gap-1.5 h-10 rounded-btn border border-primary/50 text-primary text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
-            data-test="detail-request-delivery"
-            @click="emit('request-delivery', bid)"
+            class="w-full flex items-center justify-center gap-1.5 h-10 rounded-btn border border-border-strong text-text-muted text-sm font-medium hover:bg-surface-el hover:text-text transition-colors disabled:opacity-50"
+            data-test="detail-confirm-return"
+            @click="returnMode = !returnMode"
           >
-            <PackageCheck class="w-4 h-4" /> Confirmer la livraison
+            <Undo2 class="w-4 h-4" /> Confirmer le retour du colis
           </button>
 
           <p v-else class="text-xs text-text-muted text-center">Aucune action disponible pour ce statut.</p>
@@ -252,6 +291,58 @@ function submitRefuse() {
               @click="emit('cancel', bid.id)"
             >
               Oui, annuler le colis
+            </button>
+          </div>
+
+          <!-- Sous-formulaire : confirmation no-show expéditeur -->
+          <div v-if="noShowMode" class="space-y-2 pt-1">
+            <p class="text-xs text-text-muted">
+              Signaler que l'expéditeur ne s'est pas présenté à la remise. Cette action ouvre un incident. Confirmer ?
+            </p>
+            <button
+              :disabled="isBusy"
+              class="w-full h-9 rounded-btn bg-warning text-black text-xs font-semibold hover:bg-warning/90 transition-colors disabled:opacity-50"
+              data-test="noshow-submit"
+              @click="emit('report-noshow', bid.id)"
+            >
+              Oui, signaler l'absence
+            </button>
+          </div>
+
+          <!-- Sous-formulaire : confirmation annulation après remise -->
+          <div v-if="cancelAfterHandoverMode" class="space-y-2 pt-1">
+            <p class="text-xs text-text-muted">
+              Le colis vous a déjà été remis : l'annuler déclenche un retour à l'expéditeur (remboursement). Confirmer ?
+            </p>
+            <button
+              :disabled="isBusy"
+              class="w-full h-9 rounded-btn bg-danger text-on-danger text-xs font-semibold hover:bg-danger-hover transition-colors disabled:opacity-50"
+              data-test="cancel-after-handover-submit"
+              @click="emit('cancel-after-handover', bid.id)"
+            >
+              Oui, annuler et retourner le colis
+            </button>
+          </div>
+
+          <!-- Sous-formulaire : code de retour -->
+          <div v-if="returnMode" class="space-y-2 pt-1">
+            <label class="text-xs font-medium text-text-muted">Code de retour (6 chiffres, fourni par l'expéditeur)</label>
+            <input
+              v-model="returnCode"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              placeholder="123456"
+              data-test="return-code-input"
+              class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-sm text-text tracking-[0.3em] font-mono placeholder:text-text-subtle placeholder:tracking-normal focus:outline-none focus:border-primary transition-colors"
+            />
+            <button
+              :disabled="!/^\d{6}$/.test(returnCode) || isBusy"
+              class="w-full h-9 rounded-btn bg-primary text-on-primary text-xs font-semibold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              data-test="return-submit"
+              @click="emit('confirm-return', bid.id, returnCode)"
+            >
+              Confirmer le retour
             </button>
           </div>
         </div>

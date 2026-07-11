@@ -23,6 +23,16 @@ vi.mock('@/features/trajets/services/tripsService', () => ({
   tripsService: () => mockSvc,
 }))
 
+const mockCancellationSvc = {
+  reportNoShow: vi.fn(),
+  cancelAfterHandover: vi.fn(),
+  confirmReturn: vi.fn(),
+}
+
+vi.mock('@/features/cancellation/services/cancellationService', () => ({
+  cancellationService: () => mockCancellationSvc,
+}))
+
 const pushMock = vi.fn()
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: pushMock }),
@@ -127,6 +137,40 @@ describe('useTripDetail', () => {
     const file = new File(['x'], 'p.jpg', { type: 'image/jpeg' })
     await refuseParcel('bid-7', 'endommagé', file)
     expect(mockSvc.refuseParcel).toHaveBeenCalledWith('bid-7', 'endommagé', null)
+  })
+
+  it('reportNoShow signale le no-show puis rafraîchit colis et trajet', async () => {
+    mockCancellationSvc.reportNoShow.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { reportNoShow } = useTripDetail('trip-1')
+    await reportNoShow('bid-7')
+    expect(mockCancellationSvc.reportNoShow).toHaveBeenCalledWith('bid-7')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
+    expect(mockSvc.getAnnouncement).toHaveBeenCalled()
+  })
+
+  it('cancelAfterHandover annule après remise puis rafraîchit', async () => {
+    mockCancellationSvc.cancelAfterHandover.mockResolvedValue(undefined)
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { cancelAfterHandover } = useTripDetail('trip-1')
+    await cancelAfterHandover('bid-7')
+    expect(mockCancellationSvc.cancelAfterHandover).toHaveBeenCalledWith('bid-7')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
+  })
+
+  it('confirmReturn transmet le code puis rafraîchit', async () => {
+    mockCancellationSvc.confirmReturn.mockResolvedValue({ returnCode: null, returnDeadline: null, returnedAt: '2026-07-12' })
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 't1' })
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { confirmReturn } = useTripDetail('trip-1')
+    await confirmReturn('bid-7', '654321')
+    expect(mockCancellationSvc.confirmReturn).toHaveBeenCalledWith('bid-7', '654321')
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
   })
 
   it('kpis applique le taux de commission dynamique (pas de 0,12 en dur)', async () => {

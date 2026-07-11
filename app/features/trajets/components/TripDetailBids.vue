@@ -22,6 +22,9 @@ const emit = defineEmits<{
   'confirm-presence': [bidId: string]
   'refuse-parcel': [bidId: string, reason: string, photo: File | null]
   'cancel': [bidId: string]
+  'report-noshow': [bidId: string]
+  'cancel-after-handover': [bidId: string]
+  'confirm-return': [bidId: string, returnCode: string]
   'tracking-event': [bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE']
   'export-csv': []
 }>()
@@ -456,6 +459,9 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
     @confirm-presence="(id) => forwardAndClose(() => emit('confirm-presence', id))"
     @refuse-parcel="(id, reason, photo) => forwardAndClose(() => emit('refuse-parcel', id, reason, photo))"
     @cancel="(id) => forwardAndClose(() => emit('cancel', id))"
+    @report-noshow="(id) => forwardAndClose(() => emit('report-noshow', id))"
+    @cancel-after-handover="(id) => forwardAndClose(() => emit('cancel-after-handover', id))"
+    @confirm-return="(id, code) => forwardAndClose(() => emit('confirm-return', id, code))"
     @request-delivery="onPanelRequestDelivery"
   />
 

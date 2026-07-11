@@ -79,6 +79,39 @@ describe('TripBidDetailPanel', () => {
     expect(wrapper.find('[data-test="detail-reject"]').exists()).toBe(true)
   })
 
+  it('ACCEPTED : « Expéditeur absent » demande confirmation puis émet report-noshow', async () => {
+    const wrapper = mountPanel(bid({ status: 'ACCEPTED' }))
+    await wrapper.find('[data-test="detail-report-noshow"]').trigger('click')
+    expect(wrapper.emitted('report-noshow')).toBeUndefined() // pas encore : confirmation d'abord
+    await wrapper.find('[data-test="noshow-submit"]').trigger('click')
+    expect(wrapper.emitted('report-noshow')?.[0]).toEqual(['b1'])
+  })
+
+  it('IN_TRANSIT : « Annuler après remise » demande confirmation puis émet cancel-after-handover', async () => {
+    const wrapper = mountPanel(bid({ status: 'IN_TRANSIT' }))
+    await wrapper.find('[data-test="detail-cancel-after-handover"]').trigger('click')
+    expect(wrapper.emitted('cancel-after-handover')).toBeUndefined()
+    await wrapper.find('[data-test="cancel-after-handover-submit"]').trigger('click')
+    expect(wrapper.emitted('cancel-after-handover')?.[0]).toEqual(['b1'])
+  })
+
+  it('CANCELLED : saisie du code de retour à 6 chiffres puis émet confirm-return', async () => {
+    const wrapper = mountPanel(bid({ status: 'CANCELLED' }))
+    await wrapper.find('[data-test="detail-confirm-return"]').trigger('click')
+    const input = wrapper.find('[data-test="return-code-input"]')
+    expect(input.exists()).toBe(true)
+    await input.setValue('123456')
+    await wrapper.find('[data-test="return-submit"]').trigger('click')
+    expect(wrapper.emitted('confirm-return')?.[0]).toEqual(['b1', '123456'])
+  })
+
+  it('CANCELLED : le bouton retour est désactivé tant que le code n’a pas 6 chiffres', async () => {
+    const wrapper = mountPanel(bid({ status: 'CANCELLED' }))
+    await wrapper.find('[data-test="detail-confirm-return"]').trigger('click')
+    await wrapper.find('[data-test="return-code-input"]').setValue('123')
+    expect(wrapper.find('[data-test="return-submit"]').attributes('disabled')).toBeDefined()
+  })
+
   it('IN_TRANSIT : émet request-delivery', async () => {
     const wrapper = mountPanel(bid({ status: 'IN_TRANSIT' }))
     await wrapper.find('[data-test="detail-request-delivery"]').trigger('click')
