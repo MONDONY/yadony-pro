@@ -153,4 +153,57 @@ describe('useAutomations', () => {
     expect(mockDeleteRule).toHaveBeenCalledWith('rule-custom-1')
     expect(mockListRules).toHaveBeenCalledTimes(2)
   })
+
+  it('updatePresetConfig maps minRating to the wire config as-is and re-fetches', async () => {
+    mockUpdateRule.mockResolvedValue({ ...fakePreset, config: { minRating: 4.2 } })
+    const useAutomations = await importUseAutomations()
+    const { fetchRules, updatePresetConfig } = useAutomations()
+    await fetchRules()
+    await updatePresetConfig('auto_accept_trusted', { minRating: 4.2 })
+    expect(mockUpdateRule).toHaveBeenCalledWith('auto_accept_trusted', {
+      enabled: false,
+      config: { minRating: 4.2 },
+    })
+    expect(mockListRules).toHaveBeenCalledTimes(2)
+  })
+
+  it('updatePresetConfig maps minFreeKg to freedKgThreshold and minFreeHours to consecutiveHours', async () => {
+    mockListRules.mockResolvedValue([
+      { ...fakePreset, id: 'alert_capacity_free', enabled: true, config: {} },
+      fakeCustom,
+    ])
+    mockUpdateRule.mockResolvedValue({})
+    const useAutomations = await importUseAutomations()
+    const { fetchRules, updatePresetConfig } = useAutomations()
+    await fetchRules()
+    await updatePresetConfig('alert_capacity_free', { minFreeKg: 15, minFreeHours: 6 })
+    expect(mockUpdateRule).toHaveBeenCalledWith('alert_capacity_free', {
+      enabled: true,
+      config: { freedKgThreshold: 15, consecutiveHours: 6 },
+    })
+  })
+
+  it('updatePresetConfig maps hoursBeforeDeparture as-is', async () => {
+    mockListRules.mockResolvedValue([
+      { ...fakePreset, id: 'alert_last_minute_bid', enabled: true, config: {} },
+      fakeCustom,
+    ])
+    mockUpdateRule.mockResolvedValue({})
+    const useAutomations = await importUseAutomations()
+    const { fetchRules, updatePresetConfig } = useAutomations()
+    await fetchRules()
+    await updatePresetConfig('alert_last_minute_bid', { hoursBeforeDeparture: 48 })
+    expect(mockUpdateRule).toHaveBeenCalledWith('alert_last_minute_bid', {
+      enabled: true,
+      config: { hoursBeforeDeparture: 48 },
+    })
+  })
+
+  it('updatePresetConfig does nothing when preset id is not found', async () => {
+    const useAutomations = await importUseAutomations()
+    const { fetchRules, updatePresetConfig } = useAutomations()
+    await fetchRules()
+    await updatePresetConfig('non_existent_id', { minRating: 3 })
+    expect(mockUpdateRule).not.toHaveBeenCalled()
+  })
 })
