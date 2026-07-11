@@ -30,8 +30,8 @@ const loadingBidId = ref<string | null>(null)
 
 const {
   trip, bids, isLoading, bidsLoading, error,
-  deleteLoading, kpis,
-  fetchTrip, fetchBids, deleteTrip, acceptBid, rejectBid, confirmDelivery,
+  deleteLoading, publishLoading, publishError, publishErrorCode, kpis,
+  fetchTrip, fetchBids, deleteTrip, publishTrip, acceptBid, rejectBid, confirmDelivery,
   confirmPresence, refuseParcel, cancelBid, markTrackingEvent,
   reportNoShow, cancelAfterHandover, confirmReturn, exportBidsCsv,
 } = useTripDetail(tripId)
@@ -151,6 +151,37 @@ function onExportCsv() {
         :trip="trip"
         @delete="showDeleteModal = true"
       />
+
+      <!-- Bannière brouillon -->
+      <div
+        v-if="trip.status === 'DRAFT'"
+        data-test="draft-banner"
+        class="rounded-card border border-warning/40 bg-warning/10 p-4 flex flex-col gap-3"
+      >
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <p class="text-sm text-text">
+            <span class="font-medium">Ce trajet est un brouillon</span>
+            <span class="text-text-muted"> — invisible pour les expéditeurs tant qu'il n'est pas publié.</span>
+          </p>
+          <button
+            data-test="btn-publish-trip"
+            class="h-9 px-4 rounded-btn bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
+            :disabled="publishLoading"
+            @click="publishTrip"
+          >
+            {{ publishLoading ? 'Publication…' : 'Publier le trajet' }}
+          </button>
+        </div>
+        <div v-if="publishError" class="text-sm text-danger flex items-center gap-3 flex-wrap" data-test="publish-error">
+          <span>{{ publishError }}</span>
+          <NuxtLink v-if="publishErrorCode === 'kyc-not-verified'" to="/parametres" class="underline font-medium">
+            Vérifier mon identité
+          </NuxtLink>
+          <NuxtLink v-else-if="publishErrorCode === 'departure-date-passed'" :to="`/trajets/${trip.id}/modifier`" class="underline font-medium">
+            Modifier le trajet
+          </NuxtLink>
+        </div>
+      </div>
 
       <!-- Tabs -->
       <div class="flex items-center gap-1 bg-surface rounded-btn p-1 border border-border w-fit">
