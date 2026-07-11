@@ -136,4 +136,13 @@ describe('bidsService', () => {
     const bid = await bidsService().acceptBid('b1')
     expect(bid.earningsEuros).toBe(64)
   })
+
+  it('getBid charge GET /bids/:id et mappe la réponse', async () => {
+    mockApiFn.mockResolvedValue(backendBid())
+    const { bidsService } = await import('@/features/colis/services/bidsService')
+    const bid = await bidsService().getBid('b1')
+    expect(mockApiFn).toHaveBeenCalledWith('/bids/b1', {})
+    expect(bid.id).toBe('b1')
+    expect(bid.sender.name).toBe('abou')
+  })
 })

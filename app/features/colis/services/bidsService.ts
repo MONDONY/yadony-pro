@@ -126,6 +126,11 @@ export function bidsService() {
     }
   }
 
+  async function getBid(id: string): Promise<Bid> {
+    const [res, rate] = await Promise.all([api<BackendBidResponse>(`/bids/${id}`, {}), getRate()])
+    return mapBackendToBid(res, rate)
+  }
+
   async function acceptBid(id: string): Promise<Bid> {
     const [res, rate] = await Promise.all([
       api<BackendBidResponse>(`/bids/${id}/accept`, { method: 'PUT' }),
@@ -142,5 +147,5 @@ export function bidsService() {
     return mapBackendToBid(res, rate)
   }
 
-  return { listBids, acceptBid, rejectBid }
+  return { listBids, getBid, acceptBid, rejectBid }
 }

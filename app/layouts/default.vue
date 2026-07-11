@@ -1,13 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onBeforeUnmount } from 'vue'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import CommandPalette from '@/features/search/components/CommandPalette.vue'
+import { useGlobalSearch } from '@/features/search/composables/useGlobalSearch'
 
 const route = useRoute()
 const meta = computed(() => ({
   title: (route.meta.pageTitle as string) ?? 'dony PRO',
   subtitle: route.meta.pageSubtitle as string | undefined,
 }))
+
+const { toggle: toggleSearch } = useGlobalSearch()
+
+function onGlobalKeydown(e: KeyboardEvent) {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault()
+    toggleSearch()
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', onGlobalKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKeydown))
 </script>
 
 <template>
@@ -19,5 +33,6 @@ const meta = computed(() => ({
         <slot />
       </main>
     </div>
+    <CommandPalette />
   </div>
 </template>

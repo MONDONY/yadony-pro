@@ -52,8 +52,24 @@ const availableTrips = computed(() => {
     .map((b) => ({ id: b.tripId, tripCorridor: b.tripCorridor }))
 })
 
-onMounted(() => {
-  fetchBids()
+const route = useRoute()
+
+onMounted(async () => {
+  await fetchBids()
+  // Deep-link depuis la palette de recherche : /colis?bid=<id> ouvre le détail.
+  const bidId = route.query.bid
+  if (typeof bidId === 'string' && bidId) {
+    const known = bids.value.find((b) => b.id === bidId)
+    if (known) {
+      openPanel(known)
+    } else {
+      try {
+        openPanel(await svc.getBid(bidId))
+      } catch {
+        // bid introuvable/inaccessible : on reste sur la liste
+      }
+    }
+  }
 })
 
 const svc = bidsService()
