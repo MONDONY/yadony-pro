@@ -15,6 +15,7 @@ import {
   UserCircle,
   Settings,
   ShieldAlert,
+  BellRing,
   Plus,
   Repeat,
 } from 'lucide-vue-next'
@@ -83,6 +84,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/demandes" label="Demandes compatibles">
         <template #icon><Search class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/alertes" label="Alertes corridor">
+        <template #icon><BellRing class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/activite" label="Mon Activité">
         <template #icon><BarChart3 class="w-4 h-4" /></template>
