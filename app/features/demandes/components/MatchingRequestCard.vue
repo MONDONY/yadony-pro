@@ -2,20 +2,25 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cn } from '@/lib/utils'
-import { Check } from 'lucide-vue-next'
+import { Check, Star } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import PackageTypePlaceholder from '@/features/demandes/components/PackageTypePlaceholder.vue'
 import type { MatchingRequest } from '@/features/demandes/types/index'
 
-const props = defineProps<{
-  request: MatchingRequest
-  isNegotiating: boolean
-  hasNegotiated: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    request: MatchingRequest
+    isNegotiating: boolean
+    hasNegotiated: boolean
+    isFavorite?: boolean
+  }>(),
+  { isFavorite: false },
+)
 
 const emit = defineEmits<{
   negotiate: [request: MatchingRequest]
   'view-detail': [request: MatchingRequest]
+  'toggle-favorite': [requestId: string]
 }>()
 
 const scoreBadgeVariant = computed<BadgeVariants['variant']>(() => {
@@ -30,8 +35,19 @@ const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.r
 <template>
   <div
     :data-test="`request-card-${request.id}`"
-    class="flex flex-col overflow-hidden rounded-el border border-border bg-surface shadow-card transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:shadow-pop motion-reduce:hover:translate-y-0"
+    class="relative flex flex-col overflow-hidden rounded-el border border-border bg-surface shadow-card transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:shadow-pop motion-reduce:hover:translate-y-0"
   >
+    <!-- Favori (toggle optimiste, coin haut droit) -->
+    <button
+      type="button"
+      :data-test="`favorite-btn-${request.id}`"
+      :aria-pressed="isFavorite ? 'true' : 'false'"
+      :aria-label="isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+      class="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/40 backdrop-blur-sm transition-transform hover:scale-110 motion-reduce:hover:scale-100"
+      @click.stop="emit('toggle-favorite', request.id)"
+    >
+      <Star class="w-4 h-4" :class="isFavorite ? 'text-warning fill-warning' : 'text-white'" />
+    </button>
     <!-- Photo du colis ou placeholder -->
     <img
       v-if="request.packagePhotoUrl"

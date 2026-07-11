@@ -12,12 +12,17 @@ import RequestDetailModal from '@/features/demandes/components/RequestDetailModa
 import { SectionLabel } from '@/components/ui/section-label'
 import NegotiationStartModal from '@/features/negociations/components/NegotiationStartModal.vue'
 import CreateTripFromDemandModal from '@/features/demandes/components/CreateTripFromDemandModal.vue'
+import { useFavorites } from '@/features/favoris/composables/useFavorites'
 import type { MatchingRequest, FilterState } from '@/features/demandes/types/index'
 import { DEFAULT_FILTER_STATE } from '@/features/demandes/types/index'
 
 const { requests, isLoading, error, fetchRequests, activeTrips, hasActiveTrips } = useMatchingRequests()
+const { loadIds, isFavoriteRequest, toggleRequest } = useFavorites()
 
-onMounted(() => { fetchRequests() })
+onMounted(() => {
+  fetchRequests()
+  loadIds()
+})
 
 // ── État local ──────────────────────────────────────────────────────────────
 
@@ -178,8 +183,10 @@ function openNegotiateModal(request: MatchingRequest) {
               :request="req"
               :is-negotiating="negotiatingRequest?.id === req.id"
               :has-negotiated="negotiatedIds.has(req.id)"
+              :is-favorite="isFavoriteRequest(req.id)"
               @negotiate="openNegotiateModal"
               @view-detail="detailRequest = $event"
+              @toggle-favorite="toggleRequest"
             />
           </div>
 
