@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { XCircle, Plane } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
@@ -53,6 +53,13 @@ const priceBarWidth = computed(() => {
 const canSubmit = computed(() =>
   proposedPrice.value > 0 && proposedPrice.value <= 500 && !isLoading.value,
 )
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.request) emit('close')
+}
+
+onMounted(() => document.addEventListener('keydown', handleKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
 
 async function submit() {
   if (!props.request || !canSubmit.value) return
