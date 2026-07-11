@@ -13,26 +13,30 @@ const FAKE_USER = {
 // Sample trip that will be selected via TripSelector
 const FAKE_TRIP = {
   id: 'trip-e2e-001',
+  travelerId: 'traveler-e2e-001',
   status: 'ACTIVE',
-  departureCity: { placeId: 'p1', label: 'Paris', lat: 48.85, lng: 2.35 },
-  arrivalCity: { placeId: 'p2', label: 'Dakar', lat: 14.69, lng: -17.44 },
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
   departureDate: '2026-08-15',
   departureTime: '10:00',
   arrivalTime: null,
   transportMode: 'AVION',
-  pickupPlace: { placeId: 'pk', label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
-  dropoffPlace: { placeId: 'dr', label: 'Aéroport DSS', lat: 14.73, lng: -17.49 },
-  availableWeightKg: 25,
-  usedWeightKg: 5,
+  pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
+  deliveryAddress: { label: 'Aéroport DSS', lat: 14.73, lng: -17.49 },
+  availableKg: 25,
+  totalKg: 30,
   pricePerKg: 8,
-  acceptedCategories: ['Vêtements', 'Électronique'],
-  refusedCategories: [],
+  acceptedContentTypes: ['Vêtements', 'Électronique'],
+  refusedTypes: [],
   senderNote: null,
   cashAccepted: false,
+  acceptedPaymentMethods: ['STRIPE'],
+  handoverWindowStart: '2026-08-15T08:00:00Z',
+  handoverWindowEnd: '2026-08-15T09:30:00Z',
   confirmedParcelCount: 1,
   pendingBidCount: 0,
-  reservedRevenueEuros: 40,
   createdAt: '2026-05-01T00:00:00Z',
+  updatedAt: '2026-05-01T00:00:00Z',
 }
 
 // Sample matching requests for the active trip (Paris → Dakar, Aug 15)
@@ -129,7 +133,7 @@ async function mockApi(page: import('@playwright/test').Page) {
   )
 
   // Mock user's trips list — needed by TripSelector
-  await page.route('http://localhost:8080/api/v1/travelers/me/announcements*', (route) =>
+  await page.route('http://localhost:8080/api/v1/announcements/my*', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -330,7 +334,7 @@ test.describe('Page Demandes', () => {
 
   test('affiche état vide quand pas de trajet actif', async ({ page }) => {
     // Mock no trips available
-    await page.route('http://localhost:8080/api/v1/travelers/me/announcements*', (route) =>
+    await page.route('http://localhost:8080/api/v1/announcements/my*', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',

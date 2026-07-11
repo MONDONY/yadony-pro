@@ -26,18 +26,19 @@ async function mockApi(page: import('@playwright/test').Page) {
   await page.route('**/announcements**', async (route) => {
     const fakeTrips = [
       {
-        id: 'trip-1', status: 'ACTIVE',
-        departureCity: { placeId: 'p1', label: 'Paris', lat: 48.85, lng: 2.35 },
-        arrivalCity: { placeId: 'p2', label: 'Dakar', lat: 14.69, lng: -17.44 },
+        id: 'trip-1', travelerId: 'user-1', status: 'ACTIVE',
+        departureCity: 'Paris', arrivalCity: 'Dakar',
         departureDate: '2026-08-01', departureTime: '10:00', arrivalTime: null,
         transportMode: 'AVION',
-        pickupPlace: { placeId: 'pk', label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
-        dropoffPlace: { placeId: 'dr', label: 'Aéroport DSS', lat: 14.73, lng: -17.49 },
-        availableWeightKg: 20, usedWeightKg: 15, pricePerKg: 7,
-        acceptedCategories: ['Vêtements'], refusedCategories: [],
+        pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
+        deliveryAddress: { label: 'Aéroport DSS', lat: 14.73, lng: -17.49 },
+        availableKg: 20, totalKg: 35, pricePerKg: 7,
+        acceptedContentTypes: ['Vêtements'], refusedTypes: [],
         senderNote: null, cashAccepted: false,
-        confirmedParcelCount: 3, pendingBidCount: 2, reservedRevenueEuros: 105,
-        createdAt: '2026-05-01T00:00:00Z',
+        acceptedPaymentMethods: ['STRIPE'],
+        handoverWindowStart: '2026-08-01T08:00:00Z', handoverWindowEnd: '2026-08-01T09:30:00Z',
+        confirmedParcelCount: 3, pendingBidCount: 2,
+        createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-05-01T00:00:00Z',
       },
     ]
 
@@ -45,7 +46,7 @@ async function mockApi(page: import('@playwright/test').Page) {
       const body = route.request().postDataJSON()
       await route.fulfill({
         status: 201, contentType: 'application/json',
-        body: JSON.stringify({ ...fakeTrips[0], id: 'trip-new', status: body.status }),
+        body: JSON.stringify({ ...fakeTrips[0], id: 'trip-new', status: body.saveAsDraft ? 'DRAFT' : 'ACTIVE' }),
       })
       return
     }
