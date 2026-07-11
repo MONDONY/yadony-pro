@@ -42,6 +42,8 @@ const baseTripProps = {
   refusedCategories: [],
   senderNote: null,
   cashAccepted: false,
+  handoverWindowStart: null,
+  handoverWindowEnd: null,
   confirmedParcelCount: 3,
   pendingBidCount: 2,
   reservedRevenueEuros: 105,
