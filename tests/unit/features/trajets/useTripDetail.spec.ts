@@ -17,6 +17,7 @@ const mockSvc = {
   createAnnouncement: vi.fn(),
   getTemplates: vi.fn(),
   updateAnnouncement: vi.fn(),
+  publishAnnouncement: vi.fn(),
 }
 
 vi.mock('@/features/trajets/services/tripsService', () => ({
@@ -234,6 +235,62 @@ describe('useTripDetail', () => {
     await deleteTrip()
     expect(error.value).toBe('Impossible de supprimer ce trajet.')
     expect(pushMock).not.toHaveBeenCalled()
+  })
+
+  it('publishTrip publie puis recharge le trajet', async () => {
+    const fakeTrip = { id: 'trip-1', status: 'DRAFT', availableWeightKg: 20, usedWeightKg: 5, confirmedParcelCount: 0, pendingBidCount: 0 }
+    mockSvc.publishAnnouncement.mockResolvedValue({ ...fakeTrip, status: 'ACTIVE' })
+    mockSvc.getAnnouncement.mockResolvedValue({ ...fakeTrip, status: 'ACTIVE' })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const detail = useTripDetail('trip-1')
+    await detail.publishTrip()
+    expect(mockSvc.publishAnnouncement).toHaveBeenCalledWith('trip-1')
+    expect(mockSvc.getAnnouncement).toHaveBeenCalled() // refresh
+    expect(detail.publishError.value).toBeNull()
+  })
+
+  it('publishTrip mappe kyc-not-verified', async () => {
+    mockSvc.publishAnnouncement.mockRejectedValue({ data: { code: 'kyc-not-verified', detail: 'KYC requis' } })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const detail = useTripDetail('trip-1')
+    await detail.publishTrip()
+    expect(detail.publishErrorCode.value).toBe('kyc-not-verified')
+    expect(detail.publishError.value).toBe('Vérifiez votre identité (KYC) avant de publier ce trajet.')
+  })
+
+  it('publishTrip mappe departure-date-passed', async () => {
+    mockSvc.publishAnnouncement.mockRejectedValue({ data: { code: 'departure-date-passed', detail: 'Date passée' } })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const detail = useTripDetail('trip-1')
+    await detail.publishTrip()
+    expect(detail.publishErrorCode.value).toBe('departure-date-passed')
+    expect(detail.publishError.value).toBe('La date de départ est passée. Modifiez le trajet avant de publier.')
+  })
+
+  it('publishTrip mappe pro-limit-reached', async () => {
+    mockSvc.publishAnnouncement.mockRejectedValue({ data: { code: 'pro-limit-reached', detail: 'Limite' } })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const detail = useTripDetail('trip-1')
+    await detail.publishTrip()
+    expect(detail.publishError.value).toBe('Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.')
+  })
+
+  it('publishTrip mappe publishing-suspended', async () => {
+    mockSvc.publishAnnouncement.mockRejectedValue({ data: { code: 'publishing-suspended', detail: 'Suspendu' } })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const detail = useTripDetail('trip-1')
+    await detail.publishTrip()
+    expect(detail.publishErrorCode.value).toBe('publishing-suspended')
+    expect(detail.publishError.value).toBe('La publication est suspendue sur votre compte. Contactez le support.')
+  })
+
+  it('publishTrip mappe not-a-draft', async () => {
+    mockSvc.publishAnnouncement.mockRejectedValue({ data: { code: 'not-a-draft', detail: 'Pas un brouillon' } })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const detail = useTripDetail('trip-1')
+    await detail.publishTrip()
+    expect(detail.publishErrorCode.value).toBe('not-a-draft')
+    expect(detail.publishError.value).toBe('Ce trajet n’est pas un brouillon.')
   })
 
   it('rejectBid calls svc.rejectBid then refreshes bids and trip', async () => {

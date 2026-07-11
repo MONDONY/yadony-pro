@@ -1,9 +1,9 @@
 // app/features/trajets/types/index.ts
 
-export type TripStatus = 'ACTIVE' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+export type TripStatus = 'DRAFT' | 'ACTIVE' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 export type TransportMode = 'PLANE' | 'CAR' | 'TRAIN' | 'BUS' | 'BOAT' | 'OTHER'
 export type CapacityUnit = 'SUITCASE_23KG' | 'SUITCASE_32KG' | 'KG_FREE'
-export type TripFilter = 'TOUS' | 'ACTIFS' | 'COMPLETS' | 'EN_COURS' | 'TERMINES' | 'ANNULES'
+export type TripFilter = 'TOUS' | 'ACTIFS' | 'COMPLETS' | 'EN_COURS' | 'TERMINES' | 'ANNULES' | 'BROUILLONS'
 export type ViewMode = 'list' | 'calendar'
 export type DateMode = 'none' | 'day' | 'period'
 
@@ -123,6 +123,8 @@ export interface Trip {
   refusedCategories: string[]
   senderNote: string | null
   cashAccepted: boolean
+  handoverWindowStart: string | null   // ISO UTC datetime
+  handoverWindowEnd: string | null     // ISO UTC datetime
   confirmedParcelCount: number
   pendingBidCount: number
   reservedRevenueEuros: number
@@ -153,6 +155,8 @@ export interface AnnouncementFormData {
   refusedCategories: string[]
   senderNote: string
   cashAccepted: boolean
+  handoverWindowStart: string   // <input type="datetime-local"> value, ex "2026-06-01T10:00"
+  handoverWindowEnd: string
 }
 
 export interface CreateAnnouncementPayload {
@@ -171,6 +175,8 @@ export interface CreateAnnouncementPayload {
   acceptedContentTypes: string[]
   refusedTypes: string[]
   acceptedPaymentMethods: string[]
+  handoverWindowStart: string | null   // ISO UTC datetime
+  handoverWindowEnd: string | null
 }
 
 export interface ValidationErrors {
@@ -182,6 +188,7 @@ export interface ValidationErrors {
   dropoffPlace?: string
   availableWeightKg?: string
   pricePerKg?: string
+  handoverWindowStart?: string
   global?: string
 }
 

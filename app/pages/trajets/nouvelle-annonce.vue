@@ -19,7 +19,10 @@ function onSubmitted(trip: Trip) {
 }
 
 function goToTrip() {
-  if (submittedTrip.value) {
+  if (!submittedTrip.value) return
+  if (submittedTrip.value.status === 'DRAFT') {
+    router.push('/trajets?filter=BROUILLONS')
+  } else {
     router.push(`/trajets/${submittedTrip.value.id}`)
   }
 }
@@ -53,7 +56,7 @@ function goBack() {
           Votre trajet {{ submittedTrip.departureCity.label }} → {{ submittedTrip.arrivalCity.label }} est maintenant visible par les expéditeurs.
         </template>
         <template v-else>
-          Votre trajet a été enregistré.
+          Votre brouillon est enregistré. Il est invisible pour les expéditeurs tant qu'il n'est pas publié.
         </template>
       </p>
       <div class="flex gap-3">
@@ -67,7 +70,8 @@ function goBack() {
           class="px-6 py-2.5 rounded-btn bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors"
           @click="goToTrip"
         >
-          Gérer ce trajet →
+          <template v-if="submittedTrip.status === 'DRAFT'">Voir mes brouillons →</template>
+          <template v-else>Gérer ce trajet →</template>
         </button>
       </div>
     </div>

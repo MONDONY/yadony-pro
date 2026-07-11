@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { List, CalendarDays, Plus } from 'lucide-vue-next'
 import { useTrips } from '@/features/trajets/composables/useTrips'
 import TripCard from '@/features/trajets/components/TripCard.vue'
 import TripListFilters from '@/features/trajets/components/TripListFilters.vue'
 import TripCalendar from '@/features/trajets/components/TripCalendar.vue'
 import PaginationControls from '@/components/ui/PaginationControls.vue'
+import type { TripFilter } from '@/features/trajets/types/index'
 
 definePageMeta({
   middleware: ['pro-only'],
   pageTitle: 'Mes Trajets',
   pageSubtitle: 'Liste, calendrier et publication',
 })
+
+const route = useRoute()
+const VALID_FILTERS: TripFilter[] = ['TOUS', 'ACTIFS', 'COMPLETS', 'EN_COURS', 'TERMINES', 'ANNULES', 'BROUILLONS']
+const initialFilter = VALID_FILTERS.includes(route.query.filter as TripFilter)
+  ? (route.query.filter as TripFilter)
+  : undefined
 
 const {
   trips,
@@ -41,7 +49,7 @@ const {
   setDateTo,
   setCorridor,
   toggleView,
-} = useTrips()
+} = useTrips(initialFilter)
 
 onMounted(async () => {
   await Promise.all([fetchTrips(), fetchCorridors()])

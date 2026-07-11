@@ -35,6 +35,7 @@ const formattedDate = computed(() => {
 })
 
 const statusLabel: Record<string, string> = {
+  DRAFT: 'Brouillon',
   ACTIVE: 'Actif',
   FULL: 'Complet',
   IN_PROGRESS: 'En cours',
@@ -43,6 +44,7 @@ const statusLabel: Record<string, string> = {
 }
 
 const statusVariant: Record<string, BadgeVariants['variant']> = {
+  DRAFT: 'warning',
   ACTIVE: 'success',
   FULL: 'info',
   IN_PROGRESS: 'warning',

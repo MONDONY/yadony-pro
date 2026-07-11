@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
+import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
 import { configService } from '@/features/trajets/services/configService'
 import { tripTemplateService } from '@/features/trajets/services/tripTemplateService'
@@ -46,6 +47,14 @@ const templates = ref<Trip[]>([])
 const showTemplates = ref(false)
 const selectedTemplateId = ref<string | null>(null)
 const acceptedPresets = ref<string[]>([])
+
+const submitErrorMessages: Record<string, string> = {
+  'draft-limit-reached': 'Limite de brouillons atteinte. Passez en PRO pour en créer davantage.',
+  'pro-limit-reached': 'Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.',
+  'kyc-not-verified': 'Vérifiez votre identité (KYC) dans les paramètres avant de publier un trajet.',
+  'publishing-suspended': 'La publication est suspendue sur votre compte. Contactez le support.',
+  'departure-date-passed': 'La date de départ est passée. Corrigez-la avant de publier.',
+}
 
 const today = new Date()
 const minDate = computed(() => {
@@ -127,11 +136,13 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
   isSubmitting.value = true
   try {
     const trip = props.editTripId
-      ? await submitEdit(props.editTripId)
+      ? await submitEdit(props.editTripId, status)
       : await submit(status)
     emit('submitted', trip)
-  } catch {
-    errors.value.global = 'Une erreur est survenue. Veuillez réessayer.'
+  } catch (e) {
+    const { code, detail } = extractProblem(e)
+    errors.value.global =
+      (code && submitErrorMessages[code]) || detail || 'Une erreur est survenue. Réessayez.'
   } finally {
     isSubmitting.value = false
   }
@@ -367,6 +378,40 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
           placeholder="Ex : Aéroport Léopold Sédar Senghor"
           :error="errors.dropoffPlace"
         />
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-text mb-1.5">
+            Fenêtre de remise — début <span class="text-danger">*</span>
+          </label>
+          <input
+            v-model="form.handoverWindowStart"
+            type="datetime-local"
+            data-test="handover-window-start"
+            :class="[
+              'flex h-10 w-full rounded-input border bg-surface px-3 py-1 text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]',
+              errors.handoverWindowStart ? 'border-danger' : 'border-border-strong',
+            ]"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-text mb-1.5">
+            Fenêtre de remise — fin <span class="text-danger">*</span>
+          </label>
+          <input
+            v-model="form.handoverWindowEnd"
+            type="datetime-local"
+            data-test="handover-window-end"
+            :class="[
+              'flex h-10 w-full rounded-input border bg-surface px-3 py-1 text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]',
+              errors.handoverWindowStart ? 'border-danger' : 'border-border-strong',
+            ]"
+          />
+        </div>
+        <p v-if="errors.handoverWindowStart" class="col-span-2 -mt-2 text-xs text-danger">{{ errors.handoverWindowStart }}</p>
+        <p v-else class="col-span-2 -mt-2 text-xs text-text-muted">
+          Créneau pendant lequel tu remets le colis à l'expéditeur avant le départ.
+        </p>
       </div>
     </section>
 

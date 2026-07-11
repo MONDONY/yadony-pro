@@ -42,6 +42,8 @@ const baseTripProps = {
   refusedCategories: [],
   senderNote: null,
   cashAccepted: false,
+  handoverWindowStart: null,
+  handoverWindowEnd: null,
   confirmedParcelCount: 3,
   pendingBidCount: 2,
   reservedRevenueEuros: 105,
@@ -125,5 +127,10 @@ describe('TripCard', () => {
   it('does not show a valise label when capacityUnit is absent', async () => {
     const wrapper = await mountTripCard(baseTripProps)
     expect(wrapper.text()).not.toContain('valise')
+  })
+
+  it('affiche le badge Brouillon en variante warning pour un trajet DRAFT', async () => {
+    const wrapper = await mountTripCard({ ...baseTripProps, status: 'DRAFT' })
+    expect(wrapper.text()).toContain('Brouillon')
   })
 })

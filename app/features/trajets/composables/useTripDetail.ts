@@ -3,7 +3,16 @@ import { useRouter } from 'vue-router'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
 import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
+import { extractProblem } from '@/lib/apiError'
 import type { Trip, TripBid, TripKpis } from '@/features/trajets/types/index'
+
+const publishErrorMessages: Record<string, string> = {
+  'kyc-not-verified': 'Vérifiez votre identité (KYC) avant de publier ce trajet.',
+  'departure-date-passed': 'La date de départ est passée. Modifiez le trajet avant de publier.',
+  'pro-limit-reached': 'Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.',
+  'publishing-suspended': 'La publication est suspendue sur votre compte. Contactez le support.',
+  'not-a-draft': 'Ce trajet n’est pas un brouillon.',
+}
 
 export function useTripDetail(tripId: string) {
   const trip = ref<Trip | null>(null)
@@ -12,6 +21,9 @@ export function useTripDetail(tripId: string) {
   const bidsLoading = ref(false)
   const error = ref<string | null>(null)
   const deleteLoading = ref(false)
+  const publishLoading = ref(false)
+  const publishError = ref<string | null>(null)
+  const publishErrorCode = ref<string | null>(null)
   const commissionRate = ref(FALLBACK_COMMISSION_RATE)
 
   const svc = tripsService()
@@ -53,6 +65,23 @@ export function useTripDetail(tripId: string) {
       error.value = 'Impossible de supprimer ce trajet.'
     } finally {
       deleteLoading.value = false
+    }
+  }
+
+  async function publishTrip(): Promise<void> {
+    publishLoading.value = true
+    publishError.value = null
+    publishErrorCode.value = null
+    try {
+      await svc.publishAnnouncement(tripId)
+      await fetchTrip()
+    } catch (e) {
+      const { code, detail } = extractProblem(e)
+      publishErrorCode.value = code
+      publishError.value =
+        (code && publishErrorMessages[code]) || detail || 'Impossible de publier ce trajet.'
+    } finally {
+      publishLoading.value = false
     }
   }
 
@@ -174,10 +203,14 @@ export function useTripDetail(tripId: string) {
     bidsLoading,
     error,
     deleteLoading,
+    publishLoading,
+    publishError,
+    publishErrorCode,
     kpis,
     fetchTrip,
     fetchBids,
     deleteTrip,
+    publishTrip,
     acceptBid,
     rejectBid,
     confirmDelivery,
