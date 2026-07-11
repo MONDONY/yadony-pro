@@ -275,6 +275,24 @@ describe('useTripDetail', () => {
     expect(detail.publishError.value).toBe('Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.')
   })
 
+  it('publishTrip mappe publishing-suspended', async () => {
+    mockSvc.publishAnnouncement.mockRejectedValue({ data: { code: 'publishing-suspended', detail: 'Suspendu' } })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const detail = useTripDetail('trip-1')
+    await detail.publishTrip()
+    expect(detail.publishErrorCode.value).toBe('publishing-suspended')
+    expect(detail.publishError.value).toBe('La publication est suspendue sur votre compte. Contactez le support.')
+  })
+
+  it('publishTrip mappe not-a-draft', async () => {
+    mockSvc.publishAnnouncement.mockRejectedValue({ data: { code: 'not-a-draft', detail: 'Pas un brouillon' } })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const detail = useTripDetail('trip-1')
+    await detail.publishTrip()
+    expect(detail.publishErrorCode.value).toBe('not-a-draft')
+    expect(detail.publishError.value).toBe('Ce trajet n’est pas un brouillon.')
+  })
+
   it('rejectBid calls svc.rejectBid then refreshes bids and trip', async () => {
     mockSvc.rejectBid.mockResolvedValue(undefined)
     mockSvc.getAnnouncementBids.mockResolvedValue([])
