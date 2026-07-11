@@ -173,8 +173,17 @@ export function tripsService() {
     }
   }
 
-  async function createAnnouncement(payload: CreateAnnouncementPayload): Promise<Trip> {
-    const result = await api<BackendAnnouncementResponse>('/announcements', { method: 'POST', body: payload })
+  async function createAnnouncement(
+    payload: CreateAnnouncementPayload,
+    opts?: { saveAsDraft?: boolean },
+  ): Promise<Trip> {
+    const body = opts?.saveAsDraft ? { ...payload, saveAsDraft: true } : payload
+    const result = await api<BackendAnnouncementResponse>('/announcements', { method: 'POST', body })
+    return mapBackendToTrip(result)
+  }
+
+  async function publishAnnouncement(id: string): Promise<Trip> {
+    const result = await api<BackendAnnouncementResponse>(`/announcements/${id}/publish`, { method: 'POST' })
     return mapBackendToTrip(result)
   }
 
@@ -262,7 +271,7 @@ export function tripsService() {
   }
 
   return {
-    listTrips, getCorridors, createAnnouncement, getTemplates, getAnnouncement,
+    listTrips, getCorridors, createAnnouncement, publishAnnouncement, getTemplates, getAnnouncement,
     updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
     confirmDelivery, confirmPresence, refuseParcel, uploadRefusalPhoto, cancelBid,
     postTrackingEvent, getTrackingEvents, getQrCode,
@@ -276,6 +285,7 @@ function filterToStatus(filter: TripFilter): string {
     EN_COURS: 'IN_PROGRESS',
     TERMINES: 'COMPLETED',
     ANNULES: 'CANCELLED',
+    BROUILLONS: 'DRAFT',
   }
   return map[filter as Exclude<TripFilter, 'TOUS'>]
 }

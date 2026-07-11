@@ -17,6 +17,26 @@ vi.mock('@/composables/useCommissionRate', () => ({
   useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
 }))
 
+const fakeTrip = {
+  id: 'trip-1', travelerId: 'u1', departureCity: 'Paris', arrivalCity: 'Dakar',
+  departureDate: '2026-06-01', departureTime: null, arrivalTime: null, transportMode: 'PLANE',
+  pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
+  deliveryAddress: { label: 'Aéroport CDG', lat: 49.01, lng: 2.55 },
+  availableKg: 15, totalKg: 15, pricePerKg: 7, status: 'ACTIVE',
+  pendingBidCount: 0, confirmedParcelCount: 0, senderNote: null,
+  acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'],
+  cashAccepted: false, createdAt: '2026-05-01T12:00:00', updatedAt: '2026-05-01T12:00:00',
+}
+
+const payload = {
+  departureCity: 'Paris', arrivalCity: 'Dakar',
+  departureDate: '2026-06-01', departureTime: null, arrivalTime: null, transportMode: 'PLANE' as const,
+  pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
+  deliveryAddress: { label: 'Aéroport CDG', lat: 49.01, lng: 2.55 },
+  availableKg: 15, pricePerKg: 7, description: null,
+  acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'],
+}
+
 describe('tripsService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -44,31 +64,42 @@ describe('tripsService', () => {
   })
 
   it('createAnnouncement POSTs to /announcements', async () => {
-    const fakeTrip = {
-      id: 'trip-1', travelerId: 'u1', departureCity: 'Paris', arrivalCity: 'Dakar',
-      departureDate: '2026-06-01', departureTime: null, arrivalTime: null, transportMode: 'PLANE',
-      pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
-      deliveryAddress: { label: 'Aéroport CDG', lat: 49.01, lng: 2.55 },
-      availableKg: 15, totalKg: 15, pricePerKg: 7, status: 'ACTIVE',
-      pendingBidCount: 0, confirmedParcelCount: 0, senderNote: null,
-      acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'],
-      cashAccepted: false, createdAt: '2026-05-01T12:00:00', updatedAt: '2026-05-01T12:00:00',
-    }
     mockApiFn.mockResolvedValue(fakeTrip)
     const { tripsService } = await import('@/features/trajets/services/tripsService')
     const svc = tripsService()
-    const payload = {
-      departureCity: 'Paris', arrivalCity: 'Dakar',
-      departureDate: '2026-06-01', departureTime: null, arrivalTime: null, transportMode: 'PLANE' as const,
-      pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
-      deliveryAddress: { label: 'Aéroport CDG', lat: 49.01, lng: 2.55 },
-      availableKg: 15, pricePerKg: 7, description: null,
-      acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'],
-    }
     const result = await svc.createAnnouncement(payload)
     expect(mockApiFn).toHaveBeenCalledWith('/announcements', { method: 'POST', body: payload })
     expect(result.id).toBe('trip-1')
     expect(result.availableWeightKg).toBe(15)
+  })
+
+  it('createAnnouncement transmet saveAsDraft: true dans le body en mode brouillon', async () => {
+    mockApiFn.mockResolvedValue({ ...fakeTrip, status: 'DRAFT' })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    const result = await svc.createAnnouncement(payload, { saveAsDraft: true })
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements', {
+      method: 'POST',
+      body: { ...payload, saveAsDraft: true },
+    })
+    expect(result.status).toBe('DRAFT')
+  })
+
+  it('publishAnnouncement POSTe sur /announcements/{id}/publish', async () => {
+    mockApiFn.mockResolvedValue(fakeTrip)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    const result = await svc.publishAnnouncement('trip-1')
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/trip-1/publish', { method: 'POST' })
+    expect(result.status).toBe('ACTIVE')
+  })
+
+  it('listTrips mappe le filtre BROUILLONS vers status=DRAFT', async () => {
+    mockApiFn.mockResolvedValue({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 10 })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    await svc.listTrips({ filter: 'BROUILLONS' })
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/my', { query: { status: 'DRAFT' } })
   })
 
   it('getTemplates fetches 10 most recent announcements', async () => {
