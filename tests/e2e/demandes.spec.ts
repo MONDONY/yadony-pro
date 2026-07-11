@@ -13,26 +13,30 @@ const FAKE_USER = {
 // Sample trip that will be selected via TripSelector
 const FAKE_TRIP = {
   id: 'trip-e2e-001',
+  travelerId: 'traveler-e2e-001',
   status: 'ACTIVE',
-  departureCity: { placeId: 'p1', label: 'Paris', lat: 48.85, lng: 2.35 },
-  arrivalCity: { placeId: 'p2', label: 'Dakar', lat: 14.69, lng: -17.44 },
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
   departureDate: '2026-08-15',
   departureTime: '10:00',
   arrivalTime: null,
   transportMode: 'AVION',
-  pickupPlace: { placeId: 'pk', label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
-  dropoffPlace: { placeId: 'dr', label: 'Aéroport DSS', lat: 14.73, lng: -17.49 },
-  availableWeightKg: 25,
-  usedWeightKg: 5,
+  pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
+  deliveryAddress: { label: 'Aéroport DSS', lat: 14.73, lng: -17.49 },
+  availableKg: 25,
+  totalKg: 30,
   pricePerKg: 8,
-  acceptedCategories: ['Vêtements', 'Électronique'],
-  refusedCategories: [],
+  acceptedContentTypes: ['Vêtements', 'Électronique'],
+  refusedTypes: [],
   senderNote: null,
   cashAccepted: false,
+  acceptedPaymentMethods: ['STRIPE'],
+  handoverWindowStart: '2026-08-15T08:00:00Z',
+  handoverWindowEnd: '2026-08-15T09:30:00Z',
   confirmedParcelCount: 1,
   pendingBidCount: 0,
-  reservedRevenueEuros: 40,
   createdAt: '2026-05-01T00:00:00Z',
+  updatedAt: '2026-05-01T00:00:00Z',
 }
 
 // Sample matching requests for the active trip (Paris → Dakar, Aug 15)
@@ -129,7 +133,7 @@ async function mockApi(page: import('@playwright/test').Page) {
   )
 
   // Mock user's trips list — needed by TripSelector
-  await page.route('http://localhost:8080/api/v1/travelers/me/announcements*', (route) =>
+  await page.route('http://localhost:8080/api/v1/announcements/my*', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -143,27 +147,15 @@ async function mockApi(page: import('@playwright/test').Page) {
     }),
   )
 
-  // Mock matching requests for active trip
-  await page.route('http://localhost:8080/api/v1/travelers/me/matching-requests*', (route) => {
-    const url = new URL(route.request().url())
-    const tripId = url.searchParams.get('tripId')
-
-    // If tripId filter matches, return filtered results
-    if (tripId === 'trip-e2e-001') {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(FAKE_MATCHING_REQUESTS),
-      })
-    }
-
-    // Default: empty list
-    return route.fulfill({
+  // Mock matching requests — fetched unfiltered, then filtered client-side by
+  // MatchingDashboard.vue based on the trip selected in TripSelector.
+  await page.route('http://localhost:8080/api/v1/travelers/me/matching-requests*', (route) =>
+    route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([]),
-    })
-  })
+      body: JSON.stringify(FAKE_MATCHING_REQUESTS),
+    }),
+  )
 
   // Mock negotiation creation (POST /api/v1/negotiations)
   await page.route('http://localhost:8080/api/v1/negotiations', (route) => {
@@ -188,8 +180,8 @@ async function mockApi(page: import('@playwright/test').Page) {
 }
 
 async function gotoDemandes(page: import('@playwright/test').Page) {
-  // Navigate via home to ensure auth plugin initializes
-  await page.goto('/')
+  // Navigate via /cockpit to ensure auth plugin initializes
+  await page.goto('/cockpit')
   await expect(page.locator('h1').first()).toContainText('Centre de commandes', { timeout: 10000 })
 
   // Click sidebar link for "Demandes compatibles"
@@ -283,10 +275,10 @@ test.describe('Page Demandes', () => {
     // Modal should show request summary
     await expect(page.locator('[data-test="negociation-sender-name"]')).toBeVisible()
     await expect(page.locator('[data-test="negociation-weight"]')).toBeVisible()
-    await expect(page.locator('[data-test="negociation-prix-input"]')).toBeVisible()
+    await expect(page.locator('[data-test="proposed-price"]')).toBeVisible()
 
     // Verify suggested price is pre-filled (weightKg * budgetPerKg)
-    const priceInput = page.locator('[data-test="negociation-prix-input"]')
+    const priceInput = page.locator('[data-test="proposed-price"]')
     const priceValue = await priceInput.inputValue()
     expect(parseInt(priceValue || '0')).toBeGreaterThan(0)
   })
@@ -300,7 +292,7 @@ test.describe('Page Demandes', () => {
 
     // Modal appears and pre-fills suggested price
     await expect(page.locator('[data-test="negociation-modal"]')).toBeVisible({ timeout: 5000 })
-    await expect(page.locator('[data-test="negociation-prix-input"]')).toHaveValue('40')
+    await expect(page.locator('[data-test="proposed-price"]')).toHaveValue('40')
 
     // Click submit button
     await page.locator('[data-test="negociation-submit-btn"]').click()
@@ -329,18 +321,13 @@ test.describe('Page Demandes', () => {
   })
 
   test('affiche état vide quand pas de trajet actif', async ({ page }) => {
-    // Mock no trips available
-    await page.route('http://localhost:8080/api/v1/travelers/me/announcements*', (route) =>
+    // Mock no matching requests — activeTrips is derived from matching-requests
+    // (grouped by tripId), not from the announcements list.
+    await page.route('http://localhost:8080/api/v1/travelers/me/matching-requests*', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          content: [],
-          totalElements: 0,
-          totalPages: 0,
-          number: 0,
-          size: 50,
-        }),
+        body: JSON.stringify([]),
       }),
     )
 

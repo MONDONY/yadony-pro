@@ -26,18 +26,19 @@ async function mockApi(page: import('@playwright/test').Page) {
   await page.route('**/announcements**', async (route) => {
     const fakeTrips = [
       {
-        id: 'trip-1', status: 'ACTIVE',
-        departureCity: { placeId: 'p1', label: 'Paris', lat: 48.85, lng: 2.35 },
-        arrivalCity: { placeId: 'p2', label: 'Dakar', lat: 14.69, lng: -17.44 },
+        id: 'trip-1', travelerId: 'user-1', status: 'ACTIVE',
+        departureCity: 'Paris', arrivalCity: 'Dakar',
         departureDate: '2026-08-01', departureTime: '10:00', arrivalTime: null,
         transportMode: 'AVION',
-        pickupPlace: { placeId: 'pk', label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
-        dropoffPlace: { placeId: 'dr', label: 'Aéroport DSS', lat: 14.73, lng: -17.49 },
-        availableWeightKg: 20, usedWeightKg: 15, pricePerKg: 7,
-        acceptedCategories: ['Vêtements'], refusedCategories: [],
+        pickupAddress: { label: '12 rue de la Paix', lat: 48.86, lng: 2.33 },
+        deliveryAddress: { label: 'Aéroport DSS', lat: 14.73, lng: -17.49 },
+        availableKg: 20, totalKg: 35, pricePerKg: 7,
+        acceptedContentTypes: ['Vêtements'], refusedTypes: [],
         senderNote: null, cashAccepted: false,
-        confirmedParcelCount: 3, pendingBidCount: 2, reservedRevenueEuros: 105,
-        createdAt: '2026-05-01T00:00:00Z',
+        acceptedPaymentMethods: ['STRIPE'],
+        handoverWindowStart: '2026-08-01T08:00:00Z', handoverWindowEnd: '2026-08-01T09:30:00Z',
+        confirmedParcelCount: 3, pendingBidCount: 2,
+        createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-05-01T00:00:00Z',
       },
     ]
 
@@ -45,7 +46,7 @@ async function mockApi(page: import('@playwright/test').Page) {
       const body = route.request().postDataJSON()
       await route.fulfill({
         status: 201, contentType: 'application/json',
-        body: JSON.stringify({ ...fakeTrips[0], id: 'trip-new', status: body.status }),
+        body: JSON.stringify({ ...fakeTrips[0], id: 'trip-new', status: body.saveAsDraft ? 'DRAFT' : 'ACTIVE' }),
       })
       return
     }
@@ -76,15 +77,15 @@ async function mockApi(page: import('@playwright/test').Page) {
   })
 }
 
-/** Navigate to /trajets via client-side navigation from the home page.
- *  The home page is used as the entry point so that Firebase initialises once
+/** Navigate to /trajets via client-side navigation from the authenticated dashboard.
+ *  /cockpit is used as the entry point so that Firebase initialises once
  *  (client-side plugin) and the auth seed is picked up by expose-auth.client.ts.
  *  We then follow the sidebar "Mes Trajets" link rather than doing a hard reload
  *  of /trajets, which avoids re-triggering Firebase's internal token-refresh flow.
  *  After navigation we wait for a TripCard to confirm the API data is loaded.
  */
 async function gotoTrajets(page: import('@playwright/test').Page) {
-  await page.goto('/')
+  await page.goto('/cockpit')
   await page.getByRole('link', { name: 'Mes Trajets' }).first().click()
   await page.waitForURL(/\/trajets$/)
   // Wait for the initial fetchTrips() to complete and render at least one TripCard
@@ -95,7 +96,7 @@ async function gotoTrajets(page: import('@playwright/test').Page) {
  *  Wait for the form title heading to confirm the form has mounted.
  */
 async function gotoNouvelleAnnonce(page: import('@playwright/test').Page) {
-  await page.goto('/')
+  await page.goto('/cockpit')
   await page.locator('[data-test="btn-nouvelle-annonce"]').first().click()
   await page.waitForURL(/\/trajets\/nouvelle-annonce$/)
   // Wait for the form section headings to appear
@@ -161,8 +162,8 @@ test.describe('Nouvelle annonce — Formulaire', () => {
 
   test('selecting transport mode chip marks it active', async ({ page }) => {
     await gotoNouvelleAnnonce(page)
-    await page.locator('[data-test="transport-AVION"]').click()
-    await expect(page.locator('[data-test="transport-AVION"]')).toHaveClass(/border-primary/)
+    await page.locator('[data-test="transport-PLANE"]').click()
+    await expect(page.locator('[data-test="transport-PLANE"]')).toHaveClass(/border-primary/)
   })
 
   test('cash toggle changes aria-pressed state', async ({ page }) => {

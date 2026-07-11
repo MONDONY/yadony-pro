@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { XCircle, Plane } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
@@ -54,6 +54,13 @@ const canSubmit = computed(() =>
   proposedPrice.value > 0 && proposedPrice.value <= 500 && !isLoading.value,
 )
 
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.request) emit('close')
+}
+
+onMounted(() => document.addEventListener('keydown', handleKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
+
 async function submit() {
   if (!props.request || !canSubmit.value) return
   isLoading.value = true
@@ -90,7 +97,7 @@ async function submit() {
         <!-- Header -->
         <div class="flex items-start justify-between gap-3 px-5 pt-5 pb-4 border-b border-border">
           <div>
-            <h3 class="font-semibold text-text">Négocier avec {{ request.senderName }}</h3>
+            <h3 class="font-semibold text-text">Négocier avec <span data-test="negociation-sender-name">{{ request.senderName }}</span></h3>
             <p class="text-xs text-text-muted mt-0.5">{{ request.tripCorridor }}</p>
           </div>
           <button class="text-text-muted hover:text-text p-1 transition-colors -mr-1" type="button" @click="emit('close')">
@@ -102,7 +109,7 @@ async function submit() {
         <div class="bg-bg px-5 py-3 border-b border-border">
           <SectionLabel class="mb-2">La demande</SectionLabel>
           <div class="flex gap-4 text-xs">
-            <div>
+            <div data-test="negociation-weight">
               <span class="text-text-muted">Poids</span>
               <p class="font-mono font-semibold text-text mt-0.5 tabular-nums">{{ request.weightKg }} kg</p>
             </div>
