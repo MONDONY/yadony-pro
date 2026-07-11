@@ -147,27 +147,15 @@ async function mockApi(page: import('@playwright/test').Page) {
     }),
   )
 
-  // Mock matching requests for active trip
-  await page.route('http://localhost:8080/api/v1/travelers/me/matching-requests*', (route) => {
-    const url = new URL(route.request().url())
-    const tripId = url.searchParams.get('tripId')
-
-    // If tripId filter matches, return filtered results
-    if (tripId === 'trip-e2e-001') {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(FAKE_MATCHING_REQUESTS),
-      })
-    }
-
-    // Default: empty list
-    return route.fulfill({
+  // Mock matching requests — fetched unfiltered, then filtered client-side by
+  // MatchingDashboard.vue based on the trip selected in TripSelector.
+  await page.route('http://localhost:8080/api/v1/travelers/me/matching-requests*', (route) =>
+    route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([]),
-    })
-  })
+      body: JSON.stringify(FAKE_MATCHING_REQUESTS),
+    }),
+  )
 
   // Mock negotiation creation (POST /api/v1/negotiations)
   await page.route('http://localhost:8080/api/v1/negotiations', (route) => {
@@ -333,18 +321,13 @@ test.describe('Page Demandes', () => {
   })
 
   test('affiche état vide quand pas de trajet actif', async ({ page }) => {
-    // Mock no trips available
-    await page.route('http://localhost:8080/api/v1/announcements/my*', (route) =>
+    // Mock no matching requests — activeTrips is derived from matching-requests
+    // (grouped by tripId), not from the announcements list.
+    await page.route('http://localhost:8080/api/v1/travelers/me/matching-requests*', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          content: [],
-          totalElements: 0,
-          totalPages: 0,
-          number: 0,
-          size: 50,
-        }),
+        body: JSON.stringify([]),
       }),
     )
 
