@@ -14,6 +14,7 @@ import {
   Gift,
   UserCircle,
   Settings,
+  ShieldAlert,
   Plus,
   Repeat,
 } from 'lucide-vue-next'
@@ -97,6 +98,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/notifications" label="Notifications">
         <template #icon><Bell class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/litiges" label="Litiges">
+        <template #icon><ShieldAlert class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/parrainage" label="Parrainage">
         <template #icon><Gift class="w-4 h-4" /></template>
