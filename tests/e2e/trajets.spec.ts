@@ -162,8 +162,8 @@ test.describe('Nouvelle annonce — Formulaire', () => {
 
   test('selecting transport mode chip marks it active', async ({ page }) => {
     await gotoNouvelleAnnonce(page)
-    await page.locator('[data-test="transport-AVION"]').click()
-    await expect(page.locator('[data-test="transport-AVION"]')).toHaveClass(/border-primary/)
+    await page.locator('[data-test="transport-PLANE"]').click()
+    await expect(page.locator('[data-test="transport-PLANE"]')).toHaveClass(/border-primary/)
   })
 
   test('cash toggle changes aria-pressed state', async ({ page }) => {

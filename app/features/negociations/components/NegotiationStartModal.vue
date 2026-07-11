@@ -90,7 +90,7 @@ async function submit() {
         <!-- Header -->
         <div class="flex items-start justify-between gap-3 px-5 pt-5 pb-4 border-b border-border">
           <div>
-            <h3 class="font-semibold text-text">Négocier avec {{ request.senderName }}</h3>
+            <h3 class="font-semibold text-text">Négocier avec <span data-test="negociation-sender-name">{{ request.senderName }}</span></h3>
             <p class="text-xs text-text-muted mt-0.5">{{ request.tripCorridor }}</p>
           </div>
           <button class="text-text-muted hover:text-text p-1 transition-colors -mr-1" type="button" @click="emit('close')">
@@ -102,7 +102,7 @@ async function submit() {
         <div class="bg-bg px-5 py-3 border-b border-border">
           <SectionLabel class="mb-2">La demande</SectionLabel>
           <div class="flex gap-4 text-xs">
-            <div>
+            <div data-test="negociation-weight">
               <span class="text-text-muted">Poids</span>
               <p class="font-mono font-semibold text-text mt-0.5 tabular-nums">{{ request.weightKg }} kg</p>
             </div>

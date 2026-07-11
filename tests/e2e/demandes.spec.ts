@@ -275,10 +275,10 @@ test.describe('Page Demandes', () => {
     // Modal should show request summary
     await expect(page.locator('[data-test="negociation-sender-name"]')).toBeVisible()
     await expect(page.locator('[data-test="negociation-weight"]')).toBeVisible()
-    await expect(page.locator('[data-test="negociation-prix-input"]')).toBeVisible()
+    await expect(page.locator('[data-test="proposed-price"]')).toBeVisible()
 
     // Verify suggested price is pre-filled (weightKg * budgetPerKg)
-    const priceInput = page.locator('[data-test="negociation-prix-input"]')
+    const priceInput = page.locator('[data-test="proposed-price"]')
     const priceValue = await priceInput.inputValue()
     expect(parseInt(priceValue || '0')).toBeGreaterThan(0)
   })
@@ -292,7 +292,7 @@ test.describe('Page Demandes', () => {
 
     // Modal appears and pre-fills suggested price
     await expect(page.locator('[data-test="negociation-modal"]')).toBeVisible({ timeout: 5000 })
-    await expect(page.locator('[data-test="negociation-prix-input"]')).toHaveValue('40')
+    await expect(page.locator('[data-test="proposed-price"]')).toHaveValue('40')
 
     // Click submit button
     await page.locator('[data-test="negociation-submit-btn"]').click()
