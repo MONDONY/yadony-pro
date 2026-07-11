@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './tests/e2e/global-setup.ts',
   fullyParallel: false,
   // 45s : le premier hit sur une route lourde (ex. /demandes) déclenche la
   // compilation à froid du chunk Nuxt dev (dashboard + modal négociation),
