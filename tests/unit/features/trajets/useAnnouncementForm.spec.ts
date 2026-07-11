@@ -3,12 +3,14 @@ import { createPinia, setActivePinia } from 'pinia'
 
 const mockCreate = vi.fn()
 const mockUpdate = vi.fn()
+const mockPublish = vi.fn()
 
 vi.mock('@/features/trajets/services/tripsService', () => ({
   tripsService: () => ({
     listTrips: vi.fn(),
     createAnnouncement: mockCreate,
     updateAnnouncement: mockUpdate,
+    publishAnnouncement: mockPublish,
     getTemplates: vi.fn().mockResolvedValue([]),
   }),
 }))
@@ -258,7 +260,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    const result = await submitEdit('trip-edit')
+    const result = await submitEdit('trip-edit', 'PUBLISHED')
     expect(mockUpdate).toHaveBeenCalledWith('trip-edit', expect.objectContaining({ transportMode: 'AVION', departureDate: '2026-07-01' }))
     expect(result.id).toBe('trip-edit')
   })
@@ -266,6 +268,53 @@ describe('useAnnouncementForm', () => {
   it('submitEdit throws when form is invalid', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { submitEdit } = useAnnouncementForm()
-    await expect(submitEdit('trip-x')).rejects.toThrow('Formulaire invalide')
+    await expect(submitEdit('trip-x', 'DRAFT')).rejects.toThrow('Formulaire invalide')
+  })
+
+  it('submitEdit publie le trajet quand le statut visé est PUBLISHED et que l’update retourne un brouillon', async () => {
+    mockUpdate.mockResolvedValue({ id: 'trip-draft', status: 'DRAFT' })
+    mockPublish.mockResolvedValue({ id: 'trip-draft', status: 'PUBLISHED' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submitEdit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-07-01'
+    form.transportMode = 'AVION'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    const result = await submitEdit('trip-draft', 'PUBLISHED')
+    expect(mockUpdate).toHaveBeenCalledWith('trip-draft', expect.objectContaining({ transportMode: 'AVION' }))
+    expect(mockPublish).toHaveBeenCalledWith('trip-draft')
+    expect(result.status).toBe('PUBLISHED')
+  })
+
+  it('submitEdit ne republie pas un trajet dont l’update retourne déjà le statut ACTIVE', async () => {
+    mockUpdate.mockResolvedValue({ id: 'trip-active', status: 'ACTIVE' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submitEdit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-07-01'
+    form.transportMode = 'AVION'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    const result = await submitEdit('trip-active', 'PUBLISHED')
+    expect(mockPublish).not.toHaveBeenCalled()
+    expect(result.status).toBe('ACTIVE')
+  })
+
+  it('submitEdit n’appelle jamais publishAnnouncement quand le statut visé est DRAFT', async () => {
+    mockUpdate.mockResolvedValue({ id: 'trip-draft2', status: 'DRAFT' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submitEdit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-07-01'
+    form.transportMode = 'AVION'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    const result = await submitEdit('trip-draft2', 'DRAFT')
+    expect(mockPublish).not.toHaveBeenCalled()
+    expect(result.status).toBe('DRAFT')
   })
 })

@@ -53,6 +53,7 @@ const submitErrorMessages: Record<string, string> = {
   'pro-limit-reached': 'Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.',
   'kyc-not-verified': 'Vérifiez votre identité (KYC) dans les paramètres avant de publier un trajet.',
   'publishing-suspended': 'La publication est suspendue sur votre compte. Contactez le support.',
+  'departure-date-passed': 'La date de départ est passée. Corrigez-la avant de publier.',
 }
 
 const today = new Date()
@@ -135,7 +136,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
   isSubmitting.value = true
   try {
     const trip = props.editTripId
-      ? await submitEdit(props.editTripId)
+      ? await submitEdit(props.editTripId, status)
       : await submit(status)
     emit('submitted', trip)
   } catch (e) {

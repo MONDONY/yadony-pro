@@ -87,12 +87,16 @@ export function useAnnouncementForm() {
     return svc.createAnnouncement(buildPayload(), { saveAsDraft: status === 'DRAFT' })
   }
 
-  async function submitEdit(tripId: string): Promise<Trip> {
+  async function submitEdit(tripId: string, status: 'DRAFT' | 'PUBLISHED'): Promise<Trip> {
     const errors = validate()
     if (Object.keys(errors).length > 0) {
       throw new Error('Formulaire invalide')
     }
-    return svc.updateAnnouncement(tripId, buildPayload())
+    const updated = await svc.updateAnnouncement(tripId, buildPayload())
+    if (status === 'PUBLISHED' && updated.status === 'DRAFT') {
+      return svc.publishAnnouncement(tripId)
+    }
+    return updated
   }
 
   function applyTemplate(trip: Trip): void {
