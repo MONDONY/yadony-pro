@@ -6,6 +6,10 @@ import { cn } from '@/lib/utils'
 const props = defineProps<{
   modelValue: string[]
   presets?: string[]
+  // Emoji d'affichage par label (facultatif). La valeur émise reste toujours
+  // le label seul — jamais l'emoji ni "emoji + label" — car c'est cette
+  // valeur qui est persistée et comparée à bid.contentCategory côté backend.
+  presetEmojis?: Record<string, string>
   placeholder?: string
 }>()
 
@@ -56,7 +60,7 @@ function onKeydown(e: KeyboardEvent) {
         )"
         @click="toggle(tag)"
       >
-        {{ tag }}
+        <span v-if="presetEmojis?.[tag]" class="mr-1" aria-hidden="true">{{ presetEmojis[tag] }}</span>{{ tag }}
       </button>
     </div>
 

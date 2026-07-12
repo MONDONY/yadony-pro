@@ -4,7 +4,7 @@ import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
 import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
-import { configService } from '@/features/trajets/services/configService'
+import { configService, type ContentCategory } from '@/features/trajets/services/configService'
 import { tripTemplateService } from '@/features/trajets/services/tripTemplateService'
 import type { UserTripTemplate } from '@/features/trajets/types/index'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
@@ -47,6 +47,8 @@ const templates = ref<Trip[]>([])
 const showTemplates = ref(false)
 const selectedTemplateId = ref<string | null>(null)
 const acceptedPresets = ref<string[]>([])
+const refusedPresets = ref<string[]>([])
+const presetEmojis = ref<Record<string, string>>({})
 
 const submitErrorMessages: Record<string, string> = {
   'draft-limit-reached': 'Limite de brouillons atteinte. Passez en PRO pour en créer davantage.',
@@ -68,16 +70,25 @@ const maxDate = computed(() => {
   return d.toISOString().split('T')[0]
 })
 
-const REFUSED_PRESETS: string[] = []
-
 onMounted(async () => {
+  // Chaque appel a son propre repli : un échec réseau sur l'un (notamment le
+  // catalogue de contenus) ne doit JAMAIS court-circuiter la suite du montage —
+  // sinon le prefill d'édition (applyTemplate ci-dessous) ne s'appliquerait pas
+  // et l'écran « modifier un trajet » s'afficherait vide, avec risque d'écraser
+  // les données du trajet en soumettant par-dessus.
   const [fetchedTemplates, fetchedCategories, fetchedMyTemplates] = await Promise.all([
-    fetchTemplates(),
-    fetchContentCategories(),
+    fetchTemplates().catch(() => [] as Trip[]),
+    fetchContentCategories().catch(() => [] as ContentCategory[]),
     tplSvc.list().catch(() => [] as UserTripTemplate[]),
   ])
   templates.value = fetchedTemplates
-  acceptedPresets.value = fetchedCategories
+  // La valeur persistée / émise par les chips est toujours le label — jamais
+  // le code, jamais l'emoji — car c'est ce label qui est comparé à
+  // bid.contentCategory par le moteur de matching backend.
+  const categoryLabels = fetchedCategories.map((c) => c.label)
+  acceptedPresets.value = categoryLabels
+  refusedPresets.value = categoryLabels
+  presetEmojis.value = Object.fromEntries(fetchedCategories.map((c) => [c.label, c.emoji]))
   myTemplates.value = fetchedMyTemplates
   if (props.prefill) {
     applyTemplate(props.prefill)
@@ -440,6 +451,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <ContentTagChips
           v-model="form.acceptedCategories"
           :presets="acceptedPresets"
+          :preset-emojis="presetEmojis"
           placeholder="Ajouter une catégorie…"
         />
       </div>
@@ -447,7 +459,8 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <label class="block text-sm font-medium text-text mb-3">Ce que je refuse</label>
         <ContentTagChips
           v-model="form.refusedCategories"
-          :presets="REFUSED_PRESETS"
+          :presets="refusedPresets"
+          :preset-emojis="presetEmojis"
           placeholder="Ex : Liquides, matières dangereuses…"
         />
       </div>

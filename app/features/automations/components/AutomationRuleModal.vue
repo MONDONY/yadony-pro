@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { X, Plus, Trash2 } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import { configService, type ContentCategory } from '@/features/trajets/services/configService'
 import type {
   CustomRule,
   ConditionField,
@@ -22,10 +23,42 @@ const emit = defineEmits<{
   'save': [payload: CreateCustomRulePayload]
 }>()
 
+// Option sentinelle du <select> des types de contenu qui bascule sur la
+// saisie libre. Ne collisionne jamais avec le catalogue (aucun libellé ne
+// s'appelle « Autre valeur… »).
+const OTHER_CONTENT_TYPE_OPTION = 'Autre valeur…'
+
 const name = ref('')
 const conditions = ref<RuleCondition[]>([])
 const action = ref<RuleAction>({ type: 'auto_accept' })
 const validationError = ref<string | null>(null)
+
+// Catalogue des types de contenu (Task 3). Chargé une fois à l'ouverture du
+// modal ; en cas d'échec on retombe silencieusement sur la saisie libre au
+// lieu de bloquer la création de règle.
+const contentCategories = ref<ContentCategory[]>([])
+const contentCategoriesFailed = ref(false)
+// Un booléen par condition : true → saisie libre affichée pour content_type
+// (soit parce que l'utilisateur a choisi « Autre valeur… », soit parce que
+// la valeur existante ne correspond à aucun libellé du catalogue).
+const customContentTypeMode = ref<boolean[]>([])
+
+function isCatalogLabel(value: string): boolean {
+  return contentCategories.value.some((c) => c.label === value)
+}
+
+function computeCustomMode(condition: RuleCondition): boolean {
+  return condition.field === 'content_type' && !!condition.value && !isCatalogLabel(condition.value)
+}
+
+onMounted(async () => {
+  try {
+    contentCategories.value = await configService().fetchContentCategories()
+    customContentTypeMode.value = conditions.value.map(computeCustomMode)
+  } catch {
+    contentCategoriesFailed.value = true
+  }
+})
 
 const conditionFieldOptions: Array<{ value: ConditionField; label: string }> = [
   { value: 'sender_rating', label: 'Note expéditeur' },
@@ -64,6 +97,7 @@ watch(
         conditions.value = []
         action.value = { type: 'auto_accept' }
       }
+      customContentTypeMode.value = conditions.value.map(computeCustomMode)
       validationError.value = null
     }
   },
@@ -75,10 +109,32 @@ function addCondition(): void {
     ...conditions.value,
     { field: 'sender_rating', operator: 'gte', value: '' },
   ]
+  customContentTypeMode.value = [...customContentTypeMode.value, false]
 }
 
 function removeCondition(index: number): void {
   conditions.value = conditions.value.filter((_, i) => i !== index)
+  customContentTypeMode.value = customContentTypeMode.value.filter((_, i) => i !== index)
+}
+
+// Changer de champ doit toujours réinitialiser la valeur : on ne veut pas
+// garder un « 4.5 » (note expéditeur) sur une condition de type de contenu.
+function onFieldChange(index: number): void {
+  const condition = conditions.value[index]
+  if (!condition) return
+  condition.value = ''
+  customContentTypeMode.value[index] = false
+}
+
+function onContentTypeSelectChange(index: number, value: string): void {
+  const condition = conditions.value[index]
+  if (!condition) return
+  if (value === OTHER_CONTENT_TYPE_OPTION) {
+    customContentTypeMode.value[index] = true
+    condition.value = ''
+  } else {
+    condition.value = value
+  }
 }
 
 function submit(): void {
@@ -201,6 +257,7 @@ function submit(): void {
                   v-model="condition.field"
                   :data-test="`condition-field-${index}`"
                   class="flex-1 h-9 px-2 rounded-input bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                  @change="onFieldChange(index)"
                 >
                   <option v-for="opt in conditionFieldOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
@@ -217,7 +274,21 @@ function submit(): void {
                   </option>
                 </select>
 
+                <select
+                  v-if="condition.field === 'content_type' && !contentCategoriesFailed && !customContentTypeMode[index]"
+                  :data-test="`condition-value-${index}`"
+                  :value="condition.value"
+                  class="w-28 h-9 px-2 rounded-input bg-surface border border-border text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                  @change="onContentTypeSelectChange(index, ($event.target as HTMLSelectElement).value)"
+                >
+                  <option value="" disabled>Sélectionner…</option>
+                  <option v-for="cat in contentCategories" :key="cat.code" :value="cat.label">
+                    {{ cat.label }}
+                  </option>
+                  <option :value="OTHER_CONTENT_TYPE_OPTION">{{ OTHER_CONTENT_TYPE_OPTION }}</option>
+                </select>
                 <input
+                  v-else
                   v-model="condition.value"
                   :data-test="`condition-value-${index}`"
                   type="text"
