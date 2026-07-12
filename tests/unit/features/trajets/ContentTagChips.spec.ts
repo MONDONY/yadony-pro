@@ -40,4 +40,27 @@ describe('ContentTagChips', () => {
     expect(emitted).toBeTruthy()
     expect((emitted![0] as unknown[])[0]).toEqual(['Poissons'])
   })
+
+  it('recliquer sur un preset déjà sélectionné le retire (toggle off)', async () => {
+    const wrapper = mount(ContentTagChips, {
+      props: { modelValue: ['Documents & administratif'], presets: ['Documents & administratif'] },
+    })
+    const docButton = wrapper.findAll('button').find((b) => b.text().includes('Documents & administratif'))
+    await docButton!.trigger('click')
+    const emitted = wrapper.emitted('update:modelValue')
+    expect(emitted).toBeTruthy()
+    expect((emitted![0] as unknown[])[0]).toEqual([])
+  })
+
+  it('affiche les valeurs libres déjà sélectionnées avec un bouton de suppression', async () => {
+    const wrapper = mount(ContentTagChips, {
+      props: { modelValue: ['Poissons'], presets: ['Documents & administratif'] },
+    })
+    const removeButton = wrapper.find('button.hover\\:text-danger')
+    expect(removeButton.exists()).toBe(true)
+    await removeButton.trigger('click')
+    const emitted = wrapper.emitted('update:modelValue')
+    expect(emitted).toBeTruthy()
+    expect((emitted![0] as unknown[])[0]).toEqual([])
+  })
 })
