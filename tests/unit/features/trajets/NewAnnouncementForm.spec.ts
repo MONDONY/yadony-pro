@@ -67,11 +67,11 @@ vi.mock('@/features/trajets/components/PriceOptionCards.vue', () => ({
   default: { template: '<div />', props: ['modelValue', 'commissionRate'] },
 }))
 
-async function mountForm() {
+async function mountForm(props: Record<string, unknown> = {}) {
   const { default: NewAnnouncementForm } = await import(
     '@/features/trajets/components/NewAnnouncementForm.vue'
   )
-  const wrapper = mount(NewAnnouncementForm, { attachTo: document.body })
+  const wrapper = mount(NewAnnouncementForm, { attachTo: document.body, props })
   await flushPromises()
   return wrapper
 }
@@ -85,6 +85,45 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
     mockTplList.mockResolvedValue([])
     mockTplCreate.mockResolvedValue(undefined)
     mockTplRemove.mockResolvedValue(undefined)
+  })
+
+  it("un échec du catalogue ne bloque ni le formulaire ni le pré-remplissage d'édition", async () => {
+    // Échec réseau sur /config/content-categories : le formulaire doit quand même
+    // se monter, les chips retomber sur des presets vides (saisie libre seule), et
+    // SURTOUT le prefill d'édition doit être appliqué — sinon l'écran « modifier un
+    // trajet » s'affiche vide et l'utilisateur risque d'écraser ses données.
+    mockFetchContentCategories.mockRejectedValue(new Error('network down'))
+    const prefill = {
+      id: 't-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureTime: '08:00',
+      arrivalTime: '14:30',
+      transportMode: 'PLANE',
+      pickupPlace: 'CDG',
+      dropoffPlace: 'DSS',
+      availableWeightKg: 20,
+      capacityUnit: 'SUITCASE_23KG',
+      pricePerKg: 9,
+      acceptedCategories: ['Vêtements & tissus'],
+      refusedCategories: ['Poissons'],
+      senderNote: '',
+      cashAccepted: false,
+      handoverWindowStart: null,
+      handoverWindowEnd: null,
+    }
+    const wrapper = await mountForm({ prefill })
+    const { default: ContentTagChips } = await import(
+      '@/features/trajets/components/ContentTagChips.vue'
+    )
+    const chips = wrapper.findAllComponents(ContentTagChips)
+    expect(chips.length).toBe(2)
+    // repli : presets vides, pas de crash
+    expect(chips[0]!.props('presets')).toEqual([])
+    // le prefill a bien été appliqué malgré l'échec du catalogue
+    expect(chips[0]!.props('modelValue')).toEqual(['Vêtements & tissus'])
+    expect(chips[1]!.props('modelValue')).toEqual(['Poissons'])
+    wrapper.unmount()
   })
 
   it('passe les labels du catalogue en presets des chips acceptées', async () => {

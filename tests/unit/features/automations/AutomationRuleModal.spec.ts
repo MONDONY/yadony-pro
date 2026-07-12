@@ -64,6 +64,23 @@ describe('AutomationRuleModal', () => {
     wrapper.unmount()
   })
 
+  it('une règle existante avec une valeur content_type hors catalogue retombe sur le champ libre pré-rempli', async () => {
+    // Cas legacy : règle créée avant la migration du vocabulaire, value = 'Vêtements'
+    // (libellé pré-migration, absent du catalogue canonique). Le select ne doit pas
+    // s'afficher cassé : le modal doit basculer en mode saisie libre, input pré-rempli
+    // avec la valeur EXACTE — sauvegarder sans toucher ne doit pas corrompre la règle.
+    const legacyRule = {
+      ...fakeCustomRule,
+      conditions: [{ field: 'content_type' as const, operator: 'eq' as const, value: 'Vêtements' }],
+    }
+    const wrapper = await mountModal({ modelValue: true, rule: legacyRule })
+    const valueField = wrapper.find('[data-test="condition-value-0"]')
+    expect(valueField.exists()).toBe(true)
+    expect(valueField.element.tagName).toBe('INPUT')
+    expect((valueField.element as HTMLInputElement).value).toBe('Vêtements')
+    wrapper.unmount()
+  })
+
   it('pre-fills name and conditions when a rule prop is provided', async () => {
     const wrapper = await mountModal({ modelValue: true, rule: fakeCustomRule })
     const nameInput = wrapper.find('[data-test="rule-name-input"]')

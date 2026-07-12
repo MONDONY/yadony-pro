@@ -4,7 +4,7 @@ import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
 import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
-import { configService } from '@/features/trajets/services/configService'
+import { configService, type ContentCategory } from '@/features/trajets/services/configService'
 import { tripTemplateService } from '@/features/trajets/services/tripTemplateService'
 import type { UserTripTemplate } from '@/features/trajets/types/index'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
@@ -71,9 +71,14 @@ const maxDate = computed(() => {
 })
 
 onMounted(async () => {
+  // Chaque appel a son propre repli : un échec réseau sur l'un (notamment le
+  // catalogue de contenus) ne doit JAMAIS court-circuiter la suite du montage —
+  // sinon le prefill d'édition (applyTemplate ci-dessous) ne s'appliquerait pas
+  // et l'écran « modifier un trajet » s'afficherait vide, avec risque d'écraser
+  // les données du trajet en soumettant par-dessus.
   const [fetchedTemplates, fetchedCategories, fetchedMyTemplates] = await Promise.all([
-    fetchTemplates(),
-    fetchContentCategories(),
+    fetchTemplates().catch(() => [] as Trip[]),
+    fetchContentCategories().catch(() => [] as ContentCategory[]),
     tplSvc.list().catch(() => [] as UserTripTemplate[]),
   ])
   templates.value = fetchedTemplates
