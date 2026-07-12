@@ -43,6 +43,7 @@ export interface PresetRuleConfig {
   minRating?: number
   minFreeKg?: number
   minFreeHours?: number
+  hoursBeforeDeparture?: number
 }
 
 export interface PresetRule {

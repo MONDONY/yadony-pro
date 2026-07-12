@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import type { PresetRule } from '@/features/automations/types/index'
+import type { PresetRule, PresetRuleConfig } from '@/features/automations/types/index'
 
 const props = defineProps<{
   rule: PresetRule
@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'toggle': [id: string]
+  'update-config': [id: string, config: PresetRuleConfig]
 }>()
 
 const ruleDescriptionMap: Record<string, string> = {
@@ -31,6 +32,13 @@ const ruleDescriptionMap: Record<string, string> = {
 const description = computed(
   () => ruleDescriptionMap[props.rule.id] ?? props.rule.description,
 )
+
+const localConfig = ref<PresetRuleConfig>({ ...props.rule.config })
+watch(() => props.rule.config, (c) => { localConfig.value = { ...c } })
+
+function saveConfig() {
+  emit('update-config', props.rule.id, { ...localConfig.value })
+}
 </script>
 
 <template>
@@ -72,9 +80,51 @@ const description = computed(
         <Badge v-else variant="neutral" size="sm">Inactive</Badge>
       </div>
       <p class="text-xs text-text-muted leading-relaxed">{{ description }}</p>
-      <p v-if="rule.isConfigurable" class="text-xs text-primary/70 font-medium">
-        Seuil configurable via l'API
-      </p>
+
+      <div v-if="rule.isConfigurable" class="mt-2 flex flex-wrap items-end gap-3">
+        <div v-if="rule.id === 'auto_accept_trusted'">
+          <label class="block text-2xs text-text-muted mb-0.5">Note minimum</label>
+          <input
+            v-model.number="localConfig.minRating"
+            type="number" min="1" max="5" step="0.1"
+            data-test="config-min-rating"
+            class="w-20 rounded-input border border-border-strong bg-surface px-2 py-1 text-sm"
+            @change="saveConfig"
+          />
+        </div>
+        <template v-if="rule.id === 'alert_capacity_free'">
+          <div>
+            <label class="block text-2xs text-text-muted mb-0.5">kg libres</label>
+            <input
+              v-model.number="localConfig.minFreeKg"
+              type="number" min="1" step="1"
+              data-test="config-min-free-kg"
+              class="w-20 rounded-input border border-border-strong bg-surface px-2 py-1 text-sm"
+              @change="saveConfig"
+            />
+          </div>
+          <div>
+            <label class="block text-2xs text-text-muted mb-0.5">heures consécutives</label>
+            <input
+              v-model.number="localConfig.minFreeHours"
+              type="number" min="1" step="1"
+              data-test="config-min-free-hours"
+              class="w-20 rounded-input border border-border-strong bg-surface px-2 py-1 text-sm"
+              @change="saveConfig"
+            />
+          </div>
+        </template>
+        <div v-if="rule.id === 'alert_last_minute_bid'">
+          <label class="block text-2xs text-text-muted mb-0.5">heures avant départ</label>
+          <input
+            v-model.number="localConfig.hoursBeforeDeparture"
+            type="number" min="1" step="1"
+            data-test="config-hours-before-departure"
+            class="w-20 rounded-input border border-border-strong bg-surface px-2 py-1 text-sm"
+            @change="saveConfig"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>

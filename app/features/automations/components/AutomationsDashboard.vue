@@ -8,7 +8,7 @@ import PresetRuleCard from '@/features/automations/components/PresetRuleCard.vue
 import CustomRuleCard from '@/features/automations/components/CustomRuleCard.vue'
 import AutomationHistoryItem from '@/features/automations/components/AutomationHistoryItem.vue'
 import AutomationRuleModal from '@/features/automations/components/AutomationRuleModal.vue'
-import type { CustomRule, CreateCustomRulePayload } from '@/features/automations/types/index'
+import type { CustomRule, CreateCustomRulePayload, PresetRuleConfig } from '@/features/automations/types/index'
 
 const {
   presetRules,
@@ -17,6 +17,7 @@ const {
   error: rulesError,
   fetchRules,
   togglePreset,
+  updatePresetConfig,
   saveCustomRule,
   deleteCustomRule,
 } = useAutomations()
@@ -41,6 +42,15 @@ async function handleTogglePreset(id: string): Promise<void> {
   isUpdatingPreset.value = id
   try {
     await togglePreset(id)
+  } finally {
+    isUpdatingPreset.value = null
+  }
+}
+
+async function handleUpdatePresetConfig(id: string, config: PresetRuleConfig): Promise<void> {
+  isUpdatingPreset.value = id
+  try {
+    await updatePresetConfig(id, config)
   } finally {
     isUpdatingPreset.value = null
   }
@@ -120,6 +130,7 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
             :rule="rule"
             :is-updating="isUpdatingPreset === rule.id"
             @toggle="handleTogglePreset"
+            @update-config="handleUpdatePresetConfig"
           />
           <p
             v-if="presetRules.length === 0"

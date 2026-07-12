@@ -7,6 +7,7 @@ import type {
   AutomationRule,
   CreateCustomRulePayload,
   UpdatePresetPayload,
+  PresetRuleConfig,
 } from '@/features/automations/types/index'
 
 export function useAutomations() {
@@ -44,6 +45,18 @@ export function useAutomations() {
     await fetchRules()
   }
 
+  async function updatePresetConfig(id: string, config: PresetRuleConfig): Promise<void> {
+    const preset = presetRules.value.find((r) => r.id === id)
+    if (!preset) return
+    const wireConfig: Record<string, number> = {}
+    if (config.minRating !== undefined) wireConfig.minRating = config.minRating
+    if (config.minFreeKg !== undefined) wireConfig.freedKgThreshold = config.minFreeKg
+    if (config.minFreeHours !== undefined) wireConfig.consecutiveHours = config.minFreeHours
+    if (config.hoursBeforeDeparture !== undefined) wireConfig.hoursBeforeDeparture = config.hoursBeforeDeparture
+    await svc.updateRule(id, { enabled: preset.enabled, config: wireConfig })
+    await fetchRules()
+  }
+
   async function saveCustomRule(
     payload: CreateCustomRulePayload,
     id?: string,
@@ -68,6 +81,7 @@ export function useAutomations() {
     error,
     fetchRules,
     togglePreset,
+    updatePresetConfig,
     saveCustomRule,
     deleteCustomRule,
   }
