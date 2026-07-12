@@ -32,6 +32,20 @@ describe('configService', () => {
     expect(mockApiFn).toHaveBeenCalledWith('/config/content-categories')
   })
 
+  it("tolère l'ancien contrat string[] (backend pas encore redéployé) en le normalisant", async () => {
+    // Fenêtre de déploiement : le backend d'avant la PR #100 renvoie encore
+    // ["Vêtements", …]. Le front doit afficher ces libellés (chips non vides)
+    // au lieu de rendre des chips à label undefined.
+    mockApiFn.mockResolvedValue(['Vêtements', 'Alimentation sèche'])
+    const { configService } = await import('@/features/trajets/services/configService')
+    const svc = configService()
+    const result = await svc.fetchContentCategories()
+    expect(result).toEqual([
+      { code: 'Vêtements', label: 'Vêtements', emoji: '' },
+      { code: 'Alimentation sèche', label: 'Alimentation sèche', emoji: '' },
+    ])
+  })
+
   it('renvoie des objets {code,label,emoji} et non plus des chaînes brutes', async () => {
     mockApiFn.mockResolvedValue(catalogSample)
     const { configService } = await import('@/features/trajets/services/configService')
