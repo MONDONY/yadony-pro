@@ -22,7 +22,7 @@ const PARIS = city('Paris', 48.8566, 2.3522)
 const LYON = city('Lyon', 45.764, 4.8357)
 const MARSEILLE = city('Marseille', 43.2965, 5.3698)
 
-const DEFAULT_CATEGORIES = ['Vêtements', 'Documents', 'Cosmétiques']
+const DEFAULT_CATEGORIES = ['Vêtements & tissus', 'Documents & administratif', 'Cosmétiques & parfums']
 
 /**
  * Modèles de trajet prédéfinis : corridor + transport + capacité + prix + contenu.

@@ -1,10 +1,16 @@
 import { useApi } from '@/composables/useApi'
 
+export interface ContentCategory {
+  code: string
+  label: string
+  emoji: string
+}
+
 export function configService() {
   const api = useApi()
 
-  async function fetchContentCategories(): Promise<string[]> {
-    return api<string[]>('/config/content-categories')
+  async function fetchContentCategories(): Promise<ContentCategory[]> {
+    return api<ContentCategory[]>('/config/content-categories')
   }
 
   return { fetchContentCategories }

@@ -47,6 +47,8 @@ const templates = ref<Trip[]>([])
 const showTemplates = ref(false)
 const selectedTemplateId = ref<string | null>(null)
 const acceptedPresets = ref<string[]>([])
+const refusedPresets = ref<string[]>([])
+const presetEmojis = ref<Record<string, string>>({})
 
 const submitErrorMessages: Record<string, string> = {
   'draft-limit-reached': 'Limite de brouillons atteinte. Passez en PRO pour en créer davantage.',
@@ -68,8 +70,6 @@ const maxDate = computed(() => {
   return d.toISOString().split('T')[0]
 })
 
-const REFUSED_PRESETS: string[] = []
-
 onMounted(async () => {
   const [fetchedTemplates, fetchedCategories, fetchedMyTemplates] = await Promise.all([
     fetchTemplates(),
@@ -77,7 +77,13 @@ onMounted(async () => {
     tplSvc.list().catch(() => [] as UserTripTemplate[]),
   ])
   templates.value = fetchedTemplates
-  acceptedPresets.value = fetchedCategories
+  // La valeur persistée / émise par les chips est toujours le label — jamais
+  // le code, jamais l'emoji — car c'est ce label qui est comparé à
+  // bid.contentCategory par le moteur de matching backend.
+  const categoryLabels = fetchedCategories.map((c) => c.label)
+  acceptedPresets.value = categoryLabels
+  refusedPresets.value = categoryLabels
+  presetEmojis.value = Object.fromEntries(fetchedCategories.map((c) => [c.label, c.emoji]))
   myTemplates.value = fetchedMyTemplates
   if (props.prefill) {
     applyTemplate(props.prefill)
@@ -440,6 +446,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <ContentTagChips
           v-model="form.acceptedCategories"
           :presets="acceptedPresets"
+          :preset-emojis="presetEmojis"
           placeholder="Ajouter une catégorie…"
         />
       </div>
@@ -447,7 +454,8 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <label class="block text-sm font-medium text-text mb-3">Ce que je refuse</label>
         <ContentTagChips
           v-model="form.refusedCategories"
-          :presets="REFUSED_PRESETS"
+          :presets="refusedPresets"
+          :preset-emojis="presetEmojis"
           placeholder="Ex : Liquides, matières dangereuses…"
         />
       </div>
