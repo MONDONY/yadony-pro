@@ -63,7 +63,7 @@ export function useCockpit() {
         severity: 'red',
         label: `${expiring.length} bid${expiring.length > 1 ? 's' : ''} expirant dans < 4h`,
         detail: 'Répondez rapidement pour ne pas perdre ces opportunités.',
-        actionLabel: 'Voir les bids',
+        actionLabel: 'Voir les colis',
         actionHref: '/colis',
       })
     }
@@ -131,7 +131,7 @@ export function useCockpit() {
         id: 'actions',
         label: 'Actions requises',
         value: String(pendingCount),
-        subLabel: 'bids en attente',
+        subLabel: 'colis en attente',
         trend: pendingCount > 0 ? 'up' : 'neutral',
       },
     ]

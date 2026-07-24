@@ -29,7 +29,7 @@ const payout = [
         </div>
         <div class="flex items-center gap-2 text-xs text-text-muted">
           <Lock class="h-4 w-4 text-text-subtle" :stroke-width="1.75" aria-hidden="true" />
-          <span>Paiements sécurisés via Stripe · KYC requis depuis l'app mobile</span>
+          <span>Paiements sécurisés via Stripe · Vérification d'identité requise depuis l'app mobile</span>
         </div>
       </div>
 

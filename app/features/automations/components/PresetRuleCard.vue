@@ -16,9 +16,9 @@ const emit = defineEmits<{
 
 const ruleDescriptionMap: Record<string, string> = {
   auto_accept_trusted:
-    'Accepte automatiquement les bids dont la note expéditeur ≥ seuil configuré ET le poids ≤ capacité restante.',
+    'Accepte automatiquement les colis dont la note expéditeur ≥ seuil configuré ET le poids ≤ capacité restante.',
   auto_reject_overweight:
-    'Refuse automatiquement avec un message poli les bids dont le poids demandé dépasse ta capacité restante.',
+    'Refuse automatiquement avec un message poli les colis dont le poids demandé dépasse ta capacité restante.',
   auto_close_full:
     "Passe l'annonce en statut FULL dès que ta capacité restante atteint 0 kg.",
   alert_capacity_free:
@@ -26,7 +26,7 @@ const ruleDescriptionMap: Record<string, string> = {
   notify_loyal_senders:
     "Invite tes expéditeurs historiques dès qu'une nouvelle annonce est publiée sur leurs corridors habituels.",
   alert_last_minute_bid:
-    'Déclenche un push immédiat + SMS quand un bid arrive avec un départ dans moins de 48 h.',
+    'Déclenche un push immédiat + SMS quand un colis arrive avec un départ dans moins de 48 h.',
 }
 
 const description = computed(

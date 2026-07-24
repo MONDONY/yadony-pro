@@ -34,7 +34,7 @@ const emit = defineEmits<{
           <h2 class="font-display text-lg font-semibold text-text">Supprimer ce trajet ?</h2>
         </div>
         <p class="text-sm text-text-muted">
-          Cette action est irréversible. Les expéditeurs ayant des bids en attente seront notifiés et remboursés automatiquement.
+          Cette action est irréversible. Les expéditeurs ayant des colis en attente seront notifiés et remboursés automatiquement.
         </p>
         <div class="flex gap-3 pt-2">
           <button

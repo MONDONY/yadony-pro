@@ -109,7 +109,7 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
       </div>
       <div class="rounded-el bg-surface-el px-3 py-2 text-center">
         <p class="font-mono text-base font-semibold tabular-nums text-text">{{ pendingBidCount }}</p>
-        <p class="mt-0.5 text-xs text-text-subtle">Bids en attente</p>
+        <p class="mt-0.5 text-xs text-text-subtle">Colis en attente</p>
       </div>
       <div class="rounded-el bg-surface-el px-3 py-2 text-center">
         <p class="font-mono text-base font-semibold tabular-nums text-primary">{{ reservedRevenueEuros }} €</p>

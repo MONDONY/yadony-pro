@@ -113,7 +113,7 @@ const capacityUnitLabel = computed(() => {
           </div>
           <div class="bg-surface-el rounded-el px-3 py-2 text-center">
             <p class="font-mono text-lg font-semibold tabular-nums text-warning">{{ trip.pendingBidCount }}</p>
-            <p class="text-xs text-text-subtle">Bids en attente</p>
+            <p class="text-xs text-text-subtle">Colis en attente</p>
           </div>
         </div>
 

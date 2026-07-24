@@ -255,7 +255,7 @@ describe('useTripDetail', () => {
     const detail = useTripDetail('trip-1')
     await detail.publishTrip()
     expect(detail.publishErrorCode.value).toBe('kyc-not-verified')
-    expect(detail.publishError.value).toBe('Vérifiez votre identité (KYC) avant de publier ce trajet.')
+    expect(detail.publishError.value).toBe('Vérifiez votre identité avant de publier ce trajet.')
   })
 
   it('publishTrip mappe departure-date-passed', async () => {

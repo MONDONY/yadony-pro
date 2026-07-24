@@ -53,7 +53,7 @@ const presetEmojis = ref<Record<string, string>>({})
 const submitErrorMessages: Record<string, string> = {
   'draft-limit-reached': 'Limite de brouillons atteinte. Passez en PRO pour en créer davantage.',
   'pro-limit-reached': 'Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.',
-  'kyc-not-verified': 'Vérifiez votre identité (KYC) dans les paramètres avant de publier un trajet.',
+  'kyc-not-verified': 'Vérifiez votre identité dans les paramètres avant de publier un trajet.',
   'publishing-suspended': 'La publication est suspendue sur votre compte. Contactez le support.',
   'departure-date-passed': 'La date de départ est passée. Corrigez-la avant de publier.',
 }

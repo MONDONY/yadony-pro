@@ -11,7 +11,7 @@ const items = [
   {
     icon: BadgeCheck,
     tone: 'text-success bg-success/10',
-    title: 'Identité vérifiée (KYC)',
+    title: 'Identité vérifiée',
     subtitle: 'Tous les membres sont validés avant d\'accéder à la plateforme',
   },
   {

@@ -42,7 +42,7 @@ onMounted(async () => {
     .BarcodeDetector
   if (!BarcodeDetectorCtor || !navigator.mediaDevices?.getUserMedia) {
     status.value = 'unsupported'
-    emit('error', 'Scan QR non supporté par ce navigateur.')
+    emit('error', 'Lecture QR non supportée par ce navigateur.')
     return
   }
   try {

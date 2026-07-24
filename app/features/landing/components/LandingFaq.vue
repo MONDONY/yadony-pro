@@ -61,7 +61,7 @@ const faqItems = [
   },
   {
     question: 'Comment accéder à dony PRO ?',
-    answer: "L'accès à dony PRO se débloque depuis l'application mobile dony après validation de ton identité (KYC). Va dans Profil → PRO → Activer. Une fois activé, connecte-toi sur cette page avec ton numéro de téléphone.",
+    answer: "L'accès à dony PRO se débloque depuis l'application mobile dony après validation de ton identité. Va dans Profil → PRO → Activer. Une fois activé, connecte-toi sur cette page avec ton numéro de téléphone.",
   },
   {
     question: 'Comment fonctionne le paiement sécurisé ?',

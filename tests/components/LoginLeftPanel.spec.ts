@@ -35,7 +35,7 @@ describe('LoginLeftPanel', () => {
   it('mentions KYC in the second security item', () => {
     const wrapper = mount(LoginLeftPanel)
     const items = wrapper.findAll('[data-test="security-item"]')
-    expect(items[1].text()).toContain('KYC')
+    expect(items[1].text()).toContain('Identité vérifiée')
   })
 
   it('mentions SMS in the third security item', () => {

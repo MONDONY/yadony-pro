@@ -3,7 +3,7 @@ import { ArrowRight, Lock, ShieldCheck, BadgeCheck, Package } from 'lucide-vue-n
 
 const trust = [
   { icon: Lock, label: 'Paiements Stripe' },
-  { icon: BadgeCheck, label: 'KYC vérifié' },
+  { icon: BadgeCheck, label: 'Identité vérifiée' },
   { icon: ShieldCheck, label: 'Fonds en séquestre' },
 ]
 
