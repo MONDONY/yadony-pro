@@ -7,7 +7,7 @@ import NotificationItem from '@/features/notifications/components/NotificationIt
 definePageMeta({
   middleware: ['pro-only'],
   pageTitle: 'Notifications',
-  pageSubtitle: 'Bids, négociations, paiements et alertes',
+  pageSubtitle: 'Colis, négociations, paiements et alertes',
 })
 
 const {

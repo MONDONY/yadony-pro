@@ -38,7 +38,7 @@ const statusLabel: Record<BidStatus, string> = {
 
 const paymentLabel: Record<Bid['paymentStatus'], string> = {
   PENDING: 'En attente de paiement',
-  ESCROWED: 'Paiement sécurisé (escrow)',
+  ESCROWED: 'Paiement sécurisé',
   RELEASED: 'Virement effectué',
   REFUNDED: 'Remboursé',
 }
@@ -96,7 +96,7 @@ function formatHistoryDate(iso: string): string {
     >
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
-        <h2 class="text-lg font-bold text-text font-display">Détail du bid</h2>
+        <h2 class="text-lg font-bold text-text font-display">Détail du colis</h2>
         <button
           data-test="panel-close"
           class="p-2 rounded-btn text-text-muted hover:text-text hover:bg-surface-el transition-colors"
@@ -190,7 +190,7 @@ function formatHistoryDate(iso: string): string {
           <ol class="relative">
             <li
               v-for="(step, i) in [
-                { key: 'ACCEPTED',    label: 'Bid accepté',      icon: CheckCircle },
+                { key: 'ACCEPTED',    label: 'Colis accepté',      icon: CheckCircle },
                 { key: 'HANDED_OVER', label: 'Colis remis',       icon: Package },
                 { key: 'IN_TRANSIT',  label: 'En transit',        icon: Truck },
                 { key: 'COMPLETED',   label: 'Livré',             icon: MapPin },

@@ -38,7 +38,7 @@ onMounted(load)
   <section class="bg-surface border border-border rounded-card p-5 space-y-3" data-test="cash-card">
     <header class="flex items-center justify-between">
       <div>
-        <h2 class="font-display font-semibold text-base text-text">Commission cash</h2>
+        <h2 class="font-display font-semibold text-base text-text">Commission espèces</h2>
         <p class="text-sm text-text-muted">
           Carte utilisée pour prélever la commission quand un expéditeur paie en espèces.
         </p>

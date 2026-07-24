@@ -23,7 +23,7 @@ const features = [
     bullets: [
       'Matching automatique basé sur ton trajet',
       'Chat intégré pour négocier le tarif',
-      'Expéditeurs vérifiés KYC uniquement',
+      'Expéditeurs à l\'identité vérifiée uniquement',
     ],
   },
   {
@@ -34,7 +34,7 @@ const features = [
     description: 'Les fonds sont bloqués en séquestre Stripe dès la confirmation. Tu es payé automatiquement à la livraison confirmée.',
     bullets: [
       'Séquestre Stripe — fonds garantis avant le vol',
-      'Libération automatique après scan QR livraison',
+      'Libération automatique après lecture du QR de livraison',
       'Protection en cas de litige via dony',
     ],
   },
@@ -148,7 +148,7 @@ const features = [
               <div class="ml-3.5 h-4 w-px bg-border"></div>
               <div class="flex items-center gap-3">
                 <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-success/10 font-mono text-xs font-semibold text-success">3</span>
-                <span class="text-xs text-text">Scan QR livraison · <span class="font-medium text-success">Virement automatique</span></span>
+                <span class="text-xs text-text">Lecture QR livraison · <span class="font-medium text-success">Virement automatique</span></span>
               </div>
               <div class="mt-1 flex items-center gap-2 rounded-el border border-success/20 bg-success/5 px-3 py-2.5 text-xs font-medium text-success">
                 <ArrowUpRight class="h-4 w-4 flex-shrink-0" :stroke-width="1.75" aria-hidden="true" />

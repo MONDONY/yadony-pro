@@ -44,7 +44,7 @@ const formattedDate = computed(() => {
         <time :datetime="entry.triggeredAt" class="font-mono tabular-nums">{{ formattedDate }}</time>
         <template v-if="entry.bidId">
           <span class="text-border" aria-hidden="true">·</span>
-          <span class="font-mono tabular-nums">Bid {{ entry.bidId.slice(0, 8) }}…</span>
+          <span class="font-mono tabular-nums">Colis {{ entry.bidId.slice(0, 8) }}…</span>
         </template>
       </div>
     </div>

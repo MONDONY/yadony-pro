@@ -7,7 +7,7 @@ import { extractProblem } from '@/lib/apiError'
 import type { Trip, TripBid, TripKpis } from '@/features/trajets/types/index'
 
 const publishErrorMessages: Record<string, string> = {
-  'kyc-not-verified': 'Vérifiez votre identité (KYC) avant de publier ce trajet.',
+  'kyc-not-verified': 'Vérifiez votre identité avant de publier ce trajet.',
   'departure-date-passed': 'La date de départ est passée. Modifiez le trajet avant de publier.',
   'pro-limit-reached': 'Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.',
   'publishing-suspended': 'La publication est suspendue sur votre compte. Contactez le support.',
