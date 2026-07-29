@@ -5,6 +5,7 @@ describe('public Yadony brand', () => {
   it('does not expose the former brand in active UI copy', () => {
     const files = [
       'app/components/layout/AppSidebar.vue',
+      'app/features/activite/composables/useActivity.ts',
       'app/features/auth/components/LoginLeftPanel.vue',
       'app/features/cash/components/CashCommissionCard.vue',
       'app/features/colis/components/BidDetailPanel.vue',
