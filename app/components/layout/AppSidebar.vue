@@ -35,8 +35,9 @@ const initials = computed(() =>
   <aside class="w-sidebar shrink-0 bg-surface border-r border-border flex flex-col">
     <!-- Logo -->
     <div class="px-6 py-5 border-b border-border">
-      <NuxtLink to="/cockpit" class="font-display font-bold text-xl text-primary">
-        dony <span class="text-text">PRO</span>
+      <NuxtLink to="/cockpit" class="flex items-center gap-2">
+        <img src="/logos/logo-yadony.png" alt="Yadony" class="h-7 w-auto" />
+        <span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">PRO</span>
       </NuxtLink>
     </div>
 

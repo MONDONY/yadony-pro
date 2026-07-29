@@ -27,12 +27,17 @@ const items = [
   <div class="relative flex w-1/2 shrink-0 flex-col border-r border-border bg-surface-el p-10">
     <!-- Logo -->
     <div class="flex items-center gap-2">
-      <span class="font-display text-2xl font-semibold tracking-tight text-text">dony</span>
+      <img src="/logos/logo-yadony.png" alt="Yadony" class="h-7 w-auto" />
       <span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">PRO</span>
     </div>
 
     <!-- Accroche éditoriale -->
     <div class="flex flex-1 flex-col justify-center py-10">
+      <img
+        src="/mascots/travel.png"
+        alt="Mascotte Yadony prête à voyager"
+        class="mb-5 h-36 w-36 object-contain outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
+      />
       <h2 class="max-w-sm font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-text text-balance">
         L'espace de gestion des voyageurs vérifiés.
       </h2>

@@ -7,8 +7,8 @@
       <!-- Logo + badge PRO -->
       <div class="flex items-center gap-2.5">
         <img
-          :src="isDark ? '/logos/logo-white-orange.png' : '/logos/logo-blue-orange.png'"
-          alt="dony"
+          src="/logos/logo-yadony.png"
+          alt="Yadony"
           class="h-7 w-auto"
         />
         <span
@@ -37,7 +37,7 @@
         <NuxtLink
           to="/login"
           class="text-sm font-semibold bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-btn transition-colors"
-        >Rejoindre dony PRO</NuxtLink>
+        >Rejoindre Yadony PRO</NuxtLink>
       </div>
 
       <!-- Hamburger mobile -->
@@ -78,7 +78,6 @@
 <script setup lang="ts">
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 
-const { isDark } = useTheme()
 const menuOpen = ref(false)
 
 const navLinks = [

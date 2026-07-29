@@ -3,21 +3,17 @@ import { mount } from '@vue/test-utils'
 import LoginLeftPanel from '@/features/auth/components/LoginLeftPanel.vue'
 
 describe('LoginLeftPanel', () => {
-  it('renders the dony logo text', () => {
+  it('renders the Yadony PRO logo', () => {
     const wrapper = mount(LoginLeftPanel)
-    expect(wrapper.text()).toContain('dony')
-  })
-
-  it('renders the PRO badge', () => {
-    const wrapper = mount(LoginLeftPanel)
+    expect(wrapper.find('img[alt="Yadony"]').attributes('src')).toBe('/logos/logo-yadony.png')
     expect(wrapper.text()).toContain('PRO')
   })
 
-  it('shows an editorial headline instead of a mascot (redesign Comptoir)', () => {
+  it('renders the travel mascot', () => {
     const wrapper = mount(LoginLeftPanel)
-    // La mascotte a été retirée au profit d'une accroche typographique.
-    expect(wrapper.find('img[src*="mascots"]').exists()).toBe(false)
-    expect(wrapper.find('h2').exists()).toBe(true)
+    const mascot = wrapper.find('img[alt="Mascotte Yadony prête à voyager"]')
+    expect(mascot.exists()).toBe(true)
+    expect(mascot.attributes('src')).toBe('/mascots/travel.png')
   })
 
   it('renders 3 security reassurance items', () => {

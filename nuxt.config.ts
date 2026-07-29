@@ -31,7 +31,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'dony PRO',
+      title: 'Yadony PRO',
       htmlAttrs: { lang: 'fr' },
       script: [
         {
