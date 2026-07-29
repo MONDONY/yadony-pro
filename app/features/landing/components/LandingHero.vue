@@ -36,7 +36,7 @@ const badgeClass = {
         </h1>
 
         <p class="max-w-[46ch] text-lg leading-relaxed text-text-muted">
-          dony PRO est l'espace de gestion des voyageurs vérifiés. Publiez vos trajets,
+          Yadony PRO est l'espace de gestion des voyageurs vérifiés. Publiez vos trajets,
           acceptez des colis et suivez vos encaissements en séquestre — depuis le web.
         </p>
 
@@ -68,7 +68,7 @@ const badgeClass = {
       <div class="relative hidden lg:block" aria-hidden="true">
         <div class="overflow-hidden rounded-card border border-border bg-surface shadow-pop">
           <div class="flex items-center justify-between border-b border-border px-4 py-3">
-            <span class="text-sm font-semibold text-text">Cockpit <span class="text-primary">dony PRO</span></span>
+            <span class="text-sm font-semibold text-text">Cockpit <span class="text-primary">Yadony PRO</span></span>
             <span class="h-2 w-2 rounded-full bg-success" />
           </div>
           <div class="flex flex-col gap-4 p-4">

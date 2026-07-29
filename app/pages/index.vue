@@ -18,9 +18,9 @@
 definePageMeta({ layout: 'landing' })
 
 useSeoMeta({
-  title: 'dony PRO — Gérez. Encaissez. Soyez payés.',
-  description: "L'espace de gestion pour les voyageurs vérifiés dony. Publiez vos trajets, acceptez des colis, encaissez en sécurité.",
-  ogTitle: 'dony PRO',
+  title: 'Yadony PRO — Gérez. Encaissez. Soyez payés.',
+  description: "L'espace de gestion pour les voyageurs vérifiés Yadony. Publiez vos trajets, acceptez des colis, encaissez en sécurité.",
+  ogTitle: 'Yadony PRO',
   ogDescription: 'Gérez votre activité de transporteur depuis le web.',
 })
 </script>

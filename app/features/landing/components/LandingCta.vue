@@ -3,7 +3,7 @@ import { ArrowRight, Lock, ShieldCheck } from 'lucide-vue-next'
 
 const payout = [
   { label: 'Encaissé', value: '5 480,00 €', tone: 'text-text' },
-  { label: 'Commission dony · 12 %', value: '− 657,60 €', tone: 'text-text-muted' },
+  { label: 'Commission Yadony · 12 %', value: '− 657,60 €', tone: 'text-text-muted' },
 ] as const
 </script>
 
@@ -16,7 +16,7 @@ const payout = [
           Prêt à gérer ton activité comme un pro ?
         </h2>
         <p class="text-text-muted">
-          Rejoins les voyageurs dony qui encaissent en sécurité, optimisent leur taux de remplissage et gagnent du temps sur la gestion.
+          Rejoins les voyageurs Yadony qui encaissent en sécurité, optimisent leur taux de remplissage et gagnent du temps sur la gestion.
         </p>
         <div class="flex flex-wrap gap-3">
           <NuxtLink

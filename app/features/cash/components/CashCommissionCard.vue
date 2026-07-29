@@ -71,7 +71,7 @@ onMounted(load)
     </div>
 
     <p v-else class="text-sm text-text-muted" data-test="cash-empty">
-      Aucune carte enregistrée. Ajoute-la depuis l'app mobile dony (Profil → Paiements cash)
+      Aucune carte enregistrée. Ajoute-la depuis l'app mobile Yadony (Profil → Paiements cash)
       pour pouvoir accepter les colis payés en espèces.
     </p>
   </section>

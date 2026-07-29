@@ -437,7 +437,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         </label>
         <PriceOptionCards v-model="form.pricePerKg" :commission-rate="commissionRate" />
         <p class="mt-2 text-xs text-text-muted">
-          Commission dony (12%) déduite · Vous recevez
+          Commission Yadony (12%) déduite · Vous recevez
           <span class="font-mono tabular-nums text-text font-medium">{{ netPrice.toFixed(2) }}€/kg</span>
         </p>
       </div>

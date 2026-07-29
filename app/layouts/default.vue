@@ -7,7 +7,7 @@ import { useGlobalSearch } from '@/features/search/composables/useGlobalSearch'
 
 const route = useRoute()
 const meta = computed(() => ({
-  title: (route.meta.pageTitle as string) ?? 'dony PRO',
+  title: (route.meta.pageTitle as string) ?? 'Yadony PRO',
   subtitle: route.meta.pageSubtitle as string | undefined,
 }))
 

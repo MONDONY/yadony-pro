@@ -20,7 +20,7 @@ const steps = ["Ouvre l'app", 'Profil → PRO', 'Active']
             Active ton espace PRO depuis l'application mobile
           </h2>
           <p class="max-w-md text-sm text-text-muted">
-            dony PRO est une extension de l'app dony. L'accès se débloque après validation KYC.
+            Yadony PRO est une extension de l'app Yadony. L'accès se débloque après validation KYC.
           </p>
         </div>
       </div>
@@ -47,7 +47,7 @@ const steps = ["Ouvre l'app", 'Profil → PRO', 'Active']
           class="inline-flex flex-shrink-0 items-center gap-2 rounded-btn bg-primary px-5 py-2.5 font-semibold text-on-primary shadow-btn transition-colors hover:bg-primary-hover"
         >
           <Download class="h-4 w-4" :stroke-width="1.75" aria-hidden="true" />
-          Télécharger l'app dony
+          Télécharger l'app Yadony
         </a>
       </div>
     </div>

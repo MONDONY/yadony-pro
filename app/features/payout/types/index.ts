@@ -50,7 +50,7 @@ export function describePayoutStatus(status: StripeAccountStatus | null | undefi
       return {
         tone: 'error',
         label: 'Compte refusé',
-        description: 'Stripe a refusé ton compte. Contacte le support dony.',
+        description: 'Stripe a refusé ton compte. Contacte le support Yadony.',
         action: 'none',
         canRefresh: false,
       }
@@ -58,7 +58,7 @@ export function describePayoutStatus(status: StripeAccountStatus | null | undefi
       return {
         tone: 'error',
         label: 'Compte désactivé',
-        description: 'Ton compte de paiement est désactivé. Contacte le support dony.',
+        description: 'Ton compte de paiement est désactivé. Contacte le support Yadony.',
         action: 'none',
         canRefresh: false,
       }

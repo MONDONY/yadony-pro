@@ -5,7 +5,7 @@
         <!-- Colonne intro fixe -->
         <div class="lg:w-60 flex-shrink-0">
           <h2 class="font-display font-bold text-3xl text-text mb-3">Questions fréquentes</h2>
-          <p class="text-sm text-text-muted leading-relaxed">Tout ce qu'il faut savoir avant de rejoindre dony PRO.</p>
+          <p class="text-sm text-text-muted leading-relaxed">Tout ce qu'il faut savoir avant de rejoindre Yadony PRO.</p>
         </div>
 
         <!-- Accordéon -->
@@ -56,24 +56,24 @@
 <script setup lang="ts">
 const faqItems = [
   {
-    question: "C'est quoi dony PRO ?",
-    answer: "dony PRO est l'espace web réservé aux voyageurs vérifiés de l'application dony. Il te permet de gérer tes trajets, tes demandes de transport, ta négociation avec les expéditeurs et tes paiements depuis un ordinateur.",
+    question: "C'est quoi Yadony PRO ?",
+    answer: "Yadony PRO est l'espace web réservé aux voyageurs vérifiés de l'application Yadony. Il te permet de gérer tes trajets, tes demandes de transport, ta négociation avec les expéditeurs et tes paiements depuis un ordinateur.",
   },
   {
-    question: 'Comment accéder à dony PRO ?',
-    answer: "L'accès à dony PRO se débloque depuis l'application mobile dony après validation de ton identité. Va dans Profil → PRO → Activer. Une fois activé, connecte-toi sur cette page avec ton numéro de téléphone.",
+    question: 'Comment accéder à Yadony PRO ?',
+    answer: "L'accès à Yadony PRO se débloque depuis l'application mobile Yadony après validation de ton identité. Va dans Profil → PRO → Activer. Une fois activé, connecte-toi sur cette page avec ton numéro de téléphone.",
   },
   {
     question: 'Comment fonctionne le paiement sécurisé ?',
     answer: "Les paiements transitent par Stripe, leader mondial du paiement en ligne. Dès qu'un expéditeur confirme un envoi, les fonds sont bloqués en séquestre. Ils sont libérés sur ton compte Stripe automatiquement lorsque tu scannes le QR code à la livraison.",
   },
   {
-    question: 'Quelle commission prend dony ?',
-    answer: "dony prélève 12 % sur chaque transaction, déduits du montant versé à l'expéditeur. Tu encaisses le montant négocié avec l'expéditeur, sans surprise.",
+    question: 'Quelle commission prend Yadony ?',
+    answer: "Yadony prélève 12 % sur chaque transaction, déduits du montant versé à l'expéditeur. Tu encaisses le montant négocié avec l'expéditeur, sans surprise.",
   },
   {
     question: 'Que se passe-t-il en cas de litige ?',
-    answer: "En cas de problème à la livraison, dony dispose d'une équipe de résolution des litiges. Les fonds restent en séquestre jusqu'à résolution. Pour les cas non résolus sous 48h, dony peut forcer la libération ou rembourser l'expéditeur selon les éléments fournis.",
+    answer: "En cas de problème à la livraison, Yadony dispose d'une équipe de résolution des litiges. Les fonds restent en séquestre jusqu'à résolution. Pour les cas non résolus sous 48h, Yadony peut forcer la libération ou rembourser l'expéditeur selon les éléments fournis.",
   },
 ]
 

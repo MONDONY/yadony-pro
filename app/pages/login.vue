@@ -92,7 +92,7 @@ function handleBack() {
     <p v-if="step === 'phone'" class="text-xs text-text-subtle text-center lg:hidden">
       Pas encore de compte ?
       <a href="https://dony.app" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">
-        Télécharge l'app dony
+        Télécharge l'app Yadony
       </a>
     </p>
   </div>

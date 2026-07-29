@@ -74,7 +74,7 @@ const STATUS_CLASSES: Record<string, string> = {
     </div>
 
     <p class="text-xs text-text-subtle">
-      Les litiges sont examinés par l'équipe dony. Tu seras notifié de toute décision.
+      Les litiges sont examinés par l'équipe Yadony. Tu seras notifié de toute décision.
     </p>
   </div>
 </template>

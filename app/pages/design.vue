@@ -36,7 +36,7 @@ const query = ref('')
       <!-- Masthead -->
       <div class="flex items-start justify-between gap-4">
         <div>
-          <SectionLabel>dony PRO · design system · Comptoir</SectionLabel>
+          <SectionLabel>Yadony PRO · design system · Comptoir</SectionLabel>
           <h1 class="mt-3 font-display text-3xl font-semibold tracking-tight">Primitives</h1>
           <p class="mt-2 max-w-xl text-text-muted">
             Référence vivante des composants « Comptoir ». Bascule le thème pour vérifier clair / sombre.
