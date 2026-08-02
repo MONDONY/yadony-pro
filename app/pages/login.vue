@@ -3,7 +3,6 @@
 import { ref } from 'vue'
 import PhoneNumberForm from '@/features/auth/components/PhoneNumberForm.vue'
 import OtpForm from '@/features/auth/components/OtpForm.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 
 definePageMeta({ layout: 'auth' })
 
@@ -38,7 +37,6 @@ function handleBack() {
         </svg>
         {{ step === 'otp' ? 'Changer de numéro' : 'Accueil' }}
       </button>
-      <ThemeToggle />
     </div>
 
     <!-- Titre -->
@@ -91,8 +89,8 @@ function handleBack() {
     <!-- Message aide (mobile uniquement, étape phone) -->
     <p v-if="step === 'phone'" class="text-xs text-text-subtle text-center lg:hidden">
       Pas encore de compte ?
-      <a href="https://dony.app" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">
-        Télécharge l'app dony
+      <a href="https://yadony.app" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">
+        Télécharge l'app yadony
       </a>
     </p>
   </div>

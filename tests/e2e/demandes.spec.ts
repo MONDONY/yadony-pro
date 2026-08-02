@@ -122,7 +122,7 @@ const FAKE_NEGOTIATION_THREAD = {
 async function fakeLogin(page: import('@playwright/test').Page) {
   // Inject PRO user auth seed before page JS runs (read by expose-auth.client.ts plugin)
   await page.addInitScript((u) => {
-    ;(window as unknown as { __donyAuthSeed: typeof u }).__donyAuthSeed = u
+    ;(window as unknown as { __yadonyAuthSeed: typeof u }).__yadonyAuthSeed = u
   }, FAKE_USER)
 }
 

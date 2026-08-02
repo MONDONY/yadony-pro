@@ -36,7 +36,7 @@ const initials = computed(() =>
     <!-- Logo -->
     <div class="px-6 py-5 border-b border-border">
       <NuxtLink to="/cockpit" class="font-display font-bold text-xl text-primary">
-        dony <span class="text-text">PRO</span>
+        yadony <span class="text-text">PRO</span>
       </NuxtLink>
     </div>
 

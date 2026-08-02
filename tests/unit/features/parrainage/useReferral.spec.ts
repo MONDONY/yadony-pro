@@ -12,7 +12,7 @@ async function importComposable() {
   return mod.useReferral
 }
 
-const info = { code: 'DONY-AB12', shareUrl: 'https://dony.app/r/DONY-AB12', totalInvited: 3, signedUp: 2, rewarded: 1, totalEarnedCents: 500 }
+const info = { code: 'YADONY-AB12', shareUrl: 'https://yadony.app/r/YADONY-AB12', totalInvited: 3, signedUp: 2, rewarded: 1, totalEarnedCents: 500 }
 
 describe('useReferral', () => {
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('useReferral', () => {
     mockFetch.mockResolvedValue(info)
     const { referral, fetchReferral } = (await importComposable())()
     await fetchReferral()
-    expect(referral.value?.code).toBe('DONY-AB12')
+    expect(referral.value?.code).toBe('YADONY-AB12')
   })
 
   it('sets an error when fetchReferral rejects', async () => {
@@ -35,10 +35,10 @@ describe('useReferral', () => {
   })
 
   it('regenerate updates the referral info', async () => {
-    mockRegenerate.mockResolvedValue({ ...info, code: 'DONY-XY99' })
+    mockRegenerate.mockResolvedValue({ ...info, code: 'YADONY-XY99' })
     const { referral, regenerate } = (await importComposable())()
     await regenerate()
-    expect(referral.value?.code).toBe('DONY-XY99')
+    expect(referral.value?.code).toBe('YADONY-XY99')
   })
 
   it('sets an error when regenerate rejects', async () => {

@@ -12,7 +12,7 @@ async function importService() {
   return mod.referralService
 }
 
-const info = { code: 'DONY-AB12', shareUrl: 'https://dony.app/r/DONY-AB12', totalInvited: 3, signedUp: 2, rewarded: 1, totalEarnedCents: 500 }
+const info = { code: 'YADONY-AB12', shareUrl: 'https://yadony.app/r/YADONY-AB12', totalInvited: 3, signedUp: 2, rewarded: 1, totalEarnedCents: 500 }
 
 describe('referralService', () => {
   beforeEach(() => {
@@ -25,14 +25,14 @@ describe('referralService', () => {
     const svc = (await importService())()
     const result = await svc.fetchReferral()
     expect(mockApiFn).toHaveBeenCalledWith('/me/referral')
-    expect(result.code).toBe('DONY-AB12')
+    expect(result.code).toBe('YADONY-AB12')
   })
 
   it('regenerate POSTs /me/referral/regenerate', async () => {
-    mockApiFn.mockResolvedValue({ ...info, code: 'DONY-XY99' })
+    mockApiFn.mockResolvedValue({ ...info, code: 'YADONY-XY99' })
     const svc = (await importService())()
     const result = await svc.regenerate()
     expect(mockApiFn).toHaveBeenCalledWith('/me/referral/regenerate', { method: 'POST' })
-    expect(result.code).toBe('DONY-XY99')
+    expect(result.code).toBe('YADONY-XY99')
   })
 })

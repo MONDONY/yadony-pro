@@ -1,11 +1,11 @@
-# dony PRO Workspace
+# yadony PRO Workspace
 
 Back-office web réservé aux voyageurs PRO (`isProAccount = true`).
 
 ## Stack
 - Nuxt 4 (SSR) + TypeScript + TailwindCSS + shadcn-vue
 - Firebase Phone Auth (token JWT en mémoire — pas de localStorage)
-- Backend : Spring Boot existant (`dony-back/`), endpoint `GET /auth/me`
+- Backend : Spring Boot existant (`yadony-back/`), endpoint `GET /auth/me`
 
 ## Setup
 

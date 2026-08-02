@@ -59,8 +59,8 @@ export default defineNuxtPlugin(async () => {
 
   // Ongoing listener: keep the token fresh when Firebase rotates it,
   // and clear the store if the user signs out from another tab.
-  // Skip the clear in E2E dev mode where auth is seeded via window.__donyAuthSeed.
-  const hasE2ESeed = !!(window as unknown as { __donyAuthSeed?: unknown }).__donyAuthSeed
+  // Skip the clear in E2E dev mode where auth is seeded via window.__yadonyAuthSeed.
+  const hasE2ESeed = !!(window as unknown as { __yadonyAuthSeed?: unknown }).__yadonyAuthSeed
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       const freshToken = await firebaseUser.getIdToken()

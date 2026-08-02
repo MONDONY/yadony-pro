@@ -89,7 +89,7 @@ defineProps<{
           <span class="font-mono tabular-nums text-sm font-medium text-text">{{ kpis.grossRevenueEuros.toFixed(2) }} €</span>
         </div>
         <div class="flex items-center justify-between text-danger">
-          <span class="text-sm">Commission Dony (12%)</span>
+          <span class="text-sm">Commission yadony (12%)</span>
           <span class="font-mono tabular-nums text-sm font-medium">− {{ kpis.commissionEuros.toFixed(2) }} €</span>
         </div>
         <div class="border-t border-border pt-3 flex items-center justify-between">

@@ -16,7 +16,7 @@ type AuthStore = {
 async function fakeLogin(page: import('@playwright/test').Page, user = FAKE_USER) {
   // Seed the auth store on every navigation via init script (plugin reads it).
   await page.addInitScript((u) => {
-    ;(window as unknown as { __donyAuthSeed: typeof u }).__donyAuthSeed = u
+    ;(window as unknown as { __yadonyAuthSeed: typeof u }).__yadonyAuthSeed = u
   }, user)
 }
 

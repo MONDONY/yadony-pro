@@ -7,8 +7,8 @@
       <!-- Logo + badge PRO -->
       <div class="flex items-center gap-2.5">
         <img
-          :src="isDark ? '/logos/logo-white-orange.png' : '/logos/logo-blue-orange.png'"
-          alt="dony"
+          :src="logo"
+          alt="yadony"
           class="h-7 w-auto"
         />
         <span
@@ -27,9 +27,8 @@
         >{{ link.label }}</a>
       </div>
 
-      <!-- Droite : ThemeToggle + CTAs -->
+      <!-- Droite : CTAs -->
       <div class="hidden md:flex items-center gap-2">
-        <ThemeToggle />
         <NuxtLink
           to="/login"
           class="text-sm font-medium text-text hover:text-primary transition-colors px-4 py-2 rounded-btn border border-border hover:border-primary"
@@ -37,7 +36,7 @@
         <NuxtLink
           to="/login"
           class="text-sm font-semibold bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-btn transition-colors"
-        >Rejoindre dony PRO</NuxtLink>
+        >Rejoindre yadony PRO</NuxtLink>
       </div>
 
       <!-- Hamburger mobile -->
@@ -67,7 +66,6 @@
         @click="menuOpen = false"
       >{{ link.label }}</a>
       <div class="flex items-center gap-3 pt-2 border-t border-border">
-        <ThemeToggle />
         <NuxtLink to="/login" class="text-sm font-medium text-text" @click="menuOpen = false">Se connecter</NuxtLink>
         <NuxtLink to="/login" class="text-sm font-semibold bg-primary text-on-primary px-4 py-2 rounded-btn" @click="menuOpen = false">Rejoindre</NuxtLink>
       </div>
@@ -76,10 +74,8 @@
 </template>
 
 <script setup lang="ts">
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
-
-const { isDark } = useTheme()
 const menuOpen = ref(false)
+const logo = useAssetUrl('logos/logo-yadony.png')
 
 const navLinks = [
   { href: '#comment-ca-marche', label: 'Comment ça marche' },
