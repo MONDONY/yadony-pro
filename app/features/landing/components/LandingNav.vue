@@ -37,7 +37,7 @@
         <NuxtLink
           to="/login"
           class="text-sm font-semibold bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-btn transition-colors"
-        >Rejoindre dony PRO</NuxtLink>
+        >Rejoindre yadony PRO</NuxtLink>
       </div>
 
       <!-- Hamburger mobile -->
