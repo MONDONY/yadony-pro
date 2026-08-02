@@ -22,7 +22,7 @@ function net(price: number): string {
 
 <template>
   <div>
-    <div class="grid grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <button
         v-for="price in options"
         :key="price"

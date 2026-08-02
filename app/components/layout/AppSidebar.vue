@@ -18,26 +18,52 @@ import {
   BellRing,
   Plus,
   Repeat,
+  X,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/stores/auth'
+import { useSidebar } from '@/composables/useSidebar'
 import NavItem from './NavItem.vue'
 
 const auth = useAuthStore()
+const { isOpen, close } = useSidebar()
 const initials = computed(() =>
   auth.user?.displayName?.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase() ?? '?',
 )
 </script>
 
 <template>
-  <aside class="w-sidebar shrink-0 bg-surface border-r border-border flex flex-col">
+  <!-- Backdrop mobile -->
+  <div
+    v-if="isOpen"
+    class="fixed inset-0 z-30 bg-black/40 lg:hidden"
+    data-test="sidebar-backdrop"
+    @click="close"
+  />
+
+  <aside
+    :class="[
+      'w-sidebar shrink-0 bg-surface border-r border-border flex flex-col',
+      'fixed inset-y-0 left-0 z-40 transition-transform duration-200 ease-out',
+      'lg:static lg:translate-x-0 lg:transition-none',
+      isOpen ? 'translate-x-0' : '-translate-x-full',
+    ]"
+  >
     <!-- Logo -->
-    <div class="px-6 py-5 border-b border-border">
-      <NuxtLink to="/cockpit" class="font-display font-bold text-xl text-primary">
+    <div class="px-6 py-5 border-b border-border flex items-center justify-between">
+      <NuxtLink to="/cockpit" class="font-display font-bold text-xl text-primary" @click="close">
         yadony <span class="text-text">PRO</span>
       </NuxtLink>
+      <button
+        type="button"
+        class="lg:hidden p-1 text-text-muted hover:text-text transition-colors"
+        aria-label="Fermer le menu"
+        @click="close"
+      >
+        <X class="w-5 h-5" />
+      </button>
     </div>
 
     <!-- User — ClientOnly évite le mismatch d'hydratation (auth non dispo côté SSR) -->
@@ -63,7 +89,7 @@ const initials = computed(() =>
     </ClientOnly>
 
     <!-- Nav -->
-    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto" @click="close">
       <NavItem to="/cockpit" label="Centre de commandes">
         <template #icon><Home class="w-4 h-4" /></template>
       </NavItem>
@@ -123,6 +149,7 @@ const initials = computed(() =>
         to="/trajets/nouvelle-annonce"
         data-test="btn-nouvelle-annonce"
         class="flex w-full items-center justify-center gap-2 rounded-btn bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-btn transition-[background,transform] duration-150 hover:bg-primary-hover active:translate-y-px"
+        @click="close"
       >
         <Plus class="w-4 h-4" />
         Nouvelle annonce
