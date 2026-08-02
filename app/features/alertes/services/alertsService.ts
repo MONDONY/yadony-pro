@@ -2,7 +2,7 @@
 import { useApi } from '@/composables/useApi'
 import type { CorridorAlert, CreateCorridorAlertPayload } from '@/features/alertes/types/index'
 
-// Côté dony-pro l'utilisateur est un voyageur : ses alertes cherchent des colis.
+// Côté yadony-pro l'utilisateur est un voyageur : ses alertes cherchent des colis.
 const DIRECTION = 'TRAVELER_WANTS_PACKAGES' as const
 
 export function alertsService() {

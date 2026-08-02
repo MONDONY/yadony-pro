@@ -4,11 +4,11 @@
       <!-- Logo + copyright -->
       <div class="flex items-center gap-3">
         <img
-          :src="isDark ? '/logos/logo-white-orange.png' : '/logos/logo-blue-orange.png'"
-          alt="dony"
+          :src="isDark ? logoWhite : logoBlue"
+          alt="yadony"
           class="h-6 w-auto"
         />
-        <span class="text-xs text-text-muted">© {{ currentYear }} dony. Tous droits réservés.</span>
+        <span class="text-xs text-text-muted">© {{ currentYear }} yadony. Tous droits réservés.</span>
       </div>
 
       <!-- Liens -->
@@ -35,11 +35,13 @@
 <script setup lang="ts">
 const { isDark } = useTheme()
 const currentYear = new Date().getFullYear()
+const logoWhite = useAssetUrl('logos/logo-white-orange.png')
+const logoBlue = useAssetUrl('logos/logo-blue-orange.png')
 
 const footerLinks = [
   { label: 'Confidentialité', href: '#' },
   { label: 'CGU', href: '#' },
   { label: 'Contact', href: '#' },
-  { label: '📱 App mobile dony', href: 'https://dony.app', external: true },
+  { label: '📱 App mobile yadony', href: 'https://yadony.app', external: true },
 ]
 </script>

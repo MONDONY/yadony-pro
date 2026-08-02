@@ -282,7 +282,7 @@ function formatHistoryDate(iso: string): string {
           Refuser
         </button>
         <a
-          :href="`mailto:${bid.sender.id}@dony.fr`"
+          :href="`mailto:${bid.sender.id}@yadony.fr`"
           data-test="panel-btn-contact"
           class="h-10 w-10 flex items-center justify-center rounded-btn border border-border text-text-muted hover:text-text hover:border-primary/50 transition-colors"
           aria-label="Contacter l'expéditeur"

@@ -28,7 +28,7 @@ const testimonials = [
     <div class="mx-auto max-w-6xl px-6">
       <div class="mb-12 text-center">
         <h2 class="font-display text-3xl font-semibold tracking-[-0.02em] text-text">Ce qu'en disent les voyageurs</h2>
-        <p class="mt-3 text-text-muted">Ils gèrent leur activité depuis dony PRO.</p>
+        <p class="mt-3 text-text-muted">Ils gèrent leur activité depuis yadony PRO.</p>
       </div>
 
       <div class="grid grid-cols-1 gap-6 md:grid-cols-3">

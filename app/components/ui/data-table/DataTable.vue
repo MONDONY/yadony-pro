@@ -13,14 +13,14 @@ defineProps<{ class?: HTMLAttributes['class'] }>()
 
 <template>
   <div class="w-full overflow-x-auto">
-    <table :class="cn('dony-table w-full border-collapse text-sm', $props.class)">
+    <table :class="cn('yadony-table w-full border-collapse text-sm', $props.class)">
       <slot />
     </table>
   </div>
 </template>
 
 <style scoped>
-.dony-table :deep(th) {
+.yadony-table :deep(th) {
   text-align: left;
   font-size: 11px;
   font-weight: 650;
@@ -31,23 +31,23 @@ defineProps<{ class?: HTMLAttributes['class'] }>()
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
-.dony-table :deep(td) {
+.yadony-table :deep(td) {
   padding: 14px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   color: var(--text);
 }
-.dony-table :deep(tbody tr:last-child td) {
+.yadony-table :deep(tbody tr:last-child td) {
   border-bottom: 0;
 }
-.dony-table :deep(tbody tr) {
+.yadony-table :deep(tbody tr) {
   transition: background-color 0.12s ease;
 }
-.dony-table :deep(tbody tr:hover) {
+.yadony-table :deep(tbody tr:hover) {
   background-color: var(--surface-el);
 }
-.dony-table :deep(th.num),
-.dony-table :deep(td.num) {
+.yadony-table :deep(th.num),
+.yadony-table :deep(td.num) {
   text-align: right;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;

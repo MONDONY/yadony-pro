@@ -19,7 +19,7 @@ const features = [
     icon: Handshake,
     badge: 'Matching & négociation',
     title: 'Trouve les bons expéditeurs',
-    description: 'dony te propose des expéditeurs vérifiés qui correspondent à ton trajet. Négocie le prix directement, sans intermédiaire.',
+    description: 'yadony te propose des expéditeurs vérifiés qui correspondent à ton trajet. Négocie le prix directement, sans intermédiaire.',
     bullets: [
       'Matching automatique basé sur ton trajet',
       'Chat intégré pour négocier le tarif',
@@ -35,7 +35,7 @@ const features = [
     bullets: [
       'Séquestre Stripe — fonds garantis avant le vol',
       'Libération automatique après lecture du QR de livraison',
-      'Protection en cas de litige via dony',
+      'Protection en cas de litige via yadony',
     ],
   },
 ] as const

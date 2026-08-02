@@ -27,7 +27,7 @@ const items = [
   <div class="relative flex w-1/2 shrink-0 flex-col border-r border-border bg-surface-el p-10">
     <!-- Logo -->
     <div class="flex items-center gap-2">
-      <span class="font-display text-2xl font-semibold tracking-tight text-text">dony</span>
+      <span class="font-display text-2xl font-semibold tracking-tight text-text">yadony</span>
       <span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">PRO</span>
     </div>
 

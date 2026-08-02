@@ -37,7 +37,7 @@ export function useActivity() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `dony-export-${year}-${type}.${format}`
+      a.download = `yadony-export-${year}-${type}.${format}`
       a.click()
       URL.revokeObjectURL(url)
     } catch {

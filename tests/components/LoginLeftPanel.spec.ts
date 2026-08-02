@@ -3,9 +3,9 @@ import { mount } from '@vue/test-utils'
 import LoginLeftPanel from '@/features/auth/components/LoginLeftPanel.vue'
 
 describe('LoginLeftPanel', () => {
-  it('renders the dony logo text', () => {
+  it('renders the yadony logo text', () => {
     const wrapper = mount(LoginLeftPanel)
-    expect(wrapper.text()).toContain('dony')
+    expect(wrapper.text()).toContain('yadony')
   })
 
   it('renders the PRO badge', () => {

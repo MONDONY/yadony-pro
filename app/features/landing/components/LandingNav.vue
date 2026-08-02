@@ -7,8 +7,8 @@
       <!-- Logo + badge PRO -->
       <div class="flex items-center gap-2.5">
         <img
-          :src="isDark ? '/logos/logo-white-orange.png' : '/logos/logo-blue-orange.png'"
-          alt="dony"
+          :src="isDark ? logoWhite : logoBlue"
+          alt="yadony"
           class="h-7 w-auto"
         />
         <span
@@ -80,6 +80,8 @@ import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 
 const { isDark } = useTheme()
 const menuOpen = ref(false)
+const logoWhite = useAssetUrl('logos/logo-white-orange.png')
+const logoBlue = useAssetUrl('logos/logo-blue-orange.png')
 
 const navLinks = [
   { href: '#comment-ca-marche', label: 'Comment ça marche' },
