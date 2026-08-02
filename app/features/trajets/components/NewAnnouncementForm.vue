@@ -300,7 +300,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
     <section class="space-y-5">
       <h2 class="font-display text-lg font-semibold text-text border-b border-border pb-2">Trajet</h2>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-text mb-1.5">
             Ville de départ <span class="text-danger">*</span>
@@ -321,7 +321,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-text mb-1.5">
             Ville d'arrivée <span class="text-danger">*</span>
@@ -390,7 +390,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
           :error="errors.dropoffPlace"
         />
       </div>
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-text mb-1.5">
             Fenêtre de remise — début <span class="text-danger">*</span>

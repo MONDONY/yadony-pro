@@ -19,7 +19,7 @@ const options: Array<{ value: CapacityUnit; label: string; description: string }
 <template>
   <div class="space-y-2">
     <label class="text-sm font-medium text-text">Type de capacité</label>
-    <div class="grid grid-cols-3 gap-2">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
       <button
         v-for="opt in options"
         :key="opt.value"
