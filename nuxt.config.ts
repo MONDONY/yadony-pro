@@ -30,6 +30,7 @@ export default defineNuxtConfig({
     },
   },
   app: {
+    baseURL: '/pro/',
     head: {
       title: 'dony PRO',
       htmlAttrs: { lang: 'fr' },
