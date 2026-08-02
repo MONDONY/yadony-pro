@@ -1,11 +1,18 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import LoginLeftPanel from '@/features/auth/components/LoginLeftPanel.vue'
+
+vi.mock('@/composables/useAssetUrl', () => ({
+  useAssetUrl: (path: string) => `/${path}`,
+}))
+
+const { default: LoginLeftPanel } = await import('@/features/auth/components/LoginLeftPanel.vue')
 
 describe('LoginLeftPanel', () => {
-  it('renders the yadony logo text', () => {
+  it('renders the yadony logo image', () => {
     const wrapper = mount(LoginLeftPanel)
-    expect(wrapper.text()).toContain('yadony')
+    const img = wrapper.find('img[alt="yadony"]')
+    expect(img.exists()).toBe(true)
+    expect(img.attributes('src')).toContain('logo-yadony.png')
   })
 
   it('renders the PRO badge', () => {

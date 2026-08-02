@@ -4,7 +4,7 @@
       <!-- Logo + copyright -->
       <div class="flex items-center gap-3">
         <img
-          :src="isDark ? logoWhite : logoBlue"
+          :src="logo"
           alt="yadony"
           class="h-6 w-auto"
         />
@@ -33,10 +33,8 @@
 </template>
 
 <script setup lang="ts">
-const { isDark } = useTheme()
 const currentYear = new Date().getFullYear()
-const logoWhite = useAssetUrl('logos/logo-white-orange.png')
-const logoBlue = useAssetUrl('logos/logo-blue-orange.png')
+const logo = useAssetUrl('logos/logo-yadony.png')
 
 const footerLinks = [
   { label: 'Confidentialité', href: '#' },

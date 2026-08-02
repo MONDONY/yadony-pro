@@ -3,7 +3,6 @@
 import { ref } from 'vue'
 import PhoneNumberForm from '@/features/auth/components/PhoneNumberForm.vue'
 import OtpForm from '@/features/auth/components/OtpForm.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 
 definePageMeta({ layout: 'auth' })
 
@@ -38,7 +37,6 @@ function handleBack() {
         </svg>
         {{ step === 'otp' ? 'Changer de numéro' : 'Accueil' }}
       </button>
-      <ThemeToggle />
     </div>
 
     <!-- Titre -->

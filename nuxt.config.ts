@@ -34,13 +34,8 @@ export default defineNuxtConfig({
     head: {
       title: 'yadony PRO',
       htmlAttrs: { lang: 'fr' },
-      script: [
-        {
-          innerHTML: `(function(){var s=localStorage.getItem('yadony-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(s===null&&d)){document.documentElement.classList.add('dark');}})();`,
-          type: 'text/javascript',
-          tagPosition: 'head',
-        }
-      ],
+      // Dark mode désactivé pour l'instant (pas de logo/assets adaptés au dark).
+      script: [],
     },
   },
 })

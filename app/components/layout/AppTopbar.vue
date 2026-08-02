@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Bell, LogOut, Search } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useFirebaseAuth } from '@/features/auth/composables/useFirebaseAuth'
 import { useGlobalSearch } from '@/features/search/composables/useGlobalSearch'
 
@@ -34,7 +33,6 @@ async function logout() {
       <Button variant="ghost" size="icon" class="sm:hidden" data-test="topbar-search-icon" @click="openSearch()">
         <Search class="w-4 h-4" />
       </Button>
-      <ThemeToggle />
       <Button variant="ghost" size="icon">
         <Bell class="w-4 h-4" />
       </Button>
