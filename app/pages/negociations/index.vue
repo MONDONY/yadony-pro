@@ -39,8 +39,8 @@ const TABS: { key: Tab; label: string; count?: () => number }[] = [
 <template>
   <div class="space-y-4">
     <!-- Tabs + Refresh -->
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex gap-1 bg-surface border border-border rounded-btn p-0.5">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex gap-1 bg-surface border border-border rounded-btn p-0.5 overflow-x-auto">
         <button
           v-for="tab in TABS"
           :key="tab.key"

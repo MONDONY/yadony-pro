@@ -148,16 +148,16 @@ watch(isLoading, async (val) => {
       </div>
 
       <!-- Prix courant -->
-      <div class="flex-shrink-0 flex items-center gap-3 mb-4 px-1">
-        <div class="bg-surface border border-border rounded-btn px-4 py-2 text-center">
+      <div class="flex-shrink-0 grid grid-cols-3 gap-2 sm:gap-3 mb-4 px-1">
+        <div class="bg-surface border border-border rounded-btn px-2 sm:px-4 py-2 text-center">
           <p class="text-xs text-text-muted">Prix actuel</p>
           <p class="text-xl font-bold text-accent">{{ thread.currentPriceEur }} €</p>
         </div>
-        <div class="bg-surface border border-border rounded-btn px-4 py-2 text-center">
+        <div class="bg-surface border border-border rounded-btn px-2 sm:px-4 py-2 text-center">
           <p class="text-xs text-text-muted">Échanges</p>
           <p class="text-xl font-bold text-text">{{ thread.roundsCount }}</p>
         </div>
-        <div class="bg-surface border border-border rounded-btn px-4 py-2 text-center">
+        <div class="bg-surface border border-border rounded-btn px-2 sm:px-4 py-2 text-center">
           <p class="text-xs text-text-muted">Prix/kg</p>
           <p class="text-xl font-bold text-text">{{ (thread.currentPriceEur / thread.weightKg).toFixed(2) }} €</p>
         </div>
@@ -199,7 +199,7 @@ watch(isLoading, async (val) => {
           <p class="text-xs text-amber-400 font-medium">Dernier round atteint — Accepter ou Refuser uniquement</p>
         </div>
 
-        <div v-if="thread.status === 'OPEN' && isMyTurn" class="flex gap-2">
+        <div v-if="thread.status === 'OPEN' && isMyTurn" class="flex flex-col sm:flex-row gap-2">
           <!-- Bouton Accepter (si canAccept) -->
           <button
             v-if="canAccept"

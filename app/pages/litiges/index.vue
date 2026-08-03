@@ -49,28 +49,30 @@ const STATUS_CLASSES: Record<string, string> = {
     </div>
 
     <div v-else class="bg-surface border border-border rounded-card overflow-hidden">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="border-b border-border bg-bg">
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Type</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Statut</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Remboursement</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider">Ouvert le</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-border">
-          <tr v-for="d in disputes" :key="d.id" :data-test="`dispute-${d.id}`">
-            <td class="px-4 py-3 text-text">{{ DISPUTE_TYPE_LABELS[d.type] ?? d.type }}</td>
-            <td class="px-4 py-3">
-              <span :class="['inline-block px-2 py-0.5 rounded-full text-xs font-medium', STATUS_CLASSES[d.status] ?? 'bg-border text-text-muted']">
-                {{ DISPUTE_STATUS_LABELS[d.status] ?? d.status }}
-              </span>
-            </td>
-            <td class="px-4 py-3 text-text-muted">{{ d.refundFrozen ? 'Gelé pendant l’examen' : '—' }}</td>
-            <td class="px-4 py-3 text-text-muted">{{ formatDate(d.createdAt) }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-bg">
+              <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Type</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Statut</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Remboursement</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-text-muted uppercase tracking-wider whitespace-nowrap">Ouvert le</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            <tr v-for="d in disputes" :key="d.id" :data-test="`dispute-${d.id}`">
+              <td class="px-4 py-3 text-text whitespace-nowrap">{{ DISPUTE_TYPE_LABELS[d.type] ?? d.type }}</td>
+              <td class="px-4 py-3">
+                <span :class="['inline-block px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap', STATUS_CLASSES[d.status] ?? 'bg-border text-text-muted']">
+                  {{ DISPUTE_STATUS_LABELS[d.status] ?? d.status }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-text-muted whitespace-nowrap">{{ d.refundFrozen ? 'Gelé pendant l’examen' : '—' }}</td>
+              <td class="px-4 py-3 text-text-muted whitespace-nowrap">{{ formatDate(d.createdAt) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <p class="text-xs text-text-subtle">

@@ -226,6 +226,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
 
     <!-- Table view -->
     <div v-else-if="viewMode === 'table'" class="rounded-card border border-border bg-surface shadow-card overflow-hidden">
+      <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-border bg-surface-el">
@@ -322,6 +323,7 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- Cards view -->

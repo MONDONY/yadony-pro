@@ -168,7 +168,7 @@ function corridorValue(c: CorridorOption | null): string {
 
       <!-- Date range inputs -->
       <template v-if="dateMode === 'period'">
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <div class="relative flex items-center">
             <input
               type="date"

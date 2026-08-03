@@ -184,22 +184,24 @@ function onExportCsv() {
       </div>
 
       <!-- Tabs -->
-      <div class="flex items-center gap-1 bg-surface rounded-btn p-1 border border-border w-fit">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          :data-test="`tab-${tab.key}`"
-          :class="[
-            'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
-            activeTab === tab.key ? 'bg-primary text-on-primary shadow-sm' : 'text-text-muted hover:text-text',
-          ]"
-          @click="activeTab = tab.key"
-        >
-          {{ tab.label }}
-          <span v-if="tab.key === 'bids' && bids.length > 0" class="ml-1.5 text-xs opacity-70">
-            ({{ bids.length }})
-          </span>
-        </button>
+      <div class="overflow-x-auto">
+        <div class="flex items-center gap-1 bg-surface rounded-btn p-1 border border-border w-fit">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            :data-test="`tab-${tab.key}`"
+            :class="[
+              'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
+              activeTab === tab.key ? 'bg-primary text-on-primary shadow-sm' : 'text-text-muted hover:text-text',
+            ]"
+            @click="activeTab = tab.key"
+          >
+            {{ tab.label }}
+            <span v-if="tab.key === 'bids' && bids.length > 0" class="ml-1.5 text-xs opacity-70">
+              ({{ bids.length }})
+            </span>
+          </button>
+        </div>
       </div>
 
       <!-- Tab content -->
