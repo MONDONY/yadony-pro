@@ -30,7 +30,7 @@ function go(page: number) {
 </script>
 
 <template>
-  <nav class="mt-4 flex items-center justify-between gap-4" aria-label="Pagination">
+  <nav class="mt-4 flex flex-wrap items-center justify-between gap-3" aria-label="Pagination">
     <p v-if="rangeLabel" class="font-mono text-xs tabular-nums text-text-muted">{{ rangeLabel }}</p>
     <div class="ml-auto flex items-center gap-2">
       <button

@@ -163,18 +163,6 @@ function openNegotiateModal(request: MatchingRequest) {
         </div>
 
         <template v-else>
-          <!-- Vue liste : en-tête colonnes -->
-          <div v-if="viewMode === 'list'" class="flex items-center gap-4 px-4 py-2 border-b border-border bg-surface-el/50">
-            <div class="w-8 shrink-0" />
-            <SectionLabel as="div" class="w-36 shrink-0">Expéditeur</SectionLabel>
-            <SectionLabel as="div" class="w-16 shrink-0">Poids</SectionLabel>
-            <SectionLabel as="div" class="w-28 shrink-0">Type</SectionLabel>
-            <SectionLabel as="div" class="w-20 shrink-0">Budget</SectionLabel>
-            <SectionLabel as="div" class="w-12 shrink-0">Score</SectionLabel>
-            <SectionLabel as="div" class="flex-1 hidden md:block">Message</SectionLabel>
-            <div class="shrink-0 w-20" />
-          </div>
-
           <!-- Vue carte -->
           <div v-if="viewMode === 'card'" class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             <MatchingRequestCard
@@ -190,17 +178,29 @@ function openNegotiateModal(request: MatchingRequest) {
             />
           </div>
 
-          <!-- Vue liste -->
-          <div v-else>
-            <MatchingRequestRow
-              v-for="req in paginatedRequests"
-              :key="req.id"
-              :request="req"
-              :is-negotiating="negotiatingRequest?.id === req.id"
-              :has-negotiated="negotiatedIds.has(req.id)"
-              @negotiate="openNegotiateModal"
-              @view-detail="detailRequest = $event"
-            />
+          <!-- Vue liste : scroll horizontal sur mobile, largeur fixe des colonnes préservée -->
+          <div v-else class="overflow-x-auto">
+            <div class="min-w-[720px]">
+              <div class="flex items-center gap-4 px-4 py-2 border-b border-border bg-surface-el/50">
+                <div class="w-8 shrink-0" />
+                <SectionLabel as="div" class="w-36 shrink-0">Expéditeur</SectionLabel>
+                <SectionLabel as="div" class="w-16 shrink-0">Poids</SectionLabel>
+                <SectionLabel as="div" class="w-28 shrink-0">Type</SectionLabel>
+                <SectionLabel as="div" class="w-20 shrink-0">Budget</SectionLabel>
+                <SectionLabel as="div" class="w-12 shrink-0">Score</SectionLabel>
+                <SectionLabel as="div" class="flex-1 hidden md:block">Message</SectionLabel>
+                <div class="shrink-0 w-20" />
+              </div>
+              <MatchingRequestRow
+                v-for="req in paginatedRequests"
+                :key="req.id"
+                :request="req"
+                :is-negotiating="negotiatingRequest?.id === req.id"
+                :has-negotiated="negotiatedIds.has(req.id)"
+                @negotiate="openNegotiateModal"
+                @view-detail="detailRequest = $event"
+              />
+            </div>
           </div>
 
           <!-- Pagination -->

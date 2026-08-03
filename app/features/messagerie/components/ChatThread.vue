@@ -67,9 +67,9 @@ function onSubmit() {
         data-test="chat-input"
         type="text"
         placeholder="Écris ton message…"
-        class="flex-1 h-10 rounded-btn border border-border bg-surface px-3 text-sm text-text focus:outline-none focus:border-primary"
+        class="flex-1 min-w-0 h-10 rounded-btn border border-border bg-surface px-3 text-sm text-text focus:outline-none focus:border-primary"
       />
-      <Button type="submit" size="icon" data-test="chat-send" :disabled="!canSend" aria-label="Envoyer">
+      <Button type="submit" size="icon" class="shrink-0" data-test="chat-send" :disabled="!canSend" aria-label="Envoyer">
         <Send class="w-4 h-4" />
       </Button>
     </form>

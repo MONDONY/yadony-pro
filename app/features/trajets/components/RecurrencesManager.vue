@@ -120,9 +120,9 @@ async function onDelete(rec: UserTripRecurrence) {
     <p v-if="error" class="text-sm text-danger" data-test="recurrences-error">{{ error }}</p>
 
     <!-- En-tête + créer -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <p class="flex items-center gap-2 text-sm text-text-muted">
-        <Repeat class="w-4 h-4 text-primary" />
+        <Repeat class="w-4 h-4 text-primary shrink-0" />
         Publie automatiquement tes trajets selon un planning hebdomadaire.
       </p>
       <Button
@@ -218,17 +218,17 @@ async function onDelete(rec: UserTripRecurrence) {
         v-for="rec in recurrences"
         :key="rec.id"
         :data-test="`recurrence-${rec.id}`"
-        class="bg-surface border border-border rounded-card p-4 flex items-center gap-4"
+        class="bg-surface border border-border rounded-card p-4 flex flex-wrap items-center gap-4"
       >
-        <div class="flex-1">
-          <p class="text-sm font-semibold text-text">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-text truncate">
             {{ rec.departureCity }} → {{ rec.arrivalCity }} · {{ rec.pricePerKg }}€/kg
           </p>
-          <p class="text-xs text-text-muted mt-0.5">
+          <p class="text-xs text-text-muted mt-0.5 truncate">
             🔁 {{ weekdaysSummary(rec.weekdays) }}{{ rec.departureTime ? ' · ' + rec.departureTime : '' }}
           </p>
         </div>
-        <label class="flex items-center gap-2 cursor-pointer">
+        <label class="flex items-center gap-2 cursor-pointer shrink-0">
           <input
             type="checkbox"
             :checked="rec.active"

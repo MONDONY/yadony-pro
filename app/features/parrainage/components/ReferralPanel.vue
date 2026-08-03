@@ -33,7 +33,7 @@ async function copyLink() {
   <div class="space-y-5">
     <div class="bg-surface-elevated rounded-card p-4">
       <p class="text-sm text-text-muted mb-1">Ton code de parrainage</p>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3">
         <span class="font-display font-bold text-xl text-primary tracking-wider" data-test="referral-code">
           {{ referral.code }}
         </span>
@@ -41,7 +41,7 @@ async function copyLink() {
           type="button"
           variant="outline"
           size="sm"
-          class="ml-auto"
+          class="sm:ml-auto"
           data-test="referral-copy"
           @click="copyLink"
         >

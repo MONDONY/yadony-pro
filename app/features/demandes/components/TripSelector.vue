@@ -52,12 +52,12 @@ onBeforeUnmount(() => {
     <SectionLabel class="mb-2">Mon trajet actif</SectionLabel>
     <div class="flex items-center gap-3">
       <!-- Affichage du trajet sélectionné -->
-      <div class="relative flex-1">
-        <div class="flex items-center justify-between bg-surface border border-primary/40 rounded-input px-3 py-2.5">
-          <span class="flex items-center gap-1.5 text-sm font-semibold text-text">
+      <div class="relative flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-2 bg-surface border border-primary/40 rounded-input px-3 py-2.5">
+          <span class="flex items-center gap-1.5 text-sm font-semibold text-text min-w-0 truncate">
             <component :is="selectedTrip ? Plane : Layers" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-            {{ selectedTrip ? selectedTrip.tripCorridor : 'Tous mes trajets' }}
-            <span v-if="selectedTrip" class="text-text-muted font-normal text-xs ml-2 font-mono tabular-nums">
+            <span class="truncate">{{ selectedTrip ? selectedTrip.tripCorridor : 'Tous mes trajets' }}</span>
+            <span v-if="selectedTrip" class="hidden sm:inline text-text-muted font-normal text-xs ml-2 font-mono tabular-nums whitespace-nowrap">
               · {{ selectedTrip.tripDepartureDate }} · {{ selectedTrip.tripAvailableKg }} kg dispo
             </span>
           </span>

@@ -27,7 +27,7 @@ const emit = defineEmits<{
     <div
       v-if="count > 0"
       data-test="bulk-actions-bar"
-      class="flex items-center gap-3 px-4 py-3 bg-surface border border-primary/40 rounded-el shadow-pop"
+      class="flex flex-wrap items-center gap-3 px-4 py-3 bg-surface border border-primary/40 rounded-el shadow-pop"
     >
       <span class="text-sm font-medium text-text-muted mr-2">
         <span class="text-text font-mono font-bold tabular-nums">{{ count }}</span> sélectionné{{ count > 1 ? 's' : '' }}

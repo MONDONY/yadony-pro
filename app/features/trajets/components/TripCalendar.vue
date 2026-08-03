@@ -77,8 +77,8 @@ const statusDotColor: Record<string, string> = {
     </div>
 
     <div class="grid grid-cols-7 border-b border-border">
-      <div v-for="day in DAYS_FR" :key="day" class="py-2 text-center text-xs font-medium text-text-muted">
-        {{ day }}
+      <div v-for="day in DAYS_FR" :key="day" class="py-2 text-center text-2xs sm:text-xs font-medium text-text-muted">
+        {{ day[0] }}<span class="hidden sm:inline">{{ day.slice(1) }}</span>
       </div>
     </div>
 
@@ -86,20 +86,20 @@ const statusDotColor: Record<string, string> = {
       <div
         v-for="(day, i) in calendarDays"
         :key="i"
-        :class="cn('min-h-[80px] p-2 border-r border-b border-border', !day && 'bg-bg/30')"
+        :class="cn('min-h-[56px] sm:min-h-[80px] p-1 sm:p-2 border-r border-b border-border overflow-hidden', !day && 'bg-bg/30')"
       >
         <template v-if="day !== null">
-          <span :class="cn('inline-flex items-center justify-center w-6 h-6 rounded-full font-mono text-xs font-medium tabular-nums mb-1', isToday(day) ? 'bg-primary text-on-primary' : 'text-text-muted')">
+          <span :class="cn('inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full font-mono text-2xs sm:text-xs font-medium tabular-nums mb-1', isToday(day) ? 'bg-primary text-on-primary' : 'text-text-muted')">
             {{ day }}
           </span>
           <div v-if="tripsByDay.has(day)" class="space-y-0.5">
             <div
               v-for="trip in tripsByDay.get(day)"
               :key="trip.id"
-              class="flex items-center gap-1 text-xs rounded-xs px-1.5 py-0.5 bg-surface-el truncate"
+              class="flex items-center gap-1 text-2xs sm:text-xs rounded-xs px-1 sm:px-1.5 py-0.5 bg-surface-el truncate"
             >
               <span :class="cn('w-1.5 h-1.5 rounded-full shrink-0', statusDotColor[trip.status])" />
-              <span class="truncate text-text-muted">{{ trip.arrivalCity.label }}</span>
+              <span class="truncate text-text-muted hidden sm:inline">{{ trip.arrivalCity.label }}</span>
             </div>
           </div>
         </template>
