@@ -30,14 +30,10 @@ function isoToDateInput(iso: string | null): string {
  */
 function deadlineToIso(date: string, departureDate: string, departureTime: string): string | null {
   if (!date) return null
-  const endOfDay = new Date(`${date}T23:59:00`)
-  if (departureDate && departureTime && date === departureDate) {
+  if (departureTime && date === departureDate) {
     return new Date(`${date}T${departureTime}`).toISOString()
   }
-  if (departureDate && date === departureDate) {
-    return new Date(`${date}T23:59:00`).toISOString()
-  }
-  return endOfDay.toISOString()
+  return new Date(`${date}T23:59:00`).toISOString()
 }
 
 export function useAnnouncementForm() {
