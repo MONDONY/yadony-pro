@@ -12,20 +12,28 @@ import type {
 } from '@/features/trajets/types/index'
 import type { TripTemplate } from '@/features/trajets/data/tripTemplates'
 
-// Convertit un ISO UTC ("2026-06-01T10:00:00.000Z") en valeur locale pour
-// <input type="datetime-local"> ("2026-06-01T10:00"). null → chaîne vide.
-function isoToLocalInput(iso: string | null): string {
+// Convertit un ISO UTC ("2026-06-01T18:00:00.000Z") en valeur locale pour
+// <input type="date"> ("2026-06-01"). null → chaîne vide.
+function isoToDateInput(iso: string | null): string {
   if (!iso) return ''
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-// Convertit une valeur <input type="datetime-local"> (heure locale du
-// navigateur) en ISO UTC pour l'API. Chaîne vide → null.
-function localInputToIso(value: string): string | null {
-  if (!value) return null
-  return new Date(value).toISOString()
+/**
+ * Convertit la date limite de dépôt saisie (jour seul) en ISO UTC pour l'API.
+ *
+ * Le voyageur ne choisit qu'un jour : on le borne à la fin de journée, sauf si
+ * le départ a lieu ce jour-là — auquel cas la limite est l'heure de départ,
+ * parce que le backend refuse toute date limite postérieure au départ.
+ */
+function deadlineToIso(date: string, departureDate: string, departureTime: string): string | null {
+  if (!date) return null
+  if (departureTime && date === departureDate) {
+    return new Date(`${date}T${departureTime}`).toISOString()
+  }
+  return new Date(`${date}T23:59:00`).toISOString()
 }
 
 export function useAnnouncementForm() {
@@ -45,8 +53,7 @@ export function useAnnouncementForm() {
     refusedCategories: [],
     senderNote: '',
     cashAccepted: false,
-    handoverWindowStart: '',
-    handoverWindowEnd: '',
+    handoverDeadline: '',
   })
 
   const commissionRate = ref(FALLBACK_COMMISSION_RATE)
@@ -71,21 +78,10 @@ export function useAnnouncementForm() {
     if (!form.pickupPlace) errors.pickupPlace = 'Lieu de remise requis'
     if (!form.dropoffPlace) errors.dropoffPlace = 'Lieu de récupération requis'
 
-    if (!form.handoverWindowStart || !form.handoverWindowEnd) {
-      errors.handoverWindowStart = 'La fenêtre de remise est obligatoire'
-    } else {
-      const start = new Date(form.handoverWindowStart)
-      const end = new Date(form.handoverWindowEnd)
-      if (end.getTime() <= start.getTime()) {
-        errors.handoverWindowStart = 'La fin de la fenêtre de remise doit être après le début'
-      } else if (form.departureDate) {
-        const departureBound = form.departureTime
-          ? new Date(`${form.departureDate}T${form.departureTime}`)
-          : new Date(`${form.departureDate}T23:59:59.999`)
-        if (end.getTime() > departureBound.getTime()) {
-          errors.handoverWindowStart = 'La fenêtre de remise doit se terminer avant le départ du voyageur'
-        }
-      }
+    if (!form.handoverDeadline) {
+      errors.handoverDeadline = 'La date limite de dépôt est obligatoire'
+    } else if (form.departureDate && form.handoverDeadline > form.departureDate) {
+      errors.handoverDeadline = 'La date limite de dépôt doit précéder le départ'
     }
 
     return errors
@@ -112,8 +108,11 @@ export function useAnnouncementForm() {
       acceptedContentTypes: form.acceptedCategories,
       refusedTypes: form.refusedCategories,
       acceptedPaymentMethods: paymentMethods,
-      handoverWindowStart: localInputToIso(form.handoverWindowStart),
-      handoverWindowEnd: localInputToIso(form.handoverWindowEnd),
+      handoverDeadline: deadlineToIso(
+        form.handoverDeadline,
+        form.departureDate,
+        form.departureTime,
+      ),
     }
   }
 
@@ -153,8 +152,7 @@ export function useAnnouncementForm() {
     form.refusedCategories = [...trip.refusedCategories]
     form.senderNote = trip.senderNote ?? ''
     form.cashAccepted = trip.cashAccepted
-    form.handoverWindowStart = isoToLocalInput(trip.handoverWindowStart)
-    form.handoverWindowEnd = isoToLocalInput(trip.handoverWindowEnd)
+    form.handoverDeadline = isoToDateInput(trip.handoverDeadline)
   }
 
   /**

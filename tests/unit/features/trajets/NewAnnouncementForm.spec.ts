@@ -109,8 +109,7 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
       refusedCategories: ['Poissons'],
       senderNote: '',
       cashAccepted: false,
-      handoverWindowStart: null,
-      handoverWindowEnd: null,
+      handoverDeadline: null,
     }
     const wrapper = await mountForm({ prefill })
     const { default: ContentTagChips } = await import(
@@ -250,8 +249,7 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
       refusedCategories: [],
       senderNote: null,
       cashAccepted: false,
-      handoverWindowStart: null,
-      handoverWindowEnd: null,
+      handoverDeadline: null,
       confirmedParcelCount: 0,
       pendingBidCount: 0,
       reservedRevenueEuros: 0,

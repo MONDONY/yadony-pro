@@ -69,7 +69,7 @@ describe('useAnnouncementForm', () => {
     expect(errors.transportMode).toBeDefined()
     expect(errors.pickupPlace).toBeDefined()
     expect(errors.dropoffPlace).toBeDefined()
-    expect(errors.handoverWindowStart).toBe('La fenêtre de remise est obligatoire')
+    expect(errors.handoverDeadline).toBe('La date limite de dépôt est obligatoire')
   })
 
   it('validate returns no errors when all required fields are set', async () => {
@@ -81,13 +81,12 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T10:00'
-    form.handoverWindowEnd = '2026-06-01T12:00'
+    form.handoverDeadline = '2026-06-01'
     const errors = validate()
     expect(Object.keys(errors)).toHaveLength(0)
   })
 
-  it('validate rejects handover window end before or equal to start', async () => {
+  it('validate rejects a deadline after the departure date', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, validate } = useAnnouncementForm()
     form.departureCity = validPlace
@@ -96,13 +95,12 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T12:00'
-    form.handoverWindowEnd = '2026-06-01T12:00'
+    form.handoverDeadline = '2026-06-02'
     const errors = validate()
-    expect(errors.handoverWindowStart).toBe('La fin de la fenêtre de remise doit être après le début')
+    expect(errors.handoverDeadline).toBe('La date limite de dépôt doit précéder le départ')
   })
 
-  it('validate rejects handover window ending after departure time', async () => {
+  it('validate accepts a deadline several days before departure', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, validate } = useAnnouncementForm()
     form.departureCity = validPlace
@@ -112,13 +110,12 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T08:00'
-    form.handoverWindowEnd = '2026-06-01T10:00'
+    form.handoverDeadline = '2026-05-28'
     const errors = validate()
-    expect(errors.handoverWindowStart).toBe('La fenêtre de remise doit se terminer avant le départ du voyageur')
+    expect(errors.handoverDeadline).toBeUndefined()
   })
 
-  it('validate accepts handover window ending exactly at end of departure day when no departure time set', async () => {
+  it('validate accepts a deadline on the departure day itself', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, validate } = useAnnouncementForm()
     form.departureCity = validPlace
@@ -127,10 +124,9 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T20:00'
-    form.handoverWindowEnd = '2026-06-01T22:00'
+    form.handoverDeadline = '2026-06-01'
     const errors = validate()
-    expect(errors.handoverWindowStart).toBeUndefined()
+    expect(errors.handoverDeadline).toBeUndefined()
   })
 
   it('submit calls createAnnouncement with PUBLISHED status', async () => {
@@ -143,8 +139,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T10:00'
-    form.handoverWindowEnd = '2026-06-01T12:00'
+    form.handoverDeadline = '2026-06-01'
     const result = await submit('PUBLISHED')
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({ transportMode: 'AVION' }),
@@ -153,22 +148,38 @@ describe('useAnnouncementForm', () => {
     expect(result.status).toBe('PUBLISHED')
   })
 
-  it('buildPayload sends handover window as UTC ISO strings', async () => {
+  it('buildPayload envoie la date limite en ISO UTC, bornée à la fin de journée', async () => {
     mockCreate.mockResolvedValue({ id: 'trip-hw', status: 'PUBLISHED' })
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, submit } = useAnnouncementForm()
     form.departureCity = validPlace
     form.arrivalCity = validPlace2
-    form.departureDate = '2026-06-01'
+    form.departureDate = '2026-06-05'
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T10:00'
-    form.handoverWindowEnd = '2026-06-01T12:00'
+    form.handoverDeadline = '2026-06-01'
     await submit('PUBLISHED')
     const payload = mockCreate.mock.calls[0][0]
-    expect(payload.handoverWindowStart).toBe(new Date('2026-06-01T10:00').toISOString())
-    expect(payload.handoverWindowEnd).toBe(new Date('2026-06-01T12:00').toISOString())
+    expect(payload.handoverDeadline).toBe(new Date('2026-06-01T23:59:00').toISOString())
+  })
+
+  it("buildPayload borne la date limite à l'heure de départ quand c'est le jour du départ", async () => {
+    mockCreate.mockResolvedValue({ id: 'trip-hw2', status: 'PUBLISHED' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-06-01'
+    form.departureTime = '09:00'
+    form.transportMode = 'AVION'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    form.handoverDeadline = '2026-06-01'
+    await submit('PUBLISHED')
+    const payload = mockCreate.mock.calls[0][0]
+    // 23:59 serait refusé par le backend (postérieur au départ).
+    expect(payload.handoverDeadline).toBe(new Date('2026-06-01T09:00').toISOString())
   })
 
   it('buildPayload includes capacityUnit in the payload', async () => {
@@ -181,8 +192,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T10:00'
-    form.handoverWindowEnd = '2026-06-01T12:00'
+    form.handoverDeadline = '2026-06-01'
     form.capacityUnit = 'SUITCASE_32KG'
     await submit('PUBLISHED')
     expect(mockCreate).toHaveBeenCalledWith(
@@ -201,8 +211,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T10:00'
-    form.handoverWindowEnd = '2026-06-01T12:00'
+    form.handoverDeadline = '2026-06-01'
     await submit('PUBLISHED')
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({ capacityUnit: 'SUITCASE_23KG' }),
@@ -220,8 +229,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'VOITURE'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-06-01T10:00'
-    form.handoverWindowEnd = '2026-06-01T12:00'
+    form.handoverDeadline = '2026-06-01'
     const result = await submit('DRAFT')
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({ transportMode: 'VOITURE' }),
@@ -247,7 +255,7 @@ describe('useAnnouncementForm', () => {
       availableWeightKg: 20, usedWeightKg: 0, pricePerKg: 8,
       acceptedCategories: ['Vêtements'], refusedCategories: ['Électronique'],
       senderNote: 'Handle with care', cashAccepted: true,
-      handoverWindowStart: '2026-05-01T14:00:00Z', handoverWindowEnd: '2026-05-01T16:00:00Z',
+      handoverDeadline: '2026-05-01T16:00:00Z',
       confirmedParcelCount: 0, pendingBidCount: 0, reservedRevenueEuros: 0,
       createdAt: '2026-05-01T00:00:00Z',
     }
@@ -257,11 +265,11 @@ describe('useAnnouncementForm', () => {
     expect(form.pricePerKg).toBe(8)
     expect(form.cashAccepted).toBe(true)
     expect(form.departureDate).toBe('')
-    expect(new Date(form.handoverWindowStart).toISOString()).toBe('2026-05-01T14:00:00.000Z')
-    expect(new Date(form.handoverWindowEnd).toISOString()).toBe('2026-05-01T16:00:00.000Z')
+    // La date limite du modèle est reprise en valeur <input type="date">.
+    expect(form.handoverDeadline).toBe('2026-05-01')
   })
 
-  it('applyTemplate leaves handover window empty when the trip has none', async () => {
+  it('applyTemplate leaves the deadline empty when the trip has none', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, applyTemplate } = useAnnouncementForm()
     applyTemplate({
@@ -272,12 +280,11 @@ describe('useAnnouncementForm', () => {
       availableWeightKg: 20, usedWeightKg: 0, pricePerKg: 8,
       acceptedCategories: [], refusedCategories: [],
       senderNote: null, cashAccepted: false,
-      handoverWindowStart: null, handoverWindowEnd: null,
+      handoverDeadline: null,
       confirmedParcelCount: 0, pendingBidCount: 0, reservedRevenueEuros: 0,
       createdAt: '2026-05-01T00:00:00Z',
     })
-    expect(form.handoverWindowStart).toBe('')
-    expect(form.handoverWindowEnd).toBe('')
+    expect(form.handoverDeadline).toBe('')
   })
 
   it('applyTemplate sets capacityUnit from trip, defaults to SUITCASE_23KG when absent', async () => {
@@ -291,7 +298,7 @@ describe('useAnnouncementForm', () => {
       availableWeightKg: 10, usedWeightKg: 0, pricePerKg: 6,
       acceptedCategories: [], refusedCategories: [],
       senderNote: null, cashAccepted: false,
-      handoverWindowStart: null, handoverWindowEnd: null,
+      handoverDeadline: null,
       confirmedParcelCount: 0, pendingBidCount: 0, reservedRevenueEuros: 0,
       createdAt: '2026-05-01T00:00:00Z',
     }
@@ -358,8 +365,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-07-01T10:00'
-    form.handoverWindowEnd = '2026-07-01T12:00'
+    form.handoverDeadline = '2026-07-01'
     const result = await submitEdit('trip-edit', 'PUBLISHED')
     expect(mockUpdate).toHaveBeenCalledWith('trip-edit', expect.objectContaining({ transportMode: 'AVION', departureDate: '2026-07-01' }))
     expect(result.id).toBe('trip-edit')
@@ -382,8 +388,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-07-01T10:00'
-    form.handoverWindowEnd = '2026-07-01T12:00'
+    form.handoverDeadline = '2026-07-01'
     const result = await submitEdit('trip-draft', 'PUBLISHED')
     expect(mockUpdate).toHaveBeenCalledWith('trip-draft', expect.objectContaining({ transportMode: 'AVION' }))
     expect(mockPublish).toHaveBeenCalledWith('trip-draft')
@@ -400,8 +405,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-07-01T10:00'
-    form.handoverWindowEnd = '2026-07-01T12:00'
+    form.handoverDeadline = '2026-07-01'
     const result = await submitEdit('trip-active', 'PUBLISHED')
     expect(mockPublish).not.toHaveBeenCalled()
     expect(result.status).toBe('ACTIVE')
@@ -417,8 +421,7 @@ describe('useAnnouncementForm', () => {
     form.transportMode = 'AVION'
     form.pickupPlace = validPlace
     form.dropoffPlace = validPlace2
-    form.handoverWindowStart = '2026-07-01T10:00'
-    form.handoverWindowEnd = '2026-07-01T12:00'
+    form.handoverDeadline = '2026-07-01'
     const result = await submitEdit('trip-draft2', 'DRAFT')
     expect(mockPublish).not.toHaveBeenCalled()
     expect(result.status).toBe('DRAFT')
