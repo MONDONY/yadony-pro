@@ -123,8 +123,7 @@ export interface Trip {
   refusedCategories: string[]
   senderNote: string | null
   cashAccepted: boolean
-  handoverWindowStart: string | null   // ISO UTC datetime
-  handoverWindowEnd: string | null     // ISO UTC datetime
+  handoverDeadline: string | null      // ISO UTC datetime — date limite de dépôt
   confirmedParcelCount: number
   pendingBidCount: number
   reservedRevenueEuros: number
@@ -155,8 +154,7 @@ export interface AnnouncementFormData {
   refusedCategories: string[]
   senderNote: string
   cashAccepted: boolean
-  handoverWindowStart: string   // <input type="datetime-local"> value, ex "2026-06-01T10:00"
-  handoverWindowEnd: string
+  handoverDeadline: string   // <input type="date"> value, ex "2026-06-01"
 }
 
 export interface CreateAnnouncementPayload {
@@ -175,8 +173,7 @@ export interface CreateAnnouncementPayload {
   acceptedContentTypes: string[]
   refusedTypes: string[]
   acceptedPaymentMethods: string[]
-  handoverWindowStart: string | null   // ISO UTC datetime
-  handoverWindowEnd: string | null
+  handoverDeadline: string | null      // ISO UTC datetime — date limite de dépôt
 }
 
 export interface ValidationErrors {
@@ -188,7 +185,7 @@ export interface ValidationErrors {
   dropoffPlace?: string
   availableWeightKg?: string
   pricePerKg?: string
-  handoverWindowStart?: string
+  handoverDeadline?: string
   global?: string
 }
 

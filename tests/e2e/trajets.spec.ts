@@ -36,7 +36,7 @@ async function mockApi(page: import('@playwright/test').Page) {
         acceptedContentTypes: ['Vêtements'], refusedTypes: [],
         senderNote: null, cashAccepted: false,
         acceptedPaymentMethods: ['STRIPE'],
-        handoverWindowStart: '2026-08-01T08:00:00Z', handoverWindowEnd: '2026-08-01T09:30:00Z',
+        handoverDeadline: '2026-08-01T09:30:00Z',
         confirmedParcelCount: 3, pendingBidCount: 2,
         createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-05-01T00:00:00Z',
       },

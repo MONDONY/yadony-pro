@@ -393,35 +393,22 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-text mb-1.5">
-            Fenêtre de remise — début <span class="text-danger">*</span>
+            Date limite de dépôt <span class="text-danger">*</span>
           </label>
           <input
-            v-model="form.handoverWindowStart"
-            type="datetime-local"
-            data-test="handover-window-start"
+            v-model="form.handoverDeadline"
+            type="date"
+            :max="form.departureDate || undefined"
+            data-test="handover-deadline"
             :class="[
               'flex h-10 w-full rounded-input border bg-surface px-3 py-1 text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]',
-              errors.handoverWindowStart ? 'border-danger' : 'border-border-strong',
+              errors.handoverDeadline ? 'border-danger' : 'border-border-strong',
             ]"
           />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-text mb-1.5">
-            Fenêtre de remise — fin <span class="text-danger">*</span>
-          </label>
-          <input
-            v-model="form.handoverWindowEnd"
-            type="datetime-local"
-            data-test="handover-window-end"
-            :class="[
-              'flex h-10 w-full rounded-input border bg-surface px-3 py-1 text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]',
-              errors.handoverWindowStart ? 'border-danger' : 'border-border-strong',
-            ]"
-          />
-        </div>
-        <p v-if="errors.handoverWindowStart" class="col-span-2 -mt-2 text-xs text-danger">{{ errors.handoverWindowStart }}</p>
+        <p v-if="errors.handoverDeadline" class="col-span-2 -mt-2 text-xs text-danger">{{ errors.handoverDeadline }}</p>
         <p v-else class="col-span-2 -mt-2 text-xs text-text-muted">
-          Créneau pendant lequel tu remets le colis à l'expéditeur avant le départ.
+          Jusqu'à quand les expéditeurs peuvent te déposer leurs colis, avant ton départ.
         </p>
       </div>
     </section>

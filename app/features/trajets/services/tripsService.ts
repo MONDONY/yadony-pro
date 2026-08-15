@@ -51,8 +51,7 @@ interface BackendAnnouncementResponse {
   refusedTypes: string[]
   acceptedPaymentMethods: string[]
   cashAccepted: boolean
-  handoverWindowStart: string | null
-  handoverWindowEnd: string | null
+  handoverDeadline: string | null
   createdAt: string
   updatedAt: string
 }
@@ -108,8 +107,7 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     refusedCategories: a.refusedTypes,
     senderNote: a.senderNote ?? null,
     cashAccepted: a.cashAccepted ?? (a.acceptedPaymentMethods?.includes('CASH') ?? false),
-    handoverWindowStart: a.handoverWindowStart ?? null,
-    handoverWindowEnd: a.handoverWindowEnd ?? null,
+    handoverDeadline: a.handoverDeadline ?? null,
     confirmedParcelCount: a.confirmedParcelCount,
     pendingBidCount: a.pendingBidCount,
     reservedRevenueEuros: 0,
