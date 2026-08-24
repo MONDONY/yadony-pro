@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Lock, BadgeCheck, Smartphone } from 'lucide-vue-next'
+import { Lock, BadgeCheck, KeyRound } from 'lucide-vue-next'
 import { useAssetUrl } from '@/composables/useAssetUrl'
 
 const logo = useAssetUrl('logos/logo-yadony.png')
@@ -18,10 +18,10 @@ const items = [
     subtitle: 'Tous les membres sont validés avant d\'accéder à la plateforme',
   },
   {
-    icon: Smartphone,
+    icon: KeyRound,
     tone: 'text-primary bg-primary/10',
-    title: 'Connexion par code SMS',
-    subtitle: 'Sans mot de passe — plus simple, plus sûr',
+    title: 'Connexion par code sécurisé',
+    subtitle: 'Par SMS ou email, sans mot de passe',
   },
 ]
 </script>

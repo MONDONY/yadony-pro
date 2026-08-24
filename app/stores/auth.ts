@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 
 export interface AuthUser {
   id: string
-  phoneNumber: string
+  phoneNumber: string | null
+  email?: string | null
   displayName: string
   isProAccount: boolean
   roles: string[]

@@ -5,6 +5,7 @@ import { useAuthStore, type AuthUser } from '@/stores/auth'
 const mockUser: AuthUser = {
   id: 'user-1',
   phoneNumber: '+33612345678',
+  email: 'jean@example.com',
   displayName: 'Jean Dupont',
   isProAccount: true,
   roles: ['ROLE_TRAVELER'],
