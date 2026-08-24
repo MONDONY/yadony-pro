@@ -6,8 +6,12 @@ const navigateToMock = vi.fn()
 vi.stubGlobal('navigateTo', navigateToMock)
 
 const confirmOtpMock = vi.fn()
+const confirmEmailOtpMock = vi.fn()
 vi.mock('@/features/auth/composables/useFirebaseAuth', () => ({
-  useFirebaseAuth: () => ({ confirmOtp: confirmOtpMock }),
+  useFirebaseAuth: () => ({
+    confirmOtp: confirmOtpMock,
+    confirmEmailOtp: confirmEmailOtpMock,
+  }),
 }))
 
 vi.mock('@/features/auth/components/OtpInput.vue', () => ({
@@ -25,6 +29,7 @@ describe('OtpForm', () => {
     vi.useFakeTimers()
     navigateToMock.mockClear()
     confirmOtpMock.mockClear()
+    confirmEmailOtpMock.mockClear()
   })
 
   afterEach(() => {
@@ -47,6 +52,17 @@ describe('OtpForm', () => {
     await wrapper.findComponent({ name: 'OtpInput' }).vm.$emit('complete', '123456')
     await flushPromises()
     expect(confirmOtpMock).toHaveBeenCalledWith('123456')
+  })
+
+  it('calls confirmEmailOtp in email mode', async () => {
+    confirmEmailOtpMock.mockResolvedValue({ isProAccount: true })
+    const wrapper = mount(OtpForm, {
+      props: { mode: 'email', email: 'user@example.com' },
+    })
+    await wrapper.findComponent({ name: 'OtpInput' }).vm.$emit('complete', '123456')
+    await flushPromises()
+    expect(confirmEmailOtpMock).toHaveBeenCalledWith('user@example.com', '123456')
+    expect(confirmOtpMock).not.toHaveBeenCalled()
   })
 
   it('navigates to /cockpit after successful pro login', async () => {

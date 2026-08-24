@@ -1,5 +1,6 @@
 import {
   RecaptchaVerifier,
+  signInWithCustomToken,
   signInWithPhoneNumber,
   signOut as fbSignOut,
   type ConfirmationResult,
@@ -41,6 +42,31 @@ export function useFirebaseAuth() {
     return user
   }
 
+  async function sendEmailOtp(email: string): Promise<void> {
+    await api('/auth/email-otp/send', {
+      method: 'POST',
+      body: { email },
+    })
+  }
+
+  async function confirmEmailOtp(email: string, code: string): Promise<AuthUser> {
+    if (!$firebaseAuth) {
+      throw new Error('Firebase Auth non initialisé. Vérifie la configuration Firebase dans .env.development.')
+    }
+
+    const response = await api<{ customToken: string }>('/auth/email-otp/verify', {
+      method: 'POST',
+      body: { email, code },
+    })
+    const credential = await signInWithCustomToken($firebaseAuth, response.customToken)
+    const idToken = await credential.user.getIdToken()
+    authStore.idToken = idToken
+    const user = await api<AuthUser>('/auth/me')
+    authStore.setSession(idToken, user)
+    void registerWebDevice()
+    return user
+  }
+
   async function signOut(): Promise<void> {
     await fbSignOut($firebaseAuth)
     authStore.clear()
@@ -49,5 +75,5 @@ export function useFirebaseAuth() {
     await navigateTo('/')
   }
 
-  return { sendOtp, confirmOtp, signOut }
+  return { sendOtp, confirmOtp, sendEmailOtp, confirmEmailOtp, signOut }
 }

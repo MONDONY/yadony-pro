@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import OtpInput from './OtpInput.vue'
 import { useFirebaseAuth } from '@/features/auth/composables/useFirebaseAuth'
 
-const props = defineProps<{ phone: string }>()
+const props = withDefaults(defineProps<{
+  phone?: string
+  email?: string
+  mode?: 'phone' | 'email'
+}>(), {
+  mode: 'phone',
+  phone: '',
+  email: '',
+})
 const emit = defineEmits<{ resend: [] }>()
 
-const { confirmOtp } = useFirebaseAuth()
+const { confirmOtp, confirmEmailOtp } = useFirebaseAuth()
 
 const otpInput = ref<InstanceType<typeof OtpInput> | null>(null)
 const loading = ref(false)
@@ -26,12 +34,17 @@ onUnmounted(() => {
   if (timer) clearInterval(timer)
 })
 
+const contact = computed(() => props.mode === 'email' ? props.email : props.phone)
+const channelLabel = computed(() => props.mode === 'email' ? 'email' : 'SMS')
+
 async function submit(code: string) {
   if (loading.value) return
   error.value = null
   loading.value = true
   try {
-    const user = await confirmOtp(code)
+    const user = props.mode === 'email'
+      ? await confirmEmailOtp(props.email, code)
+      : await confirmOtp(code)
     if (!user.isProAccount) {
       await navigateTo('/upgrade')
       return
@@ -51,7 +64,8 @@ async function submit(code: string) {
 <template>
   <div class="flex flex-col gap-4">
     <p class="text-sm text-muted">
-      Code envoyé au <span class="font-semibold text-text">{{ props.phone }}</span>
+      Code {{ channelLabel }} envoyé à
+      <span class="font-semibold text-text">{{ contact }}</span>
     </p>
 
     <OtpInput ref="otpInput" :disabled="loading" @complete="submit" />
