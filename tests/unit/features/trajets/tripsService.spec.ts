@@ -179,6 +179,26 @@ describe('tripsService', () => {
     expect(result.cashAccepted).toBe(true)
   })
 
+  it('getAnnouncement maps pricing mode, currency and negotiability from Dony App announcements', async () => {
+    const fakeDetail = {
+      ...fakeTrip,
+      id: 'trip-negotiable',
+      capacityUnit: 'KG_EXACT',
+      pricingMode: 'MIXED',
+      negotiable: true,
+      currency: 'EUR',
+      bidsCount: 0,
+      traveler: null,
+    }
+    mockApiFn.mockResolvedValue(fakeDetail)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncement('trip-negotiable')
+    expect(result.capacityUnit).toBe('KG_EXACT')
+    expect(result.pricingMode).toBe('MIXED')
+    expect(result.negotiable).toBe(true)
+    expect(result.currency).toBe('EUR')
+  })
+
   it('updateAnnouncement sends PUT /announcements/:id', async () => {
     const fakeDetail = {
       id: 'trip-42', travelerId: 'u1', departureCity: 'Lyon', arrivalCity: 'Abidjan',
@@ -256,6 +276,37 @@ describe('tripsService', () => {
     expect(result[0].earningsEuros).toBe(64) // 80 × (1 − 0,20)
   })
 
+  it('getAnnouncementBids maps a negotiated bid summary', async () => {
+    const fakeBid = {
+      id: 'bid-neg-1', announcementId: 'trip-42', senderId: 'sender-1',
+      senderName: 'Alice Martin', senderTotalShipments: 5,
+      weightKg: 4, declaredValueEur: 50, description: 'Articles divers',
+      contentCategory: null, status: 'NEGOTIATING',
+      departureCity: 'Paris', arrivalCity: 'Dakar',
+      departureDate: '2026-08-01', pricePerKg: 8, createdAt: '2026-06-01T10:00:00',
+      paymentMethod: 'STRIPE',
+      proposedGrossEur: 44,
+      netEur: 38.72,
+      round: 2,
+      myTurn: true,
+      canCounter: true,
+      currency: 'EUR',
+    }
+    mockApiFn.mockResolvedValue([fakeBid])
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncementBids('trip-42')
+    expect(result[0]).toMatchObject({
+      status: 'NEGOTIATING',
+      paymentAmountEuros: 44,
+      earningsEuros: 38.72,
+      negotiationRound: 2,
+      negotiationMyTurn: true,
+      negotiationCanCounter: true,
+      negotiationCurrency: 'EUR',
+      negotiationProposedGrossEuros: 44,
+    })
+  })
+
   it('acceptBid sends PUT /bids/:id/accept', async () => {
     mockApiFn.mockResolvedValue(undefined)
     const { tripsService } = await import('@/features/trajets/services/tripsService')
@@ -270,6 +321,26 @@ describe('tripsService', () => {
     const svc = tripsService()
     await svc.rejectBid('bid-99')
     expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-99/reject', { method: 'PUT' })
+  })
+
+  it('counterBidNegotiation POSTs the traveler counter-offer endpoint', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    await tripsService().counterBidNegotiation('bid-99', { proposedTotalEur: 42, body: 'Ok à 42 €' })
+    expect(mockApiFn).toHaveBeenCalledWith('/bids/bid-99/negotiation/counter', {
+      method: 'POST',
+      body: { proposedTotalEur: 42, body: 'Ok à 42 €' },
+    })
+  })
+
+  it('acceptBidNegotiation and rejectBidNegotiation use the Dony App negotiation endpoints', async () => {
+    mockApiFn.mockResolvedValue(undefined)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    await svc.acceptBidNegotiation('bid-99')
+    await svc.rejectBidNegotiation('bid-99')
+    expect(mockApiFn).toHaveBeenNthCalledWith(1, '/bids/bid-99/negotiation/accept', { method: 'POST' })
+    expect(mockApiFn).toHaveBeenNthCalledWith(2, '/bids/bid-99/negotiation/reject', { method: 'POST' })
   })
 
   it('confirmPresence sends PUT /bids/:id/confirm-presence', async () => {

@@ -97,6 +97,24 @@ export function useTripDetail(tripId: string) {
     await fetchTrip()
   }
 
+  async function acceptBidNegotiation(bidId: string): Promise<void> {
+    await svc.acceptBidNegotiation(bidId)
+    await fetchBids()
+    await fetchTrip()
+  }
+
+  async function rejectBidNegotiation(bidId: string): Promise<void> {
+    await svc.rejectBidNegotiation(bidId)
+    await fetchBids()
+    await fetchTrip()
+  }
+
+  async function counterBidNegotiation(bidId: string, proposedTotalEur: number, body: string | null = null): Promise<void> {
+    await svc.counterBidNegotiation(bidId, { proposedTotalEur, body })
+    await fetchBids()
+    await fetchTrip()
+  }
+
   async function confirmDelivery(bidId: string, code: string): Promise<void> {
     await svc.confirmDelivery(bidId, code)
     await fetchBids()
@@ -213,6 +231,9 @@ export function useTripDetail(tripId: string) {
     publishTrip,
     acceptBid,
     rejectBid,
+    acceptBidNegotiation,
+    rejectBidNegotiation,
+    counterBidNegotiation,
     confirmDelivery,
     confirmPresence,
     refuseParcel,

@@ -51,6 +51,10 @@ interface BackendAnnouncementResponse {
   refusedTypes: string[]
   acceptedPaymentMethods: string[]
   cashAccepted: boolean
+  capacityUnit?: Trip['capacityUnit']
+  pricingMode?: Trip['pricingMode']
+  negotiable?: boolean
+  currency?: string
   handoverDeadline: string | null
   createdAt: string
   updatedAt: string
@@ -78,6 +82,12 @@ interface BackendBidResponse {
   pricePerKg: number
   createdAt: string
   paymentMethod: string | null
+  proposedGrossEur?: number | null
+  netEur?: number | null
+  round?: number | null
+  myTurn?: boolean | null
+  canCounter?: boolean | null
+  currency?: string | null
 }
 
 interface BackendPage {
@@ -102,6 +112,10 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     dropoffPlace: { placeId: '', label: a.deliveryAddress.label, lat: a.deliveryAddress.lat, lng: a.deliveryAddress.lng },
     availableWeightKg: a.availableKg,
     usedWeightKg: a.totalKg - a.availableKg,
+    capacityUnit: a.capacityUnit ?? 'SUITCASE_23KG',
+    pricingMode: a.pricingMode ?? 'KG',
+    negotiable: a.negotiable ?? false,
+    currency: a.currency ?? 'EUR',
     pricePerKg: a.pricePerKg,
     acceptedCategories: a.acceptedContentTypes,
     refusedCategories: a.refusedTypes,
@@ -118,8 +132,11 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
 function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number): TripBid {
   const weightKg = Number(b.weightKg) || 0
   const pricePerKg = Number(b.pricePerKg) || 0
-  const paymentAmountEuros = Math.round(pricePerKg * weightKg * 100) / 100
-  const earningsEuros = Math.round(paymentAmountEuros * (1 - commissionRate) * 100) / 100
+  const proposedGrossEuros = typeof b.proposedGrossEur === 'number' ? b.proposedGrossEur : null
+  const paymentAmountEuros = proposedGrossEuros ?? Math.round(pricePerKg * weightKg * 100) / 100
+  const earningsEuros = typeof b.netEur === 'number'
+    ? b.netEur
+    : Math.round(paymentAmountEuros * (1 - commissionRate) * 100) / 100
   const senderName = b.senderName ?? 'Expéditeur'
   const senderInitials = senderName
     .split(' ')
@@ -140,6 +157,11 @@ function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number):
     paymentAmountEuros,
     earningsEuros,
     paymentMethod: b.paymentMethod,
+    negotiationRound: b.round ?? undefined,
+    negotiationMyTurn: b.myTurn ?? undefined,
+    negotiationCanCounter: b.canCounter ?? undefined,
+    negotiationCurrency: b.currency ?? undefined,
+    negotiationProposedGrossEuros: proposedGrossEuros ?? undefined,
     createdAt: b.createdAt,
   }
 }
@@ -226,6 +248,21 @@ export function tripsService() {
     await api<void>(`/bids/${bidId}/reject`, { method: 'PUT' })
   }
 
+  async function counterBidNegotiation(
+    bidId: string,
+    payload: { proposedTotalEur: number; body?: string | null },
+  ): Promise<void> {
+    await api<void>(`/bids/${bidId}/negotiation/counter`, { method: 'POST', body: payload })
+  }
+
+  async function acceptBidNegotiation(bidId: string): Promise<void> {
+    await api<void>(`/bids/${bidId}/negotiation/accept`, { method: 'POST' })
+  }
+
+  async function rejectBidNegotiation(bidId: string): Promise<void> {
+    await api<void>(`/bids/${bidId}/negotiation/reject`, { method: 'POST' })
+  }
+
   async function confirmDelivery(bidId: string, code: string): Promise<void> {
     await api<void>(`/tracking/${bidId}/confirm-delivery`, { method: 'POST', body: { confirmationCode: code } })
   }
@@ -275,6 +312,7 @@ export function tripsService() {
   return {
     listTrips, getCorridors, createAnnouncement, publishAnnouncement, getTemplates, getAnnouncement,
     updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
+    counterBidNegotiation, acceptBidNegotiation, rejectBidNegotiation,
     confirmDelivery, confirmPresence, refuseParcel, uploadRefusalPhoto, cancelBid,
     postTrackingEvent, getTrackingEvents, getQrCode,
   }
