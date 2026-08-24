@@ -7,6 +7,9 @@ const mockSvc = {
   deleteAnnouncement: vi.fn(),
   acceptBid: vi.fn(),
   rejectBid: vi.fn(),
+  acceptBidNegotiation: vi.fn(),
+  rejectBidNegotiation: vi.fn(),
+  counterBidNegotiation: vi.fn(),
   confirmDelivery: vi.fn(),
   confirmPresence: vi.fn(),
   refuseParcel: vi.fn(),
@@ -303,6 +306,29 @@ describe('useTripDetail', () => {
     expect(mockSvc.rejectBid).toHaveBeenCalledWith('bid-7')
     expect(mockSvc.getAnnouncementBids).toHaveBeenCalledWith('trip-1')
     expect(mockSvc.getAnnouncement).toHaveBeenCalledWith('trip-1')
+  })
+
+  it('bid negotiation actions call the Dony App endpoints then refresh bids and trip', async () => {
+    mockSvc.acceptBidNegotiation.mockResolvedValue(undefined)
+    mockSvc.rejectBidNegotiation.mockResolvedValue(undefined)
+    mockSvc.counterBidNegotiation.mockResolvedValue(undefined)
+    mockSvc.getAnnouncementBids.mockResolvedValue([])
+    mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', availableWeightKg: 20, usedWeightKg: 0, status: 'ACTIVE' })
+    const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+    const { acceptBidNegotiation, rejectBidNegotiation, counterBidNegotiation } = useTripDetail('trip-1')
+
+    await acceptBidNegotiation('bid-neg-1')
+    await rejectBidNegotiation('bid-neg-2')
+    await counterBidNegotiation('bid-neg-3', 42, 'Ok à 42 €')
+
+    expect(mockSvc.acceptBidNegotiation).toHaveBeenCalledWith('bid-neg-1')
+    expect(mockSvc.rejectBidNegotiation).toHaveBeenCalledWith('bid-neg-2')
+    expect(mockSvc.counterBidNegotiation).toHaveBeenCalledWith('bid-neg-3', {
+      proposedTotalEur: 42,
+      body: 'Ok à 42 €',
+    })
+    expect(mockSvc.getAnnouncementBids).toHaveBeenCalledTimes(3)
+    expect(mockSvc.getAnnouncement).toHaveBeenCalledTimes(3)
   })
 
   it('markTrackingEvent posts the event then refreshes bids and trip', async () => {

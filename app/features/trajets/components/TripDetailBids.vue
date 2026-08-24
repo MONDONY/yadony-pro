@@ -18,6 +18,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   'accept': [bidId: string]
   'reject': [bidId: string]
+  'accept-negotiation': [bidId: string]
+  'reject-negotiation': [bidId: string]
+  'counter-negotiation': [bidId: string, proposedTotalEur: number, body: string | null]
   'confirm-delivery': [bidId: string, code: string]
   'confirm-presence': [bidId: string]
   'refuse-parcel': [bidId: string, reason: string, photo: File | null]
@@ -85,9 +88,10 @@ watch(() => props.loadingBidId, (newVal, oldVal) => {
 type BidViewMode = 'cards' | 'table'
 const viewMode = ref<BidViewMode>('cards')
 
-type StatusFilter = 'TOUS' | 'PAYMENT_ESCROWED' | 'ACCEPTED' | 'IN_TRANSIT' | 'COMPLETED' | 'REJECTED' | 'CANCELLED'
+type StatusFilter = 'TOUS' | 'NEGOTIATING' | 'PAYMENT_ESCROWED' | 'ACCEPTED' | 'IN_TRANSIT' | 'COMPLETED' | 'REJECTED' | 'CANCELLED'
 const statusFilters: Array<{ key: StatusFilter; label: string }> = [
   { key: 'TOUS', label: 'Tous' },
+  { key: 'NEGOTIATING', label: 'Négociation' },
   { key: 'PAYMENT_ESCROWED', label: 'À traiter' },
   { key: 'ACCEPTED', label: 'Acceptés' },
   { key: 'IN_TRANSIT', label: 'En transit' },
@@ -99,6 +103,7 @@ const statusFilters: Array<{ key: StatusFilter; label: string }> = [
 const STATUS_LABELS: Record<string, string> = {
   AWAITING_PAYMENT: 'Paiement attendu',
   PENDING: 'En attente',
+  NEGOTIATING: 'Négociation',
   PAYMENT_ESCROWED: 'À traiter',
   ACCEPTED: 'Accepté',
   HANDED_OVER: 'Remis',
@@ -114,6 +119,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_VARIANT: Record<string, BadgeVariants['variant']> = {
   AWAITING_PAYMENT: 'warning',
   PENDING: 'neutral',
+  NEGOTIATING: 'warning',
   PAYMENT_ESCROWED: 'info',
   ACCEPTED: 'success',
   HANDED_OVER: 'info',
@@ -142,6 +148,7 @@ const filteredBids = computed(() => {
 })
 
 const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYMENT_ESCROWED').length)
+const negotiationCount = computed(() => props.bids.filter((b) => b.status === 'NEGOTIATING').length)
 
 </script>
 
@@ -163,6 +170,9 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
           @click="activeStatusFilter = f.key"
         >
           {{ f.label }}
+          <span v-if="f.key === 'NEGOTIATING' && negotiationCount > 0" class="ml-1 bg-warning text-bg rounded-full px-1.5 py-0.5 text-[10px] font-mono font-semibold tabular-nums">
+            {{ negotiationCount }}
+          </span>
           <span v-if="f.key === 'PAYMENT_ESCROWED' && pendingCount > 0" class="ml-1 bg-warning text-bg rounded-full px-1.5 py-0.5 text-[10px] font-mono font-semibold tabular-nums">
             {{ pendingCount }}
           </span>
@@ -371,6 +381,9 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
         <p v-if="bid.contentDescription" class="text-xs text-text-muted">
           Contenu : {{ bid.contentDescription }}
         </p>
+        <p v-if="bid.status === 'NEGOTIATING'" class="text-xs text-warning">
+          Proposition à {{ (bid.negotiationProposedGrossEuros ?? bid.paymentAmountEuros).toFixed(2) }} {{ bid.negotiationCurrency ?? 'EUR' }}
+        </p>
 
         <!-- Actions PAYMENT_ESCROWED -->
         <div v-if="bid.status === 'PAYMENT_ESCROWED'" class="flex items-center gap-2 pt-1">
@@ -458,6 +471,9 @@ const pendingCount = computed(() => props.bids.filter((b) => b.status === 'PAYME
     @close="detailBid = null"
     @accept="(id) => forwardAndClose(() => emit('accept', id))"
     @reject="(id) => forwardAndClose(() => emit('reject', id))"
+    @accept-negotiation="(id) => forwardAndClose(() => emit('accept-negotiation', id))"
+    @reject-negotiation="(id) => forwardAndClose(() => emit('reject-negotiation', id))"
+    @counter-negotiation="(id, amount, body) => forwardAndClose(() => emit('counter-negotiation', id, amount, body))"
     @confirm-presence="(id) => forwardAndClose(() => emit('confirm-presence', id))"
     @refuse-parcel="(id, reason, photo) => forwardAndClose(() => emit('refuse-parcel', id, reason, photo))"
     @cancel="(id) => forwardAndClose(() => emit('cancel', id))"

@@ -6,7 +6,7 @@ import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
 import { configService, type ContentCategory } from '@/features/trajets/services/configService'
 import { tripTemplateService } from '@/features/trajets/services/tripTemplateService'
-import type { UserTripTemplate } from '@/features/trajets/types/index'
+import type { PricingMode, UserTripTemplate } from '@/features/trajets/types/index'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
 import TransportModeChips from '@/features/trajets/components/TransportModeChips.vue'
 import WeightSlider from '@/features/trajets/components/WeightSlider.vue'
@@ -49,6 +49,10 @@ const selectedTemplateId = ref<string | null>(null)
 const acceptedPresets = ref<string[]>([])
 const refusedPresets = ref<string[]>([])
 const presetEmojis = ref<Record<string, string>>({})
+const pricingOptions: Array<{ value: PricingMode; label: string; description: string }> = [
+  { value: 'KG', label: 'Au kilo', description: 'Prix simple par kilo' },
+  { value: 'MIXED', label: 'Grille + kilo', description: 'Articles tarifés et reste au kilo' },
+]
 
 const submitErrorMessages: Record<string, string> = {
   'draft-limit-reached': 'Limite de brouillons atteinte. Passez en PRO pour en créer davantage.',
@@ -420,6 +424,30 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
       <WeightSlider v-model="form.availableWeightKg" :min="1" :max="23" />
       <div>
         <label class="block text-sm font-medium text-text mb-3">
+          Mode de tarification <span class="text-danger">*</span>
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            v-for="option in pricingOptions"
+            :key="option.value"
+            type="button"
+            :data-test="`pricing-mode-${option.value}`"
+            :class="[
+              'flex flex-col items-start gap-1 rounded-el border px-4 py-3 text-left transition-[border-color,box-shadow,color]',
+              form.pricingMode === option.value
+                ? 'border-primary bg-primary/10 text-primary shadow-card'
+                : 'border-border bg-surface text-text-muted hover:border-primary/50 hover:text-text',
+            ]"
+            @click="form.pricingMode = option.value"
+          >
+            <span class="text-sm font-semibold">{{ option.label }}</span>
+            <span class="text-xs opacity-75">{{ option.description }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-text mb-3">
           Prix par kg <span class="text-danger">*</span>
         </label>
         <PriceOptionCards v-model="form.pricePerKg" :commission-rate="commissionRate" />
@@ -427,6 +455,22 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
           Commission yadony (12%) déduite · Vous recevez
           <span class="font-mono tabular-nums text-text font-medium">{{ netPrice.toFixed(2) }}€/kg</span>
         </p>
+      </div>
+
+      <div class="flex items-center justify-between gap-4 p-4 rounded-el border border-border bg-surface-el">
+        <div>
+          <p class="text-sm font-medium text-text">Négociation expéditeur</p>
+          <p class="text-xs text-text-muted mt-0.5">Autoriser les expéditeurs à proposer un prix sur ce trajet</p>
+        </div>
+        <button
+          type="button"
+          :class="['relative w-10 h-6 rounded-full transition-colors flex-shrink-0', form.negotiable ? 'bg-primary' : 'bg-border-strong']"
+          :aria-pressed="form.negotiable"
+          data-test="negotiable-toggle"
+          @click="form.negotiable = !form.negotiable"
+        >
+          <span :class="['absolute top-1 w-4 h-4 bg-surface rounded-full shadow transition-transform', form.negotiable ? 'translate-x-5' : 'translate-x-1']" />
+        </button>
       </div>
     </section>
 

@@ -57,6 +57,9 @@ describe('useAnnouncementForm', () => {
     expect(form.departureCity).toBeNull()
     expect(form.transportMode).toBeNull()
     expect(form.capacityUnit).toBe('SUITCASE_23KG')
+    expect(form.pricingMode).toBe('KG')
+    expect(form.negotiable).toBe(false)
+    expect(form.currency).toBe('EUR')
   })
 
   it('validate returns errors for missing required fields', async () => {
@@ -201,6 +204,33 @@ describe('useAnnouncementForm', () => {
     )
   })
 
+  it('buildPayload includes the new Dony App pricing and negotiation fields', async () => {
+    mockCreate.mockResolvedValue({ id: 'trip-pricing', status: 'PUBLISHED' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-06-01'
+    form.transportMode = 'AVION'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    form.handoverDeadline = '2026-06-01'
+    form.capacityUnit = 'KG_EXACT'
+    form.pricingMode = 'MIXED'
+    form.negotiable = true
+    form.currency = 'EUR'
+    await submit('PUBLISHED')
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        capacityUnit: 'KG_EXACT',
+        pricingMode: 'MIXED',
+        negotiable: true,
+        currency: 'EUR',
+      }),
+      { saveAsDraft: false },
+    )
+  })
+
   it('buildPayload defaults capacityUnit to SUITCASE_23KG when not changed', async () => {
     mockCreate.mockResolvedValue({ id: 'trip-default', status: 'PUBLISHED' })
     const useAnnouncementForm = await importUseAnnouncementForm()
@@ -255,6 +285,7 @@ describe('useAnnouncementForm', () => {
       availableWeightKg: 20, usedWeightKg: 0, pricePerKg: 8,
       acceptedCategories: ['Vêtements'], refusedCategories: ['Électronique'],
       senderNote: 'Handle with care', cashAccepted: true,
+      pricingMode: 'MIXED' as const, negotiable: true, currency: 'EUR',
       handoverDeadline: '2026-05-01T16:00:00Z',
       confirmedParcelCount: 0, pendingBidCount: 0, reservedRevenueEuros: 0,
       createdAt: '2026-05-01T00:00:00Z',
@@ -264,6 +295,9 @@ describe('useAnnouncementForm', () => {
     expect(form.availableWeightKg).toBe(20)
     expect(form.pricePerKg).toBe(8)
     expect(form.cashAccepted).toBe(true)
+    expect(form.pricingMode).toBe('MIXED')
+    expect(form.negotiable).toBe(true)
+    expect(form.currency).toBe('EUR')
     expect(form.departureDate).toBe('')
     // La date limite du modèle est reprise en valeur <input type="date">.
     expect(form.handoverDeadline).toBe('2026-05-01')

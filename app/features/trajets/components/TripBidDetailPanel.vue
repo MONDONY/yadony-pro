@@ -14,6 +14,9 @@ const emit = defineEmits<{
   close: []
   accept: [bidId: string]
   reject: [bidId: string]
+  'accept-negotiation': [bidId: string]
+  'reject-negotiation': [bidId: string]
+  'counter-negotiation': [bidId: string, proposedTotalEur: number, body: string | null]
   'confirm-presence': [bidId: string]
   'refuse-parcel': [bidId: string, reason: string, photo: File | null]
   cancel: [bidId: string]
@@ -27,6 +30,7 @@ const STATUS_LABELS: Record<string, string> = {
   AWAITING_PAYMENT: 'Paiement attendu',
   PENDING: 'En attente',
   PAYMENT_ESCROWED: 'À traiter',
+  NEGOTIATING: 'Négociation',
   ACCEPTED: 'Accepté',
   HANDED_OVER: 'Remis',
   IN_TRANSIT: 'En transit',
@@ -39,6 +43,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 const STATUS_VARIANT: Record<string, BadgeVariants['variant']> = {
   PAYMENT_ESCROWED: 'info',
+  NEGOTIATING: 'warning',
   ACCEPTED: 'success',
   HANDED_OVER: 'info',
   IN_TRANSIT: 'info',
@@ -59,6 +64,9 @@ const noShowMode = ref(false)
 const cancelAfterHandoverMode = ref(false)
 const returnMode = ref(false)
 const returnCode = ref('')
+const counterMode = ref(false)
+const counterAmount = ref<number | null>(null)
+const counterBody = ref('')
 
 // Réinitialise les sous-formulaires quand on change de colis / ferme.
 watch(() => props.bid?.id, () => {
@@ -70,9 +78,15 @@ watch(() => props.bid?.id, () => {
   cancelAfterHandoverMode.value = false
   returnMode.value = false
   returnCode.value = ''
+  counterMode.value = false
+  counterAmount.value = props.bid?.negotiationProposedGrossEuros ?? props.bid?.paymentAmountEuros ?? null
+  counterBody.value = ''
 })
 
 const isBusy = computed(() => !!props.bid && props.loadingBidId === props.bid.id)
+const negotiationAmount = computed(() => props.bid?.negotiationProposedGrossEuros ?? props.bid?.paymentAmountEuros ?? 0)
+const canAnswerNegotiation = computed(() => props.bid?.negotiationMyTurn !== false)
+const canSubmitCounter = computed(() => !!props.bid && Number(counterAmount.value) > 0)
 
 function onRefusePhotoChange(event: Event) {
   const input = event.target as HTMLInputElement
@@ -82,6 +96,11 @@ function onRefusePhotoChange(event: Event) {
 function submitRefuse() {
   if (!props.bid || refuseReason.value.trim().length < 3) return
   emit('refuse-parcel', props.bid.id, refuseReason.value.trim(), refusePhoto.value)
+}
+
+function submitCounter() {
+  if (!props.bid || !canSubmitCounter.value) return
+  emit('counter-negotiation', props.bid.id, Number(counterAmount.value), counterBody.value.trim() || null)
 }
 </script>
 
@@ -143,13 +162,85 @@ function submitRefuse() {
           <div v-if="bid.paymentMethod" class="text-xs text-text-muted">
             <span class="text-text-subtle">Paiement :</span> {{ bid.paymentMethod }}
           </div>
+          <div v-if="bid.status === 'NEGOTIATING'" class="rounded-el border border-warning/40 bg-warning/10 p-3 text-sm">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-text-muted">Proposition expéditeur</span>
+              <span class="font-mono tabular-nums font-semibold text-text">
+                {{ negotiationAmount.toFixed(2) }} {{ bid.negotiationCurrency ?? 'EUR' }}
+              </span>
+            </div>
+            <p class="mt-1 text-xs text-text-muted">
+              Tour <span class="font-mono tabular-nums">{{ bid.negotiationRound ?? 1 }}</span>
+            </p>
+          </div>
         </div>
 
         <!-- Actions -->
         <div class="border-t border-border px-5 py-4 space-y-3">
 
+          <!-- NEGOTIATING : répondre à une proposition de prix -->
+          <template v-if="bid.status === 'NEGOTIATING'">
+            <div v-if="canAnswerNegotiation" class="flex items-center gap-2">
+              <button
+                :disabled="isBusy"
+                class="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-btn bg-success text-on-primary text-sm font-medium hover:bg-success/90 transition-colors disabled:opacity-50"
+                data-test="detail-accept-negotiation"
+                @click="emit('accept-negotiation', bid.id)"
+              >
+                <CheckCircle class="w-4 h-4" /> Accepter
+              </button>
+              <button
+                :disabled="isBusy"
+                class="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-btn border border-danger text-danger text-sm font-medium hover:bg-danger/10 transition-colors disabled:opacity-50"
+                data-test="detail-reject-negotiation"
+                @click="emit('reject-negotiation', bid.id)"
+              >
+                <XCircle class="w-4 h-4" /> Refuser
+              </button>
+            </div>
+            <button
+              v-if="canAnswerNegotiation && bid.negotiationCanCounter !== false"
+              :disabled="isBusy"
+              class="w-full flex items-center justify-center gap-1.5 h-9 rounded-btn border border-primary/50 text-primary text-xs font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
+              data-test="detail-open-counter-negotiation"
+              @click="counterMode = !counterMode"
+            >
+              <Undo2 class="w-3.5 h-3.5" /> Faire une contre-proposition
+            </button>
+            <p v-if="!canAnswerNegotiation" class="text-xs text-text-muted text-center">
+              En attente de la réponse de l'expéditeur.
+            </p>
+
+            <div v-if="counterMode" class="space-y-2 pt-1">
+              <label class="text-xs font-medium text-text-muted">Montant proposé</label>
+              <input
+                v-model.number="counterAmount"
+                type="number"
+                min="1"
+                step="0.5"
+                data-test="counter-negotiation-amount"
+                class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              />
+              <label class="text-xs font-medium text-text-muted">Message optionnel</label>
+              <textarea
+                v-model="counterBody"
+                rows="2"
+                data-test="counter-negotiation-body"
+                class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-sm text-text placeholder:text-text-subtle focus:outline-none focus:border-primary transition-colors resize-none"
+              />
+              <button
+                :disabled="!canSubmitCounter || isBusy"
+                class="w-full h-9 rounded-btn bg-primary text-on-primary text-xs font-semibold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                data-test="counter-negotiation-submit"
+                @click="submitCounter"
+              >
+                Envoyer la contre-proposition
+              </button>
+            </div>
+          </template>
+
           <!-- PAYMENT_ESCROWED : accepter / refuser le bid -->
-          <div v-if="bid.status === 'PAYMENT_ESCROWED'" class="flex items-center gap-2">
+          <div v-else-if="bid.status === 'PAYMENT_ESCROWED'" class="flex items-center gap-2">
             <button
               :disabled="isBusy"
               class="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-btn bg-success text-on-primary text-sm font-medium hover:bg-success/90 transition-colors disabled:opacity-50"

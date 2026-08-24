@@ -37,8 +37,17 @@ const capacityUnitLabel = computed(() => {
     SUITCASE_23KG: '1 valise 23 kg',
     SUITCASE_32KG: '1 valise 32 kg',
     KG_FREE: 'Kg libre',
+    KG_EXACT: 'Kg exact',
   }
   return labels[props.trip.capacityUnit ?? ''] ?? ''
+})
+
+const pricingModeLabel = computed(() => {
+  const labels: Record<string, string> = {
+    KG: 'Au kilo',
+    MIXED: 'Grille + kilo',
+  }
+  return labels[props.trip.pricingMode ?? 'KG'] ?? 'Au kilo'
 })
 </script>
 
@@ -122,11 +131,18 @@ const capacityUnitLabel = computed(() => {
           <div>
             <p class="text-xs text-text-muted">Prix</p>
             <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ trip.pricePerKg }} €/kg</p>
+            <p class="text-xs text-text-muted mt-0.5">{{ pricingModeLabel }}</p>
           </div>
         </div>
 
         <div v-if="capacityUnitLabel" class="flex items-center gap-1.5 text-sm text-text-muted">
           <span class="font-medium text-text">{{ capacityUnitLabel }}</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 text-sm text-text-muted">
+          <span class="font-medium text-text">
+            {{ trip.negotiable ? 'Négociation ouverte' : 'Prix non négociable' }}
+          </span>
         </div>
       </div>
     </section>

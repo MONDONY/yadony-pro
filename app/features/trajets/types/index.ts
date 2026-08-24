@@ -2,7 +2,8 @@
 
 export type TripStatus = 'DRAFT' | 'ACTIVE' | 'FULL' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 export type TransportMode = 'PLANE' | 'CAR' | 'TRAIN' | 'BUS' | 'BOAT' | 'OTHER'
-export type CapacityUnit = 'SUITCASE_23KG' | 'SUITCASE_32KG' | 'KG_FREE'
+export type CapacityUnit = 'SUITCASE_23KG' | 'SUITCASE_32KG' | 'KG_FREE' | 'KG_EXACT'
+export type PricingMode = 'KG' | 'MIXED'
 export type TripFilter = 'TOUS' | 'ACTIFS' | 'COMPLETS' | 'EN_COURS' | 'TERMINES' | 'ANNULES' | 'BROUILLONS'
 export type ViewMode = 'list' | 'calendar'
 export type DateMode = 'none' | 'day' | 'period'
@@ -118,6 +119,9 @@ export interface Trip {
   availableWeightKg: number
   usedWeightKg: number
   capacityUnit?: CapacityUnit
+  pricingMode?: PricingMode
+  negotiable?: boolean
+  currency?: string
   pricePerKg: number
   acceptedCategories: string[]
   refusedCategories: string[]
@@ -149,6 +153,9 @@ export interface AnnouncementFormData {
   dropoffPlace: SelectedPlace | null
   availableWeightKg: number
   capacityUnit: CapacityUnit
+  pricingMode: PricingMode
+  negotiable: boolean
+  currency: string
   pricePerKg: number
   acceptedCategories: string[]
   refusedCategories: string[]
@@ -168,6 +175,9 @@ export interface CreateAnnouncementPayload {
   deliveryAddress: { label: string; lat: number; lng: number }
   availableKg: number
   capacityUnit: CapacityUnit
+  pricingMode: PricingMode
+  negotiable: boolean
+  currency: string
   pricePerKg: number
   description: string | null
   acceptedContentTypes: string[]
@@ -202,7 +212,17 @@ export interface TripBid {
   paymentAmountEuros: number
   earningsEuros: number
   paymentMethod: string | null
+  negotiationRound?: number
+  negotiationMyTurn?: boolean
+  negotiationCanCounter?: boolean
+  negotiationCurrency?: string
+  negotiationProposedGrossEuros?: number
   createdAt: string
+}
+
+export interface CounterBidNegotiationPayload {
+  proposedTotalEur: number
+  body?: string | null
 }
 
 export interface TripKpis {

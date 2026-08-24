@@ -13,13 +13,14 @@ const options: Array<{ value: CapacityUnit; label: string; description: string }
   { value: 'SUITCASE_23KG', label: '1 valise 23 kg', description: 'Format standard cabine' },
   { value: 'SUITCASE_32KG', label: '1 valise 32 kg', description: 'Grande valise' },
   { value: 'KG_FREE',       label: 'Kg libre',         description: 'Au kilo, sans contrainte' },
+  { value: 'KG_EXACT',      label: 'Kg exact',         description: 'Capacité précise' },
 ]
 </script>
 
 <template>
   <div class="space-y-2">
     <label class="text-sm font-medium text-text">Type de capacité</label>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
       <button
         v-for="opt in options"
         :key="opt.value"

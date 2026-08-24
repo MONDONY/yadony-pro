@@ -32,6 +32,7 @@ const {
   trip, bids, isLoading, bidsLoading, error,
   deleteLoading, publishLoading, publishError, publishErrorCode, kpis,
   fetchTrip, fetchBids, deleteTrip, publishTrip, acceptBid, rejectBid, confirmDelivery,
+  acceptBidNegotiation, rejectBidNegotiation, counterBidNegotiation,
   confirmPresence, refuseParcel, cancelBid, markTrackingEvent,
   reportNoShow, cancelAfterHandover, confirmReturn, exportBidsCsv,
 } = useTripDetail(tripId)
@@ -70,6 +71,18 @@ async function onRejectBid(bidId: string) {
   } finally {
     loadingBidId.value = null
   }
+}
+
+function onAcceptBidNegotiation(bidId: string) {
+  return withBidLoading(bidId, () => acceptBidNegotiation(bidId))
+}
+
+function onRejectBidNegotiation(bidId: string) {
+  return withBidLoading(bidId, () => rejectBidNegotiation(bidId))
+}
+
+function onCounterBidNegotiation(bidId: string, amount: number, body: string | null) {
+  return withBidLoading(bidId, () => counterBidNegotiation(bidId, amount, body))
 }
 
 async function onConfirmDelivery(bidId: string, code: string) {
@@ -214,6 +227,9 @@ function onExportCsv() {
         :loading-bid-id="loadingBidId"
         @accept="onAcceptBid"
         @reject="onRejectBid"
+        @accept-negotiation="onAcceptBidNegotiation"
+        @reject-negotiation="onRejectBidNegotiation"
+        @counter-negotiation="onCounterBidNegotiation"
         @confirm-delivery="onConfirmDelivery"
         @confirm-presence="onConfirmPresence"
         @refuse-parcel="onRefuseParcel"

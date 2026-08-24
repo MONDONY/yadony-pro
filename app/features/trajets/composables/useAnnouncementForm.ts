@@ -48,6 +48,9 @@ export function useAnnouncementForm() {
     dropoffPlace: null,
     availableWeightKg: 15,
     capacityUnit: 'SUITCASE_23KG' as CapacityUnit,
+    pricingMode: 'KG',
+    negotiable: false,
+    currency: 'EUR',
     pricePerKg: 7,
     acceptedCategories: [],
     refusedCategories: [],
@@ -103,6 +106,9 @@ export function useAnnouncementForm() {
       deliveryAddress: { label: dropoff.label, lat: dropoff.lat, lng: dropoff.lng },
       availableKg: form.availableWeightKg,
       capacityUnit: form.capacityUnit,
+      pricingMode: form.pricingMode,
+      negotiable: form.negotiable,
+      currency: form.currency,
       pricePerKg: form.pricePerKg,
       description: form.senderNote || null,
       acceptedContentTypes: form.acceptedCategories,
@@ -147,6 +153,9 @@ export function useAnnouncementForm() {
     form.dropoffPlace = trip.dropoffPlace
     form.availableWeightKg = trip.availableWeightKg
     form.capacityUnit = trip.capacityUnit ?? 'SUITCASE_23KG'
+    form.pricingMode = trip.pricingMode ?? 'KG'
+    form.negotiable = trip.negotiable ?? false
+    form.currency = trip.currency ?? 'EUR'
     form.pricePerKg = trip.pricePerKg
     form.acceptedCategories = [...trip.acceptedCategories]
     form.refusedCategories = [...trip.refusedCategories]
