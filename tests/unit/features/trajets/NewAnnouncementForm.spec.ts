@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { ref } from 'vue'
 
 const catalogSample = [
   { code: 'DOCUMENTS', label: 'Documents & administratif', emoji: '📄' },
@@ -13,6 +14,8 @@ const mockFetchTemplates = vi.fn()
 const mockTplList = vi.fn()
 const mockTplCreate = vi.fn()
 const mockTplRemove = vi.fn()
+const mockPriceGridItems = ref([])
+const mockFetchPriceGridItems = vi.fn()
 
 vi.mock('@/features/trajets/services/configService', () => ({
   configService: () => ({ fetchContentCategories: mockFetchContentCategories }),
@@ -28,6 +31,15 @@ vi.mock('@/features/trajets/services/tripTemplateService', () => ({
     create: mockTplCreate,
     update: vi.fn(),
     remove: mockTplRemove,
+  }),
+}))
+
+vi.mock('@/features/tarifs/composables/usePriceGrid', () => ({
+  usePriceGrid: () => ({
+    items: mockPriceGridItems,
+    isLoading: ref(false),
+    error: ref(null),
+    fetchItems: mockFetchPriceGridItems,
   }),
 }))
 
@@ -85,6 +97,8 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
     mockTplList.mockResolvedValue([])
     mockTplCreate.mockResolvedValue(undefined)
     mockTplRemove.mockResolvedValue(undefined)
+    mockPriceGridItems.value = []
+    mockFetchPriceGridItems.mockResolvedValue(undefined)
   })
 
   it("un échec du catalogue ne bloque ni le formulaire ni le pré-remplissage d'édition", async () => {
@@ -191,6 +205,43 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
 
     expect(wrapper.find('[data-test="pricing-mode-MIXED"]').classes()).toContain('border-primary')
     expect(wrapper.find('[data-test="negotiable-toggle"]').attributes('aria-pressed')).toBe('true')
+    wrapper.unmount()
+  })
+
+  it('affiche la grille tarifaire quand le mode grille + kilo est sélectionné', async () => {
+    mockPriceGridItems.value = [
+      { id: 'cabine', label: 'Valise cabine', unitPriceNet: 18, unitPriceDisplay: 20.45, position: 0 },
+      { id: 'telephone', label: 'Téléphone', unitPriceNet: 25, unitPriceDisplay: 28.41, position: 1 },
+    ]
+
+    const wrapper = await mountForm()
+    expect(wrapper.find('[data-test="announcement-price-grid"]').exists()).toBe(false)
+
+    await wrapper.find('[data-test="pricing-mode-MIXED"]').trigger('click')
+
+    const grid = wrapper.find('[data-test="announcement-price-grid"]')
+    expect(grid.exists()).toBe(true)
+    expect(grid.text()).toContain('Valise cabine')
+    expect(grid.text()).toContain('Téléphone')
+    expect(wrapper.find('[data-test="announcement-price-grid-row-cabine"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="announcement-price-grid-row-telephone"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('garde les toggles de publication alignés avec un switch de taille fixe', async () => {
+    const wrapper = await mountForm()
+
+    for (const key of ['negotiable', 'cash']) {
+      const row = wrapper.find(`[data-test="${key}-toggle-row"]`)
+      const copy = wrapper.find(`[data-test="${key}-toggle-copy"]`)
+      const toggle = wrapper.find(`[data-test="${key}-toggle"]`)
+
+      expect(row.classes()).toEqual(expect.arrayContaining(['gap-4', 'justify-between']))
+      expect(copy.classes()).toEqual(expect.arrayContaining(['min-w-0', 'flex-1']))
+      expect(toggle.classes()).toEqual(expect.arrayContaining(['w-11', 'flex-shrink-0']))
+      expect(toggle.attributes('role')).toBe('switch')
+    }
+
     wrapper.unmount()
   })
 
