@@ -178,6 +178,22 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
     wrapper.unmount()
   })
 
+  it('permet de choisir le mode grille + kilo et d’ouvrir la négociation expéditeur', async () => {
+    const wrapper = await mountForm()
+    const mixed = wrapper.find('[data-test="pricing-mode-MIXED"]')
+    const toggle = wrapper.find('[data-test="negotiable-toggle"]')
+
+    expect(mixed.exists()).toBe(true)
+    expect(toggle.attributes('aria-pressed')).toBe('false')
+
+    await mixed.trigger('click')
+    await toggle.trigger('click')
+
+    expect(wrapper.find('[data-test="pricing-mode-MIXED"]').classes()).toContain('border-primary')
+    expect(wrapper.find('[data-test="negotiable-toggle"]').attributes('aria-pressed')).toBe('true')
+    wrapper.unmount()
+  })
+
   it('affiche « aucun modèle » puis liste, sélectionne et supprime un modèle personnel', async () => {
     const myTemplate = {
       id: 'tpl-1',

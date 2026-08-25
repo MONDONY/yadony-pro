@@ -79,6 +79,54 @@ describe('TripBidDetailPanel', () => {
     expect(wrapper.find('[data-test="detail-reject"]').exists()).toBe(true)
   })
 
+  it('NEGOTIATING : affiche la proposition et permet accepter/refuser', async () => {
+    const wrapper = mountPanel(bid({
+      status: 'NEGOTIATING',
+      paymentAmountEuros: 44,
+      negotiationProposedGrossEuros: 44,
+      negotiationCurrency: 'EUR',
+      negotiationRound: 2,
+      negotiationMyTurn: true,
+      negotiationCanCounter: true,
+    }))
+    expect(wrapper.text()).toContain('Proposition expéditeur')
+    expect(wrapper.text()).toContain('44.00 EUR')
+    expect(wrapper.find('[data-test="detail-open-counter-negotiation"]').exists()).toBe(true)
+
+    await wrapper.find('[data-test="detail-accept-negotiation"]').trigger('click')
+    await wrapper.find('[data-test="detail-reject-negotiation"]').trigger('click')
+
+    expect(wrapper.emitted('accept-negotiation')?.[0]).toEqual(['b1'])
+    expect(wrapper.emitted('reject-negotiation')?.[0]).toEqual(['b1'])
+  })
+
+  it('NEGOTIATING : envoie une contre-proposition avec message optionnel', async () => {
+    const wrapper = mountPanel(bid({
+      status: 'NEGOTIATING',
+      paymentAmountEuros: 44,
+      negotiationProposedGrossEuros: 44,
+      negotiationMyTurn: true,
+      negotiationCanCounter: true,
+    }))
+    await wrapper.find('[data-test="detail-open-counter-negotiation"]').trigger('click')
+    await wrapper.find('[data-test="counter-negotiation-amount"]').setValue(48.5)
+    await wrapper.find('[data-test="counter-negotiation-body"]').setValue('Possible à ce montant')
+    await wrapper.find('[data-test="counter-negotiation-submit"]').trigger('click')
+    expect(wrapper.emitted('counter-negotiation')?.[0]).toEqual(['b1', 48.5, 'Possible à ce montant'])
+  })
+
+  it("NEGOTIATING : affiche l'attente quand ce n'est pas au voyageur de répondre", () => {
+    const wrapper = mountPanel(bid({
+      status: 'NEGOTIATING',
+      paymentAmountEuros: 44,
+      negotiationMyTurn: false,
+      negotiationCanCounter: true,
+    }))
+    expect(wrapper.text()).toContain("En attente de la réponse de l'expéditeur.")
+    expect(wrapper.find('[data-test="detail-accept-negotiation"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="detail-open-counter-negotiation"]').exists()).toBe(false)
+  })
+
   it('ACCEPTED : « Expéditeur absent » demande confirmation puis émet report-noshow', async () => {
     const wrapper = mountPanel(bid({ status: 'ACCEPTED' }))
     await wrapper.find('[data-test="detail-report-noshow"]').trigger('click')
