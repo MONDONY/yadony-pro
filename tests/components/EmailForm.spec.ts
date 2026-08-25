@@ -43,6 +43,17 @@ describe('EmailForm', () => {
     expect(wrapper.text()).toContain('email-service-error')
   })
 
+  it("remplace l'erreur technique d'envoi OTP par un message utilisateur", async () => {
+    sendEmailOtpMock.mockRejectedValueOnce(new Error('[POST] "https://api.yadony.com/api/v1/auth/email-otp/send": 400'))
+    const wrapper = mount(EmailForm)
+    await wrapper.find('input[type="email"]').setValue('user@example.com')
+    await wrapper.find('form').trigger('submit')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain("Impossible d'envoyer le code")
+    expect(wrapper.text()).not.toContain('[POST]')
+    expect(wrapper.text()).not.toContain('api.yadony.com')
+  })
+
   it('disables submit button while loading', async () => {
     let resolveSendEmailOtp!: () => void
     sendEmailOtpMock.mockImplementationOnce(

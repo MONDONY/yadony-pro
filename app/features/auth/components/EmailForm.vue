@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { Mail } from 'lucide-vue-next'
 import { useFirebaseAuth } from '@/features/auth/composables/useFirebaseAuth'
+import { friendlyAuthError } from '@/features/auth/lib/friendlyAuthError'
 
 const emit = defineEmits<{ sent: [email: string] }>()
 
@@ -26,7 +27,7 @@ async function submit() {
     await sendEmailOtp(normalizedEmail.value)
     emit('sent', normalizedEmail.value)
   } catch (e) {
-    error.value = (e as Error).message || 'Erreur envoi OTP email'
+    error.value = friendlyAuthError(e, 'send-email-otp')
   } finally {
     loading.value = false
   }
