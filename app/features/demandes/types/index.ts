@@ -4,6 +4,7 @@ export interface MatchingRequest {
   tripCorridor: string
   tripDepartureDate: string
   tripAvailableKg: number
+  tripNegotiable?: boolean
   senderId: string
   senderName: string
   senderInitials: string

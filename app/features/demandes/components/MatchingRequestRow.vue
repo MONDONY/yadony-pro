@@ -24,6 +24,7 @@ const scoreVariant = computed<BadgeVariants['variant']>(() => {
   if (props.request.matchScore >= 60) return 'warning'
   return 'neutral'
 })
+const canNegotiate = computed(() => props.request.tripNegotiable !== false)
 </script>
 
 <template>
@@ -88,16 +89,16 @@ const scoreVariant = computed<BadgeVariants['variant']>(() => {
         v-else
         :data-test="`row-negotiate-${request.id}`"
         type="button"
-        :disabled="isNegotiating"
+        :disabled="isNegotiating || !canNegotiate"
         :class="cn(
           'h-8 rounded-btn px-3 text-xs font-semibold transition-colors',
-          isNegotiating
+          isNegotiating || !canNegotiate
             ? 'cursor-not-allowed bg-surface-el text-text-muted'
             : 'bg-primary text-on-primary shadow-btn hover:bg-primary-hover',
         )"
         @click="emit('negotiate', request)"
       >
-        {{ isNegotiating ? 'Ouverture…' : 'Négocier' }}
+        {{ !canNegotiate ? 'Prix fixe' : isNegotiating ? 'Ouverture…' : 'Négocier' }}
       </button>
     </div>
   </div>

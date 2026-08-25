@@ -21,12 +21,17 @@ interface BackendTripRecurrence {
   capacityUnit: CapacityUnit
   availableKg: number
   pricePerKg: number
+  pricingMode?: UserTripRecurrence['pricingMode'] | null
+  negotiable?: boolean | null
+  currency?: string | null
   acceptedCategories: string[] | null
+  refusedCategories?: string[] | null
   pickupAddress: BackendAddress
   deliveryAddress: BackendAddress
   departureTime: string | null
   arrivalTime: string | null
   cashAccepted: boolean
+  handoverDeadline?: string | null
   weekdays: string
   horizonDays: number
   active: boolean
@@ -50,12 +55,17 @@ function mapToRecurrence(r: BackendTripRecurrence): UserTripRecurrence {
     capacityUnit: r.capacityUnit,
     availableKg: r.availableKg,
     pricePerKg: r.pricePerKg,
+    pricingMode: r.pricingMode ?? 'KG',
+    negotiable: r.negotiable ?? false,
+    currency: r.currency ?? 'EUR',
     acceptedCategories: r.acceptedCategories ?? [],
+    refusedCategories: r.refusedCategories ?? [],
     pickupAddress: toPlace(r.pickupAddress),
     deliveryAddress: toPlace(r.deliveryAddress),
     departureTime: time,
     arrivalTime: arrival,
     cashAccepted: r.cashAccepted ?? false,
+    handoverDeadline: r.handoverDeadline ?? null,
     weekdays: r.weekdays,
     horizonDays: r.horizonDays,
     active: r.active,
@@ -98,12 +108,17 @@ export function recurrenceToPayload(r: UserTripRecurrence): SaveTripRecurrencePa
     capacityUnit: r.capacityUnit,
     availableKg: r.availableKg,
     pricePerKg: r.pricePerKg,
+    pricingMode: r.pricingMode,
+    negotiable: r.negotiable,
+    currency: r.currency,
     acceptedCategories: [...r.acceptedCategories],
+    refusedCategories: [...r.refusedCategories],
     pickupAddress: { label: r.pickupAddress.label, lat: r.pickupAddress.lat, lng: r.pickupAddress.lng },
     deliveryAddress: { label: r.deliveryAddress.label, lat: r.deliveryAddress.lat, lng: r.deliveryAddress.lng },
     departureTime: r.departureTime,
     arrivalTime: r.arrivalTime,
     cashAccepted: r.cashAccepted,
+    handoverDeadline: r.handoverDeadline,
     weekdays: r.weekdays,
     horizonDays: r.horizonDays,
     active: r.active,

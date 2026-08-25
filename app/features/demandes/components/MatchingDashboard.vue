@@ -106,6 +106,7 @@ const createTripRequest = ref<MatchingRequest | null>(null)
 const negotiatedIds = reactive(new Set<string>())
 
 function openNegotiateModal(request: MatchingRequest) {
+  if (request.tripNegotiable === false) return
   if (!hasActiveTrips.value) {
     createTripRequest.value = request
   } else {

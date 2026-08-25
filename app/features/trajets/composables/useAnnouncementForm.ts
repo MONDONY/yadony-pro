@@ -177,6 +177,11 @@ export function useAnnouncementForm() {
     form.availableWeightKg = t.availableWeightKg
     form.pricePerKg = t.pricePerKg
     form.acceptedCategories = [...t.acceptedCategories]
+    if ('pricingMode' in t) form.pricingMode = t.pricingMode
+    if ('negotiable' in t) form.negotiable = t.negotiable
+    if ('currency' in t) form.currency = t.currency
+    if ('refusedCategories' in t) form.refusedCategories = [...t.refusedCategories]
+    if ('handoverDeadline' in t) form.handoverDeadline = isoToDateInput(t.handoverDeadline)
     if ('cashAccepted' in t) form.cashAccepted = t.cashAccepted
     if ('arrivalTime' in t) form.arrivalTime = t.arrivalTime ?? ''
   }
@@ -201,8 +206,13 @@ export function useAnnouncementForm() {
       capacityUnit: form.capacityUnit,
       availableKg: form.availableWeightKg,
       pricePerKg: form.pricePerKg,
+      pricingMode: form.pricingMode,
+      negotiable: form.negotiable,
+      currency: form.currency,
       acceptedCategories: [...form.acceptedCategories],
+      refusedCategories: [...form.refusedCategories],
       cashAccepted: form.cashAccepted,
+      handoverDeadline: form.handoverDeadline || null,
       arrivalTime: form.arrivalTime || null,
     }
   }
