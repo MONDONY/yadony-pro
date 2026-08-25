@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import OtpInput from './OtpInput.vue'
 import { useFirebaseAuth } from '@/features/auth/composables/useFirebaseAuth'
+import { friendlyAuthError } from '@/features/auth/lib/friendlyAuthError'
 
 const props = withDefaults(defineProps<{
   phone?: string
@@ -52,7 +53,7 @@ async function submit(code: string) {
     await navigateTo('/cockpit')
   }
   catch (e) {
-    error.value = (e as Error).message || 'Code incorrect'
+    error.value = friendlyAuthError(e, props.mode === 'email' ? 'confirm-email-otp' : 'confirm-phone-otp')
   }
   finally {
     loading.value = false

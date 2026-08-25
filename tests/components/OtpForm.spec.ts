@@ -89,6 +89,16 @@ describe('OtpForm', () => {
     expect(wrapper.text()).toContain('Code incorrect')
   })
 
+  it("remplace l'erreur technique email OTP 400 par un message utilisateur", async () => {
+    confirmEmailOtpMock.mockRejectedValue(new Error('[POST] "https://api.yadony.com/api/v1/auth/email-otp/verify": 400'))
+    const wrapper = mount(OtpForm, { props: { mode: 'email', email: 'user@example.com' } })
+    await wrapper.findComponent({ name: 'OtpInput' }).vm.$emit('complete', '000000')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Code incorrect ou expiré')
+    expect(wrapper.text()).not.toContain('[POST]')
+    expect(wrapper.text()).not.toContain('api.yadony.com')
+  })
+
   it('emits resend when resend button clicked (countdown at 0)', async () => {
     vi.useFakeTimers()
     const wrapper = mount(OtpForm, { props: { phone: '+33612345678' } })
