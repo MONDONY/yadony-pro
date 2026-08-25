@@ -23,6 +23,16 @@ async function blockFirebaseAuthCalls(page: import('@playwright/test').Page) {
 }
 
 async function mockApi(page: import('@playwright/test').Page) {
+  await page.route('**/travelers/me/price-grid', async (route) => {
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify([
+        { id: 'cabine', label: 'Valise cabine', unitPriceNet: 18, unitPriceDisplay: 20.45, position: 0 },
+        { id: 'telephone', label: 'Téléphone', unitPriceNet: 25, unitPriceDisplay: 28.41, position: 1 },
+      ]),
+    })
+  })
+
   await page.route('**/announcements**', async (route) => {
     const fakeTrips = [
       {
@@ -172,5 +182,13 @@ test.describe('Nouvelle annonce — Formulaire', () => {
     await expect(toggle).toHaveAttribute('aria-pressed', 'false')
     await toggle.click()
     await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('mixed pricing mode shows article price grid', async ({ page }) => {
+    await gotoNouvelleAnnonce(page)
+    await page.locator('[data-test="pricing-mode-MIXED"]').click()
+    await expect(page.locator('[data-test="announcement-price-grid"]')).toBeVisible()
+    await expect(page.locator('[data-test="announcement-price-grid-row-cabine"]')).toContainText('Valise cabine')
+    await expect(page.locator('[data-test="announcement-price-grid-row-telephone"]')).toContainText('Téléphone')
   })
 })

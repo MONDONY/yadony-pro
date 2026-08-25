@@ -4,8 +4,10 @@ import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
 import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
+import { usePriceGrid } from '@/features/tarifs/composables/usePriceGrid'
 import { configService, type ContentCategory } from '@/features/trajets/services/configService'
 import { tripTemplateService } from '@/features/trajets/services/tripTemplateService'
+import type { PriceGridItem } from '@/features/tarifs/types/index'
 import type { PricingMode, UserTripTemplate } from '@/features/trajets/types/index'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
 import TransportModeChips from '@/features/trajets/components/TransportModeChips.vue'
@@ -31,6 +33,12 @@ const props = withDefaults(defineProps<{
 
 const { form, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
 const { fetchTemplates } = useTrips()
+const {
+  items: priceGridItems,
+  isLoading: isPriceGridLoading,
+  error: priceGridError,
+  fetchItems: fetchPriceGridItems,
+} = usePriceGrid()
 const { fetchContentCategories } = configService()
 const tplSvc = tripTemplateService()
 
@@ -53,6 +61,9 @@ const pricingOptions: Array<{ value: PricingMode; label: string; description: st
   { value: 'KG', label: 'Au kilo', description: 'Prix simple par kilo' },
   { value: 'MIXED', label: 'Grille + kilo', description: 'Articles tarifés et reste au kilo' },
 ]
+const sortedPriceGridItems = computed<PriceGridItem[]>(() =>
+  [...priceGridItems.value].sort((a, b) => a.position - b.position),
+)
 
 const submitErrorMessages: Record<string, string> = {
   'draft-limit-reached': 'Limite de brouillons atteinte. Passez en PRO pour en créer davantage.',
@@ -84,6 +95,7 @@ onMounted(async () => {
     fetchTemplates().catch(() => [] as Trip[]),
     fetchContentCategories().catch(() => [] as ContentCategory[]),
     tplSvc.list().catch(() => [] as UserTripTemplate[]),
+    fetchPriceGridItems().catch(() => undefined),
   ])
   templates.value = fetchedTemplates
   // La valeur persistée / émise par les chips est toujours le label — jamais
@@ -113,6 +125,11 @@ function onSelectQuickTemplate(t: TripTemplate) {
 function onSelectMyTemplate(t: UserTripTemplate) {
   applyQuickTemplate(t)
   selectedMyTemplateId.value = t.id
+}
+
+function formatArticlePrice(item: PriceGridItem): string {
+  const value = item.unitPriceDisplay ?? item.unitPriceNet
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
 }
 
 async function onDeleteMyTemplate(t: UserTripTemplate) {
@@ -446,6 +463,55 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         </div>
       </div>
 
+      <div
+        v-if="form.pricingMode === 'MIXED'"
+        class="rounded-el border border-border bg-surface-el p-4"
+        data-test="announcement-price-grid"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-semibold text-text">Articles tarifés</h3>
+            <p class="text-xs text-text-muted mt-0.5">Prix appliqués aux articles de ta grille</p>
+          </div>
+          <NuxtLink to="/tarifs" class="text-xs font-medium text-primary hover:underline">
+            Modifier la grille
+          </NuxtLink>
+        </div>
+
+        <div v-if="isPriceGridLoading" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div v-for="index in 4" :key="index" class="h-14 rounded-btn bg-border/60 animate-pulse" />
+        </div>
+
+        <p v-else-if="priceGridError" class="mt-4 text-sm text-danger" data-test="announcement-price-grid-error">
+          {{ priceGridError }}
+        </p>
+
+        <div
+          v-else-if="sortedPriceGridItems.length === 0"
+          class="mt-4 rounded-btn border border-dashed border-border-strong bg-surface px-4 py-3"
+          data-test="announcement-price-grid-empty"
+        >
+          <p class="text-sm font-medium text-text">Aucun article tarifé</p>
+          <NuxtLink to="/tarifs" class="mt-1 inline-flex text-xs font-medium text-primary hover:underline">
+            Ajouter des articles
+          </NuxtLink>
+        </div>
+
+        <ul v-else class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <li
+            v-for="item in sortedPriceGridItems"
+            :key="item.id"
+            class="flex items-center justify-between gap-3 rounded-btn border border-border bg-surface px-3 py-2.5"
+            :data-test="`announcement-price-grid-row-${item.id}`"
+          >
+            <span class="min-w-0 truncate text-sm font-medium text-text">{{ item.label }}</span>
+            <span class="flex-shrink-0 font-mono text-sm font-semibold tabular-nums text-primary">
+              {{ formatArticlePrice(item) }}
+            </span>
+          </li>
+        </ul>
+      </div>
+
       <div>
         <label class="block text-sm font-medium text-text mb-3">
           Prix par kg <span class="text-danger">*</span>
@@ -457,19 +523,25 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         </p>
       </div>
 
-      <div class="flex items-center justify-between gap-4 p-4 rounded-el border border-border bg-surface-el">
-        <div>
+      <div
+        class="flex items-start sm:items-center justify-between gap-4 p-4 rounded-el border border-border bg-surface-el"
+        data-test="negotiable-toggle-row"
+      >
+        <div class="min-w-0 flex-1" data-test="negotiable-toggle-copy">
           <p class="text-sm font-medium text-text">Négociation expéditeur</p>
           <p class="text-xs text-text-muted mt-0.5">Autoriser les expéditeurs à proposer un prix sur ce trajet</p>
         </div>
         <button
           type="button"
-          :class="['relative w-10 h-6 rounded-full transition-colors flex-shrink-0', form.negotiable ? 'bg-primary' : 'bg-border-strong']"
+          role="switch"
+          aria-label="Autoriser la négociation expéditeur"
+          :class="['relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary', form.negotiable ? 'bg-primary' : 'bg-border-strong']"
           :aria-pressed="form.negotiable"
+          :aria-checked="form.negotiable"
           data-test="negotiable-toggle"
           @click="form.negotiable = !form.negotiable"
         >
-          <span :class="['absolute top-1 w-4 h-4 bg-surface rounded-full shadow transition-transform', form.negotiable ? 'translate-x-5' : 'translate-x-1']" />
+          <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200', form.negotiable ? 'translate-x-6' : 'translate-x-1']" />
         </button>
       </div>
     </section>
@@ -512,19 +584,25 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <p class="mt-1 text-xs text-text-muted text-right"><span class="font-mono tabular-nums">{{ form.senderNote.length }}</span>/500</p>
       </div>
 
-      <div class="flex items-center justify-between p-4 rounded-el border border-border bg-surface-el">
-        <div>
+      <div
+        class="flex items-start sm:items-center justify-between gap-4 p-4 rounded-el border border-border bg-surface-el"
+        data-test="cash-toggle-row"
+      >
+        <div class="min-w-0 flex-1" data-test="cash-toggle-copy">
           <p class="text-sm font-medium text-text">Paiement en espèces</p>
           <p class="text-xs text-text-muted mt-0.5">La carte bancaire Stripe est toujours activée</p>
         </div>
         <button
           type="button"
-          :class="['relative w-10 h-6 rounded-full transition-colors', form.cashAccepted ? 'bg-primary' : 'bg-border-strong']"
+          role="switch"
+          aria-label="Autoriser le paiement en espèces"
+          :class="['relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary', form.cashAccepted ? 'bg-primary' : 'bg-border-strong']"
           :aria-pressed="form.cashAccepted"
+          :aria-checked="form.cashAccepted"
           data-test="cash-toggle"
           @click="form.cashAccepted = !form.cashAccepted"
         >
-          <span :class="['absolute top-1 w-4 h-4 bg-surface rounded-full shadow transition-transform', form.cashAccepted ? 'translate-x-5' : 'translate-x-1']" />
+          <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200', form.cashAccepted ? 'translate-x-6' : 'translate-x-1']" />
         </button>
       </div>
     </section>
