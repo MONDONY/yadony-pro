@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { DataTable } from '@/components/ui/data-table'
 import { Field, Input } from '@/components/ui/input'
 
-definePageMeta({ layout: false })
+definePageMeta({ layout: false, middleware: ['pro-only'] })
 
 const isDark = ref(false)
 onMounted(() => {
