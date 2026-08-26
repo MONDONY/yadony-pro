@@ -1,7 +1,6 @@
 import { useAuthStore } from '@/stores/auth'
 
-// '/design' : page interne de référence du design system (aucune donnée).
-const PUBLIC_ROUTES = ['/login', '/upgrade', '/', '/design']
+const PUBLIC_ROUTES = ['/login', '/upgrade', '/']
 
 export default defineNuxtRouteMiddleware((to) => {
   if (import.meta.server) return

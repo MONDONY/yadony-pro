@@ -53,4 +53,11 @@ describe('MatchingRequestCard — favoris', () => {
     expect(wrapper.emitted('toggle-favorite')?.[0]).toEqual(['pr-1'])
     expect(wrapper.emitted('view-detail')).toBeUndefined()
   })
+
+  it('désactive la négociation quand le trajet ne l’autorise pas', () => {
+    const wrapper = mountCard({ tripNegotiable: false })
+    const btn = wrapper.find('[data-test="negotiate-btn-pr-1"]')
+    expect((btn.element as HTMLButtonElement).disabled).toBe(true)
+    expect(btn.text()).toContain('Prix fixe')
+  })
 })

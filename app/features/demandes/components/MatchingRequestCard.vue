@@ -30,6 +30,7 @@ const scoreBadgeVariant = computed<BadgeVariants['variant']>(() => {
 })
 
 const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.round(props.request.senderRating)))
+const canNegotiate = computed(() => props.request.tripNegotiable !== false)
 </script>
 
 <template>
@@ -152,17 +153,17 @@ const starsArray = computed(() => Array.from({ length: 5 }, (_, i) => i < Math.r
         <button
           v-else
           :data-test="`negotiate-btn-${request.id}`"
-          :disabled="isNegotiating"
+          :disabled="isNegotiating || !canNegotiate"
           :class="cn(
             'h-8 px-4 rounded-btn text-xs font-semibold transition-colors',
-            isNegotiating
+            isNegotiating || !canNegotiate
               ? 'bg-border text-text-muted cursor-not-allowed'
               : 'bg-primary text-on-primary shadow-btn hover:bg-primary-hover',
           )"
           type="button"
           @click="emit('negotiate', request)"
         >
-          {{ isNegotiating ? 'Ouverture…' : 'Négocier' }}
+          {{ !canNegotiate ? 'Prix fixe' : isNegotiating ? 'Ouverture…' : 'Négocier' }}
         </button>
       </div>
     </div>

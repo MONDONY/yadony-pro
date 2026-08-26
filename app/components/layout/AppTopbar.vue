@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Bell, LogOut, Menu, Search } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useFirebaseAuth } from '@/features/auth/composables/useFirebaseAuth'
 import { useGlobalSearch } from '@/features/search/composables/useGlobalSearch'
 import { useSidebar } from '@/composables/useSidebar'
@@ -47,9 +47,14 @@ async function logout() {
       <Button variant="ghost" size="icon" class="sm:hidden" data-test="topbar-search-icon" @click="openSearch()">
         <Search class="w-4 h-4" />
       </Button>
-      <Button variant="ghost" size="icon">
+      <NuxtLink
+        to="/notifications"
+        :class="buttonVariants({ variant: 'ghost', size: 'icon' })"
+        data-test="topbar-notifications"
+        aria-label="Voir les notifications"
+      >
         <Bell class="w-4 h-4" />
-      </Button>
+      </NuxtLink>
       <Button variant="ghost" size="icon" @click="logout">
         <LogOut class="w-4 h-4" />
       </Button>

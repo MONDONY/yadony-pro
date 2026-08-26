@@ -42,8 +42,13 @@ export interface UserTripTemplate {
   capacityUnit: CapacityUnit
   availableWeightKg: number
   pricePerKg: number
+  pricingMode: PricingMode
+  negotiable: boolean
+  currency: string
   acceptedCategories: string[]
+  refusedCategories: string[]
   cashAccepted: boolean
+  handoverDeadline: string | null
   arrivalTime: string | null
 }
 
@@ -60,8 +65,13 @@ export interface SaveTripTemplatePayload {
   capacityUnit: CapacityUnit
   availableKg: number
   pricePerKg: number
+  pricingMode: PricingMode
+  negotiable: boolean
+  currency: string
   acceptedCategories: string[]
+  refusedCategories: string[]
   cashAccepted: boolean
+  handoverDeadline: string | null
   arrivalTime: string | null
 }
 
@@ -74,12 +84,17 @@ export interface UserTripRecurrence {
   capacityUnit: CapacityUnit
   availableKg: number
   pricePerKg: number
+  pricingMode: PricingMode
+  negotiable: boolean
+  currency: string
   acceptedCategories: string[]
+  refusedCategories: string[]
   pickupAddress: SelectedPlace
   deliveryAddress: SelectedPlace
   departureTime: string | null
   arrivalTime: string | null
   cashAccepted: boolean
+  handoverDeadline: string | null
   weekdays: string
   horizonDays: number
   active: boolean
@@ -94,12 +109,17 @@ export interface SaveTripRecurrencePayload {
   capacityUnit: CapacityUnit
   availableKg: number
   pricePerKg: number
+  pricingMode: PricingMode
+  negotiable: boolean
+  currency: string
   acceptedCategories: string[]
+  refusedCategories: string[]
   pickupAddress: { label: string; lat: number; lng: number }
   deliveryAddress: { label: string; lat: number; lng: number }
   departureTime: string | null
   arrivalTime: string | null
   cashAccepted: boolean
+  handoverDeadline: string | null
   weekdays: string
   horizonDays: number | null
   active: boolean

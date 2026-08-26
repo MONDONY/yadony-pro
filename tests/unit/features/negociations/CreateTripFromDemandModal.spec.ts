@@ -59,6 +59,14 @@ describe('CreateTripFromDemandModal', () => {
     await wrapper.find('[data-test="create-trip-submit"]').trigger('click')
     await new Promise(r => setTimeout(r, 0))
     expect(mockCreateAnnouncement).toHaveBeenCalledOnce()
+    expect(mockCreateAnnouncement).toHaveBeenCalledWith(expect.objectContaining({
+      capacityUnit: 'KG_FREE',
+      pricingMode: 'KG',
+      negotiable: true,
+      currency: 'EUR',
+      acceptedPaymentMethods: ['STRIPE'],
+      handoverDeadline: null,
+    }))
     expect(mockStartNegotiation).toHaveBeenCalledWith(
       expect.objectContaining({
         packageRequestId: 'req-1',

@@ -20,8 +20,13 @@ interface BackendTripTemplate {
   capacityUnit: CapacityUnit
   availableKg: number
   pricePerKg: number
+  pricingMode?: UserTripTemplate['pricingMode'] | null
+  negotiable?: boolean | null
+  currency?: string | null
   acceptedCategories: string[] | null
+  refusedCategories?: string[] | null
   cashAccepted: boolean
+  handoverDeadline?: string | null
   arrivalTime: string | null
 }
 
@@ -36,8 +41,13 @@ function mapToTemplate(t: BackendTripTemplate): UserTripTemplate {
     capacityUnit: t.capacityUnit,
     availableWeightKg: t.availableKg,
     pricePerKg: t.pricePerKg,
+    pricingMode: t.pricingMode ?? 'KG',
+    negotiable: t.negotiable ?? false,
+    currency: t.currency ?? 'EUR',
     acceptedCategories: t.acceptedCategories ?? [],
+    refusedCategories: t.refusedCategories ?? [],
     cashAccepted: t.cashAccepted ?? false,
+    handoverDeadline: t.handoverDeadline ?? null,
     arrivalTime: t.arrivalTime ? t.arrivalTime.slice(0, 5) : null,
   }
 }

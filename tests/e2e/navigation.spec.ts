@@ -25,6 +25,11 @@ test('unauthenticated user is redirected to /login', async ({ page }) => {
   await expect(page).toHaveURL(/\/login$/)
 })
 
+test('unauthenticated user is redirected away from internal design page', async ({ page }) => {
+  await page.goto('/design')
+  await expect(page).toHaveURL(/\/login$/)
+})
+
 test('non-pro user is redirected to /upgrade', async ({ page }) => {
   await fakeLogin(page, { ...FAKE_USER, isProAccount: false })
   await page.goto('/trajets')

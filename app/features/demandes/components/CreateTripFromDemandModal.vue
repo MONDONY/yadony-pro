@@ -93,11 +93,16 @@ async function submit() {
       pickupAddress: { label: departureCity.value, lat: 0, lng: 0 },
       deliveryAddress: { label: arrivalCity.value, lat: 0, lng: 0 },
       availableKg: availableKg.value,
+      capacityUnit: 'KG_FREE',
+      pricingMode: 'KG',
+      negotiable: true,
+      currency: 'EUR',
       pricePerKg: props.request.budgetPerKg,
       description: null,
       acceptedContentTypes: [props.request.contentType],
       refusedTypes: [],
       acceptedPaymentMethods: ['STRIPE'],
+      handoverDeadline: null,
     })
     announcementId = trip.id
   } catch {

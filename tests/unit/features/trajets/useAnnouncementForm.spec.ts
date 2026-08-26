@@ -321,6 +321,31 @@ describe('useAnnouncementForm', () => {
     expect(form.handoverDeadline).toBe('')
   })
 
+  it('applyQuickTemplate preserves date-only handover deadline without timezone conversion', async () => {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, applyQuickTemplate } = useAnnouncementForm()
+    applyQuickTemplate({
+      id: 'tpl-date-only',
+      label: 'Date only',
+      emoji: null,
+      departureCity: validPlace,
+      arrivalCity: validPlace2,
+      transportMode: 'PLANE' as const,
+      capacityUnit: 'KG_FREE' as const,
+      availableWeightKg: 20,
+      pricePerKg: 8,
+      pricingMode: 'KG' as const,
+      negotiable: false,
+      currency: 'EUR',
+      acceptedCategories: [],
+      refusedCategories: [],
+      cashAccepted: false,
+      handoverDeadline: '2026-06-01',
+      arrivalTime: null,
+    })
+    expect(form.handoverDeadline).toBe('2026-06-01')
+  })
+
   it('applyTemplate sets capacityUnit from trip, defaults to SUITCASE_23KG when absent', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, applyTemplate } = useAnnouncementForm()
@@ -369,6 +394,39 @@ describe('useAnnouncementForm', () => {
     expect(form.departureDate).toBe('')
     expect(form.pickupPlace).toBeNull()
     expect(form.dropoffPlace).toBeNull()
+  })
+
+  it('buildTemplatePayload preserves the current publication options', async () => {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, buildTemplatePayload } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.transportMode = 'PLANE'
+    form.capacityUnit = 'KG_FREE'
+    form.availableWeightKg = 18
+    form.pricePerKg = 7
+    form.pricingMode = 'MIXED'
+    form.negotiable = true
+    form.currency = 'EUR'
+    form.acceptedCategories = ['Documents']
+    form.refusedCategories = ['Liquides']
+    form.cashAccepted = true
+    form.arrivalTime = '18:30'
+    form.handoverDeadline = '2026-06-01'
+
+    expect(buildTemplatePayload('Pro Dakar')).toEqual(expect.objectContaining({
+      label: 'Pro Dakar',
+      capacityUnit: 'KG_FREE',
+      availableKg: 18,
+      pricingMode: 'MIXED',
+      negotiable: true,
+      currency: 'EUR',
+      acceptedCategories: ['Documents'],
+      refusedCategories: ['Liquides'],
+      cashAccepted: true,
+      handoverDeadline: '2026-06-01',
+      arrivalTime: '18:30',
+    }))
   })
 
   it('netPrice computes 88% of pricePerKg correctly', async () => {

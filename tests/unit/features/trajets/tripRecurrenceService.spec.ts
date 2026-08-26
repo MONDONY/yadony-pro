@@ -21,12 +21,17 @@ const backendRecurrence = {
   capacityUnit: 'SUITCASE_23KG',
   availableKg: 23,
   pricePerKg: 8,
+  pricingMode: 'MIXED',
+  negotiable: true,
+  currency: 'EUR',
   acceptedCategories: ['Vêtements'],
+  refusedCategories: ['Liquides'],
   pickupAddress: { label: '12 rue', lat: 48.86, lng: 2.33 },
   deliveryAddress: { label: 'CDG', lat: 49.01, lng: 2.55 },
   departureTime: '14:00:00',
   arrivalTime: '18:30:00',
   cashAccepted: true,
+  handoverDeadline: '2026-08-15T09:30:00Z',
   weekdays: '0000100',
   horizonDays: 14,
   active: true,
@@ -48,15 +53,21 @@ describe('tripRecurrenceService', () => {
     expect(result[0].weekdays).toBe('0000100')
     expect(result[0].pickupAddress.label).toBe('12 rue')
     expect(result[0].acceptedCategories).toEqual(['Vêtements'])
+    expect(result[0].refusedCategories).toEqual(['Liquides'])
+    expect(result[0].pricingMode).toBe('MIXED')
+    expect(result[0].negotiable).toBe(true)
+    expect(result[0].currency).toBe('EUR')
     expect(result[0].arrivalTime).toBe('18:30')
     expect(result[0].cashAccepted).toBe(true)
+    expect(result[0].handoverDeadline).toBe('2026-08-15T09:30:00Z')
   })
 
   it('list maps null acceptedCategories and null time', async () => {
-    mockApiFn.mockResolvedValue([{ ...backendRecurrence, acceptedCategories: null, departureTime: null }])
+    mockApiFn.mockResolvedValue([{ ...backendRecurrence, acceptedCategories: null, refusedCategories: null, departureTime: null }])
     const { tripRecurrenceService } = await import('@/features/trajets/services/tripRecurrenceService')
     const result = await tripRecurrenceService().list()
     expect(result[0].acceptedCategories).toEqual([])
+    expect(result[0].refusedCategories).toEqual([])
     expect(result[0].departureTime).toBeNull()
   })
 
@@ -67,9 +78,12 @@ describe('tripRecurrenceService', () => {
       sourceTemplateId: 'tpl-1', departureCity: 'Paris', arrivalCity: 'Dakar',
       transportMode: 'PLANE' as const, capacityUnit: 'SUITCASE_23KG' as const,
       availableKg: 23, pricePerKg: 8, acceptedCategories: ['Vêtements'],
+      refusedCategories: ['Liquides'], pricingMode: 'MIXED' as const,
+      negotiable: true, currency: 'EUR',
       pickupAddress: { label: '12 rue', lat: 48.86, lng: 2.33 },
       deliveryAddress: { label: 'CDG', lat: 49.01, lng: 2.55 },
       departureTime: '14:00', arrivalTime: '18:30', cashAccepted: true,
+      handoverDeadline: null,
       weekdays: '0000100', horizonDays: 14, active: true,
     }
     await tripRecurrenceService().create(payload)
@@ -96,5 +110,10 @@ describe('tripRecurrenceService', () => {
     expect(payload.active).toBe(true)
     expect(payload.arrivalTime).toBe('18:30')
     expect(payload.cashAccepted).toBe(true)
+    expect(payload.refusedCategories).toEqual(['Liquides'])
+    expect(payload.pricingMode).toBe('MIXED')
+    expect(payload.negotiable).toBe(true)
+    expect(payload.currency).toBe('EUR')
+    expect(payload.handoverDeadline).toBeNull()
   })
 })

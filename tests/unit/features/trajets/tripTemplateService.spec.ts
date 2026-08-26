@@ -26,8 +26,13 @@ const backendTemplate = {
   capacityUnit: 'SUITCASE_23KG',
   availableKg: 23,
   pricePerKg: 8,
+  pricingMode: 'MIXED',
+  negotiable: true,
+  currency: 'EUR',
   acceptedCategories: ['Vêtements', 'Documents'],
+  refusedCategories: ['Produits frais'],
   cashAccepted: true,
+  handoverDeadline: '2026-08-15T09:30:00Z',
   arrivalTime: '18:30:00',
 }
 
@@ -49,16 +54,22 @@ describe('tripTemplateService', () => {
     expect(result[0].departureCity.lat).toBe(48.85)
     expect(result[0].availableWeightKg).toBe(23)
     expect(result[0].acceptedCategories).toEqual(['Vêtements', 'Documents'])
+    expect(result[0].refusedCategories).toEqual(['Produits frais'])
+    expect(result[0].pricingMode).toBe('MIXED')
+    expect(result[0].negotiable).toBe(true)
+    expect(result[0].currency).toBe('EUR')
     expect(result[0].cashAccepted).toBe(true)
+    expect(result[0].handoverDeadline).toBe('2026-08-15T09:30:00Z')
     expect(result[0].arrivalTime).toBe('18:30')
   })
 
   it('list maps null acceptedCategories to empty array', async () => {
-    mockApiFn.mockResolvedValue([{ ...backendTemplate, acceptedCategories: null, departureLat: null, departureLng: null }])
+    mockApiFn.mockResolvedValue([{ ...backendTemplate, acceptedCategories: null, refusedCategories: null, departureLat: null, departureLng: null }])
     const { tripTemplateService } = await import('@/features/trajets/services/tripTemplateService')
     const svc = tripTemplateService()
     const result = await svc.list()
     expect(result[0].acceptedCategories).toEqual([])
+    expect(result[0].refusedCategories).toEqual([])
     expect(result[0].departureCity.lat).toBe(0)
   })
 
@@ -72,7 +83,9 @@ describe('tripTemplateService', () => {
       arrivalCity: 'Dakar', arrivalLat: 14.71, arrivalLng: -17.46,
       transportMode: 'PLANE' as const, capacityUnit: 'SUITCASE_23KG' as const,
       availableKg: 23, pricePerKg: 8, acceptedCategories: ['Vêtements', 'Documents'],
-      cashAccepted: true, arrivalTime: '18:30',
+      refusedCategories: ['Produits frais'], pricingMode: 'MIXED' as const,
+      negotiable: true, currency: 'EUR',
+      cashAccepted: true, handoverDeadline: '2026-08-15T09:30:00Z', arrivalTime: '18:30',
     }
     const result = await svc.create(payload)
     expect(mockApiFn).toHaveBeenCalledWith('/trip-templates', { method: 'POST', body: payload })
@@ -89,7 +102,9 @@ describe('tripTemplateService', () => {
       arrivalCity: 'Abidjan', arrivalLat: null, arrivalLng: null,
       transportMode: 'PLANE' as const, capacityUnit: 'KG_FREE' as const,
       availableKg: 30, pricePerKg: 9, acceptedCategories: [],
-      cashAccepted: false, arrivalTime: null,
+      refusedCategories: [], pricingMode: 'KG' as const,
+      negotiable: false, currency: 'EUR',
+      cashAccepted: false, handoverDeadline: null, arrivalTime: null,
     }
     await svc.update('tpl-1', payload)
     expect(mockApiFn).toHaveBeenCalledWith('/trip-templates/tpl-1', { method: 'PUT', body: payload })

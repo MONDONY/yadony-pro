@@ -16,6 +16,7 @@ import type { TripTemplate } from '@/features/trajets/data/tripTemplates'
 // <input type="date"> ("2026-06-01"). null → chaîne vide.
 function isoToDateInput(iso: string | null): string {
   if (!iso) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -177,6 +178,11 @@ export function useAnnouncementForm() {
     form.availableWeightKg = t.availableWeightKg
     form.pricePerKg = t.pricePerKg
     form.acceptedCategories = [...t.acceptedCategories]
+    if ('pricingMode' in t) form.pricingMode = t.pricingMode
+    if ('negotiable' in t) form.negotiable = t.negotiable
+    if ('currency' in t) form.currency = t.currency
+    if ('refusedCategories' in t) form.refusedCategories = [...t.refusedCategories]
+    if ('handoverDeadline' in t) form.handoverDeadline = isoToDateInput(t.handoverDeadline)
     if ('cashAccepted' in t) form.cashAccepted = t.cashAccepted
     if ('arrivalTime' in t) form.arrivalTime = t.arrivalTime ?? ''
   }
@@ -201,8 +207,13 @@ export function useAnnouncementForm() {
       capacityUnit: form.capacityUnit,
       availableKg: form.availableWeightKg,
       pricePerKg: form.pricePerKg,
+      pricingMode: form.pricingMode,
+      negotiable: form.negotiable,
+      currency: form.currency,
       acceptedCategories: [...form.acceptedCategories],
+      refusedCategories: [...form.refusedCategories],
       cashAccepted: form.cashAccepted,
+      handoverDeadline: form.handoverDeadline || null,
       arrivalTime: form.arrivalTime || null,
     }
   }
