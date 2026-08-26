@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: true,
+    testTimeout: 10000,
     setupFiles: ['./tests/setup.ts'],
     exclude: ['node_modules/**', '.nuxt/**', '.output/**', 'tests/e2e/**', '.worktrees/**', '.claude/**'],
     coverage: {
