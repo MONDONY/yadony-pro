@@ -95,7 +95,7 @@ async function submit() {
       availableKg: availableKg.value,
       capacityUnit: 'KG_FREE',
       pricingMode: 'KG',
-      negotiable: false,
+      negotiable: true,
       currency: 'EUR',
       pricePerKg: props.request.budgetPerKg,
       description: null,

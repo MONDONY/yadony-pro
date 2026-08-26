@@ -62,7 +62,7 @@ describe('CreateTripFromDemandModal', () => {
     expect(mockCreateAnnouncement).toHaveBeenCalledWith(expect.objectContaining({
       capacityUnit: 'KG_FREE',
       pricingMode: 'KG',
-      negotiable: false,
+      negotiable: true,
       currency: 'EUR',
       acceptedPaymentMethods: ['STRIPE'],
       handoverDeadline: null,

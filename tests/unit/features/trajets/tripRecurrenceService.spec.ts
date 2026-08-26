@@ -83,7 +83,7 @@ describe('tripRecurrenceService', () => {
       pickupAddress: { label: '12 rue', lat: 48.86, lng: 2.33 },
       deliveryAddress: { label: 'CDG', lat: 49.01, lng: 2.55 },
       departureTime: '14:00', arrivalTime: '18:30', cashAccepted: true,
-      handoverDeadline: '2026-08-15T09:30:00Z',
+      handoverDeadline: null,
       weekdays: '0000100', horizonDays: 14, active: true,
     }
     await tripRecurrenceService().create(payload)
@@ -114,6 +114,6 @@ describe('tripRecurrenceService', () => {
     expect(payload.pricingMode).toBe('MIXED')
     expect(payload.negotiable).toBe(true)
     expect(payload.currency).toBe('EUR')
-    expect(payload.handoverDeadline).toBe('2026-08-15T09:30:00Z')
+    expect(payload.handoverDeadline).toBeNull()
   })
 })

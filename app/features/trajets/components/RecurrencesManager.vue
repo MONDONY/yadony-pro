@@ -82,7 +82,7 @@ async function onCreate() {
       departureTime: time.value || null,
       arrivalTime: tpl.arrivalTime,
       cashAccepted: tpl.cashAccepted,
-      handoverDeadline: tpl.handoverDeadline,
+      handoverDeadline: null,
       weekdays: days.value.map((d) => (d ? '1' : '0')).join(''),
       horizonDays: 14,
       active: true,

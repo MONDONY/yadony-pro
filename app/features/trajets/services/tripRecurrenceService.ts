@@ -118,7 +118,7 @@ export function recurrenceToPayload(r: UserTripRecurrence): SaveTripRecurrencePa
     departureTime: r.departureTime,
     arrivalTime: r.arrivalTime,
     cashAccepted: r.cashAccepted,
-    handoverDeadline: r.handoverDeadline,
+    handoverDeadline: null,
     weekdays: r.weekdays,
     horizonDays: r.horizonDays,
     active: r.active,

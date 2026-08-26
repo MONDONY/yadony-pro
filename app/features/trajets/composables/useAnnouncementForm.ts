@@ -16,6 +16,7 @@ import type { TripTemplate } from '@/features/trajets/data/tripTemplates'
 // <input type="date"> ("2026-06-01"). null → chaîne vide.
 function isoToDateInput(iso: string | null): string {
   if (!iso) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
