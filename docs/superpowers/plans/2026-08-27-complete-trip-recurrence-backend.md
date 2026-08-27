@@ -313,7 +313,10 @@ git commit -m "feat(recurrence): prevent duplicate publications"
 **Files:**
 - Modify: `src/main/java/com/yadony/api/matching/TripRecurrenceRepository.java`
 - Modify: `src/main/java/com/yadony/api/matching/TripRecurrenceService.java`
+- Create: `src/main/java/com/yadony/api/matching/TripRecurrenceActivationEvent.java`
+- Create: `src/main/java/com/yadony/api/matching/TripRecurrenceActivationListener.java`
 - Modify: `src/test/java/com/yadony/api/matching/TripRecurrenceServiceTest.java`
+- Create: `src/test/java/com/yadony/api/matching/TripRecurrenceActivationListenerTest.java`
 
 **Interfaces:**
 - Consumes calendar matching and recurring announcement creation.
@@ -341,7 +344,20 @@ Expected: FAIL against the old horizon-pointer algorithm.
 
 Scan `[today, today + publicationLeadDays]`, filter with `TripRecurrenceCalendar`, and call `createRecurringAnnouncement`. Build `handoverDeadline` as the effective departure time (or noon) minus `handoverLeadDays`. Pass through pricing mode, negotiation, currency, description, accepted and refused categories.
 
-- [ ] **Step 4: Persist safe error state and retry**
+- [ ] **Step 4: Trigger immediate generation only after commit**
+
+Publish `TripRecurrenceActivationEvent(recurrenceId, userId)` from active creates and updates. Handle it with:
+
+```java
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+public void onActivated(TripRecurrenceActivationEvent event) {
+    service.generateForUserRecurrence(event.userId(), event.recurrenceId());
+}
+```
+
+The listener reloads the committed recurrence by user and ID before generation. This keeps recurrence persistence independent from KYC, Stripe, quota, duplicate-key, or other announcement failures.
+
+- [ ] **Step 5: Persist safe error state and retry**
 
 Map known `YadonyBusinessException.errorCode` values to stable French messages in a small private mapper. Store no raw exception text for unknown failures:
 
@@ -351,22 +367,22 @@ default -> "La publication automatique a échoué. Elle sera retentée."
 
 Clear the fields after any successful publication. Do not advance a checkpoint on failure.
 
-- [ ] **Step 5: Restrict repository selection**
+- [ ] **Step 6: Restrict repository selection**
 
 Replace `findByActiveTrue()` with a query that returns active, non-deleted recurrences whose `endDate` is null or not before today. Pass `today` explicitly from `generateDueTrips()`.
 
-- [ ] **Step 6: Run focused tests**
+- [ ] **Step 7: Run focused tests**
 
 ```bash
-./mvnw -Dtest=TripRecurrenceServiceTest,TripRecurrenceControllerIntegrationTest test --no-transfer-progress
+./mvnw -Dtest=TripRecurrenceServiceTest,TripRecurrenceActivationListenerTest,TripRecurrenceControllerIntegrationTest test --no-transfer-progress
 ```
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add src/main/java/com/yadony/api/matching/TripRecurrenceRepository.java src/main/java/com/yadony/api/matching/TripRecurrenceService.java src/test/java/com/yadony/api/matching/TripRecurrenceServiceTest.java
+git add src/main/java/com/yadony/api/matching/TripRecurrenceRepository.java src/main/java/com/yadony/api/matching/TripRecurrenceService.java src/main/java/com/yadony/api/matching/TripRecurrenceActivationEvent.java src/main/java/com/yadony/api/matching/TripRecurrenceActivationListener.java src/test/java/com/yadony/api/matching/TripRecurrenceServiceTest.java src/test/java/com/yadony/api/matching/TripRecurrenceActivationListenerTest.java
 git commit -m "feat(recurrence): publish schedules progressively"
 ```
 
@@ -381,7 +397,7 @@ git commit -m "feat(recurrence): publish schedules progressively"
 - [ ] **Step 1: Run recurrence and announcement tests together**
 
 ```bash
-./mvnw -Dtest=TripRecurrenceCalendarTest,TripRecurrenceServiceTest,TripRecurrenceControllerIntegrationTest,AnnouncementServiceTest,V233CompleteTripRecurrencesMigrationTest test --no-transfer-progress
+./mvnw -Dtest=TripRecurrenceCalendarTest,TripRecurrenceServiceTest,TripRecurrenceActivationListenerTest,TripRecurrenceControllerIntegrationTest,AnnouncementServiceTest,V233CompleteTripRecurrencesMigrationTest test --no-transfer-progress
 ```
 
 Expected: PASS.
@@ -411,4 +427,3 @@ git log --oneline --decorate -6
 ```
 
 Expected: no whitespace errors and no uncommitted implementation changes.
-
