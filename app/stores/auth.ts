@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useApi } from '@/composables/useApi'
 
 export interface AuthUser {
   id: string
@@ -34,6 +35,17 @@ export const useAuthStore = defineStore('auth', {
     clear() {
       this.idToken = null
       this.user = null
+    },
+    async refreshUser() {
+      if (!this.idToken) return
+      try {
+        const api = useApi()
+        const user = await api<AuthUser>('/auth/me')
+        this.user = user
+      } catch {
+        // Un échec de rafraîchissement ne doit jamais vider la session existante :
+        // perdre la session parce que /auth/me a échoué serait pire que ne pas rafraîchir.
+      }
     },
   },
 })

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Smartphone, Download, ChevronRight } from 'lucide-vue-next'
+import { CreditCard, ArrowRight, ChevronRight } from 'lucide-vue-next'
 
-const steps = ["Ouvre l'app", 'Profil → PRO', 'Active']
+const steps = ['Choisis ta formule', 'Paiement sécurisé', 'Accède à ton espace']
 </script>
 
 <template>
@@ -13,14 +13,14 @@ const steps = ["Ouvre l'app", 'Profil → PRO', 'Active']
           class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-el border border-border bg-surface-el text-primary"
           aria-hidden="true"
         >
-          <Smartphone class="h-5 w-5" :stroke-width="1.75" />
+          <CreditCard class="h-5 w-5" :stroke-width="1.75" />
         </span>
         <div>
           <h2 class="mb-1 font-display text-lg font-semibold tracking-[-0.02em] text-text">
-            Active ton espace PRO depuis l'application mobile
+            Active ton espace PRO en ligne
           </h2>
           <p class="max-w-md text-sm text-text-muted">
-            yadony PRO est une extension de l'app yadony. L'accès se débloque après validation KYC.
+            yadony PRO est l'espace web des voyageurs vérifiés. Abonne-toi directement ici pour débloquer ton accès.
           </p>
         </div>
       </div>
@@ -40,15 +40,13 @@ const steps = ["Ouvre l'app", 'Profil → PRO', 'Active']
           </template>
         </div>
         <!-- Bouton CTA -->
-        <a
-          href="https://yadony.app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <NuxtLink
+          to="/upgrade"
           class="inline-flex flex-shrink-0 items-center gap-2 rounded-btn bg-primary px-5 py-2.5 font-semibold text-on-primary shadow-btn transition-colors hover:bg-primary-hover"
         >
-          <Download class="h-4 w-4" :stroke-width="1.75" aria-hidden="true" />
-          Télécharger l'app yadony
-        </a>
+          <ArrowRight class="h-4 w-4" :stroke-width="1.75" aria-hidden="true" />
+          Découvrir les formules PRO
+        </NuxtLink>
       </div>
     </div>
   </section>
