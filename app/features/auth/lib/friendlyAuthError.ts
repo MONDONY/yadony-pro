@@ -1,8 +1,6 @@
-import { extractProblem } from '@/lib/apiError'
+import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
 
 type AuthErrorContext = 'send-email-otp' | 'confirm-email-otp' | 'confirm-phone-otp'
-
-const TECHNICAL_ERROR_PATTERN = /\[(GET|POST|PUT|PATCH|DELETE)\]|https?:\/\/|\/api\/|:\s?\d{3}\b/i
 
 const CODE_MESSAGES: Record<string, string> = {
   'email-otp-invalid': 'Code incorrect ou expiré. Vérifie le code reçu par email ou demande un nouveau code.',

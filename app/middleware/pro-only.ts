@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/stores/auth'
+import { refreshIfPendingActivation } from '@/features/abonnement/lib/refreshIfPendingActivation'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   if (import.meta.server) return
@@ -10,9 +11,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // renverrait l'utilisateur vers la page de vente qu'il vient tout juste de
   // quitter, juste après avoir payé — le défaut le plus visible que ce
   // parcours pourrait produire.
-  if (to?.query?.success === '1' && !auth.isProAccount) {
-    await auth.refreshUser()
-  }
+  await refreshIfPendingActivation(auth, to?.query)
 
   if (!auth.isProAccount) {
     // Le paramètre de succès doit survivre au renvoi : si le webhook Stripe

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 import type { ProSubscription } from '@/features/abonnement/types/index'
 
 const mockFetchSubscription = vi.fn()
@@ -36,6 +37,11 @@ describe('useSubscription', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.resetModules()
+    // useSubscription() lit désormais un store Pinia partagé (état partagé
+    // entre le bandeau du layout et la page de gestion) : chaque test a
+    // besoin de sa propre instance Pinia active, sinon l'état d'un test
+    // fuirait vers le suivant.
+    setActivePinia(createPinia())
   })
 
   it('initializes with no subscription and idle state', async () => {

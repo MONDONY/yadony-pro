@@ -3,11 +3,26 @@
 import { computed } from 'vue'
 import { CreditCard, ArrowRight } from 'lucide-vue-next'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import {
   BILLING_CYCLE_LABELS,
   SUBSCRIPTION_STATUS_LABELS,
   type ProSubscription,
+  type SubscriptionStatus,
 } from '@/features/abonnement/types/index'
+
+// Même patron que TripCard/BidTableRow/TripDetailHeader : le statut est
+// signalé par une pastille colorée, pas par du texte brut. C'est le seul
+// écran du portail où un impayé a une conséquence financière directe — il ne
+// peut pas être le seul à ne pas donner ce signal couleur.
+const STATUS_VARIANT: Record<SubscriptionStatus, BadgeVariants['variant']> = {
+  ACTIVE: 'success',
+  PAST_DUE: 'danger',
+  LEGACY_GRACE: 'warning',
+  CANCELED: 'neutral',
+  EXPIRED: 'neutral',
+  NONE: 'neutral',
+}
 
 const props = withDefaults(
   defineProps<{
@@ -23,7 +38,9 @@ const emit = defineEmits<{
   'manage-portal': []
 }>()
 
-const statusLabel = computed(() => SUBSCRIPTION_STATUS_LABELS[props.subscription?.status ?? 'NONE'])
+const status = computed<SubscriptionStatus>(() => props.subscription?.status ?? 'NONE')
+const statusLabel = computed(() => SUBSCRIPTION_STATUS_LABELS[status.value])
+const statusVariant = computed<BadgeVariants['variant']>(() => STATUS_VARIANT[status.value])
 
 // Le cycle affiché doit être Mensuel/Annuel, jamais le tarif du catalogue
 // courant (SUBSCRIPTION_PRICING) : un abonné historique ou promotionnel ne
@@ -50,9 +67,9 @@ function handleManagePortal(): void {
 
 <template>
   <div class="bg-surface border border-border rounded-card p-5" data-test="subscription-status-card">
-    <p class="font-display font-semibold text-lg text-text" data-test="subscription-status-label">
+    <Badge :variant="statusVariant" size="sm" data-test="subscription-status-label">
       {{ statusLabel }}
-    </p>
+    </Badge>
 
     <p v-if="cycleLabel" class="font-mono tabular-nums text-sm text-text-muted mt-1" data-test="subscription-status-cycle">
       {{ cycleLabel }}

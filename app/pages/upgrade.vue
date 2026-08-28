@@ -4,6 +4,7 @@ import { CheckCircle } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
 import { useSubscription } from '@/features/abonnement/composables/useSubscription'
+import { refreshIfPendingActivation } from '@/features/abonnement/lib/refreshIfPendingActivation'
 import PricingCard from '@/features/abonnement/components/PricingCard.vue'
 import type { BillingCycle } from '@/features/abonnement/types/index'
 
@@ -23,11 +24,9 @@ const isVerifying = ref(false)
 const verifyAttempted = ref(false)
 
 onMounted(async () => {
-  if (paymentSucceeded.value && !auth.isProAccount) {
-    await auth.refreshUser()
-    if (auth.isProAccount) {
-      await navigateTo('/parametres/abonnement')
-    }
+  const isPendingActivation = await refreshIfPendingActivation(auth, route.query)
+  if (isPendingActivation && auth.isProAccount) {
+    await navigateTo('/parametres/abonnement')
   }
 })
 

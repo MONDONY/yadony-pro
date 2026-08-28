@@ -36,7 +36,6 @@ export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
 }
 
 export interface SubscriptionPricingPlan {
-  cycle: BillingCycle
   amount: number
   currency: 'EUR'
   label: string
@@ -44,13 +43,11 @@ export interface SubscriptionPricingPlan {
 
 export const SUBSCRIPTION_PRICING: Record<BillingCycle, SubscriptionPricingPlan> = {
   MONTHLY: {
-    cycle: 'MONTHLY',
     amount: 4.99,
     currency: 'EUR',
     label: '4,99 € / mois',
   },
   YEARLY: {
-    cycle: 'YEARLY',
     amount: 47.9,
     currency: 'EUR',
     label: '47,90 € / an',

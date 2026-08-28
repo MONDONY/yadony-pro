@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
 import { useSubscription } from '@/features/abonnement/composables/useSubscription'
+import { refreshIfPendingActivation } from '@/features/abonnement/lib/refreshIfPendingActivation'
 import SubscriptionStatusCard from '@/features/abonnement/components/SubscriptionStatusCard.vue'
 
 definePageMeta({
@@ -26,9 +27,7 @@ onMounted(async () => {
   // faire), pour que les données affichées soient à jour même si l'utilisateur
   // arrive sur cette page sans repasser par le middleware (navigation
   // interne, par exemple).
-  if (route.query.success === '1' && !auth.isProAccount) {
-    await auth.refreshUser()
-  }
+  await refreshIfPendingActivation(auth, route.query)
   await fetchSubscription()
 })
 
