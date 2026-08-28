@@ -10,17 +10,19 @@ export type SubscriptionStatus =
   | 'EXPIRED'
   | 'NONE'
 
+export type SubscriptionSource = 'STRIPE' | 'ADMIN_GRANT' | 'LEGACY_FREE'
+
 export interface ProSubscription {
   active: boolean
   status: SubscriptionStatus
-  source: string | null
+  source: SubscriptionSource | null
   billingCycle: BillingCycle | null
   currentPeriodEnd: string | null
   cancelAtPeriodEnd: boolean
   graceExpiresAt: string | null
 }
 
-export interface CheckoutUrl {
+export interface BillingSessionUrl {
   url: string
 }
 

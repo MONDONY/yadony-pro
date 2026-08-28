@@ -1,5 +1,5 @@
 import { useApi } from '@/composables/useApi'
-import type { BillingCycle, CheckoutUrl, ProSubscription } from '@/features/abonnement/types/index'
+import type { BillingCycle, BillingSessionUrl, ProSubscription } from '@/features/abonnement/types/index'
 
 export function subscriptionService() {
   const api = useApi()
@@ -8,15 +8,15 @@ export function subscriptionService() {
     return api<ProSubscription>('/billing/subscription')
   }
 
-  async function createCheckoutSession(cycle: BillingCycle): Promise<CheckoutUrl> {
-    return api<CheckoutUrl>('/billing/checkout-session', {
+  async function createCheckoutSession(cycle: BillingCycle): Promise<BillingSessionUrl> {
+    return api<BillingSessionUrl>('/billing/checkout-session', {
       method: 'POST',
       query: { cycle },
     })
   }
 
-  async function createPortalSession(): Promise<CheckoutUrl> {
-    return api<CheckoutUrl>('/billing/portal-session', {
+  async function createPortalSession(): Promise<BillingSessionUrl> {
+    return api<BillingSessionUrl>('/billing/portal-session', {
       method: 'POST',
     })
   }
