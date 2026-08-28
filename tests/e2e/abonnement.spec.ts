@@ -326,8 +326,15 @@ test.describe('Abonnement — Retour de paiement sur la page de vente, webhook S
     expect(authMeCallCount).toBeGreaterThanOrEqual(1)
 
     // Le bouton de revérification relance le rafraîchissement du profil.
+    // On arme l'attente de la requête AVANT le clic (idiome déjà utilisé plus
+    // haut pour `checkoutRequest`) : une simple comparaison de compteur après
+    // `networkidle` peut s'exécuter avant que le clic n'ait eu le temps de
+    // déclencher l'appel réseau, ce qui rend l'assertion sujette à un flake
+    // temporel sans rapport avec le comportement réel de la page.
     const callsBeforeRetry = authMeCallCount
+    const secondAuthMeRequest = page.waitForRequest('**/auth/me')
     await page.locator('[data-test="upgrade-check-activation-button"]').click()
+    await secondAuthMeRequest
     await page.waitForLoadState('networkidle')
     expect(authMeCallCount).toBeGreaterThan(callsBeforeRetry)
     // Toujours non-PRO : on reste sur l'état d'attente, jamais un retour à la grille.
