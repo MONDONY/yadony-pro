@@ -84,8 +84,9 @@ describe('useSubscription', () => {
     const { error, subscribe } = useSubscription()
     const url = await subscribe('MONTHLY')
     expect(url).toBeNull()
-    expect(error.value).toMatch(/déjà/)
-    expect(error.value).toMatch(/gestion/)
+    expect(error.value).toBe(
+      'Votre abonnement est déjà en cours. Rendez-vous sur la page de gestion de votre abonnement.',
+    )
   })
 
   it('subscribe returns null and maps billing-not-configured to a jargon-free message', async () => {
@@ -94,7 +95,7 @@ describe('useSubscription', () => {
     const { error, subscribe } = useSubscription()
     const url = await subscribe('YEARLY')
     expect(url).toBeNull()
-    expect(error.value).toBe("L'abonnement n'est pas encore disponible pour le moment. Réessayez plus tard.")
+    expect(error.value).toBe("L'abonnement n'est pas encore ouvert.")
   })
 
   it('openPortal returns the portal URL on success', async () => {
@@ -111,7 +112,7 @@ describe('useSubscription', () => {
     const { error, openPortal } = useSubscription()
     const url = await openPortal()
     expect(url).toBeNull()
-    expect(error.value).toMatch(/aucun abonnement payant/i)
+    expect(error.value).toBe("Aucun abonnement payant n'est rattaché à votre compte.")
   })
 
   it('falls back to the backend detail when the code is unknown but a clean detail is provided', async () => {
@@ -124,11 +125,30 @@ describe('useSubscription', () => {
     expect(error.value).toBe('Le service est temporairement indisponible.')
   })
 
+  it('rejects a technical-looking detail and falls back to the generic message', async () => {
+    mockCreateCheckoutSession.mockRejectedValue(
+      problemError('other-code', '[GET] https://api.dony.io/billing/checkout-session: 500'),
+    )
+    const useSubscription = await importComposable()
+    const { error, subscribe } = useSubscription()
+    await subscribe('MONTHLY')
+    expect(error.value).toBe('Impossible de démarrer la souscription. Veuillez réessayer.')
+  })
+
   it('falls back to a generic message when the error code is unknown', async () => {
     mockCreateCheckoutSession.mockRejectedValue(problemError('some-unmapped-code'))
     const useSubscription = await importComposable()
     const { error, subscribe } = useSubscription()
     await subscribe('MONTHLY')
     expect(error.value).toBe('Impossible de démarrer la souscription. Veuillez réessayer.')
+  })
+
+  it('openPortal falls back to a generic message on a network failure without a known code', async () => {
+    mockCreatePortalSession.mockRejectedValue(new Error('network'))
+    const useSubscription = await importComposable()
+    const { error, openPortal } = useSubscription()
+    const url = await openPortal()
+    expect(url).toBeNull()
+    expect(error.value).toBe("Impossible d'ouvrir la gestion de l'abonnement. Veuillez réessayer.")
   })
 })

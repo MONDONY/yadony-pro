@@ -10,8 +10,8 @@ const TECHNICAL_ERROR_PATTERN = /\[(GET|POST|PUT|PATCH|DELETE)\]|https?:\/\/|\/a
 const SUBSCRIPTION_ERROR_MESSAGES: Record<string, string> = {
   'subscription-already-active':
     'Votre abonnement est déjà en cours. Rendez-vous sur la page de gestion de votre abonnement.',
-  'billing-not-configured': "L'abonnement n'est pas encore disponible pour le moment. Réessayez plus tard.",
-  'no-stripe-customer': 'Aucun abonnement payant n’est rattaché à votre compte.',
+  'billing-not-configured': "L'abonnement n'est pas encore ouvert.",
+  'no-stripe-customer': "Aucun abonnement payant n'est rattaché à votre compte.",
 }
 
 function resolveErrorMessage(e: unknown, genericMessage: string): string {
