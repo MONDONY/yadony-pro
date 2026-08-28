@@ -1,10 +1,10 @@
 <!-- app/features/abonnement/components/SubscriptionStatusCard.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CreditCard } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
+import { CreditCard, ArrowRight } from 'lucide-vue-next'
+import { Button, buttonVariants } from '@/components/ui/button'
 import {
-  SUBSCRIPTION_PRICING,
+  BILLING_CYCLE_LABELS,
   SUBSCRIPTION_STATUS_LABELS,
   type ProSubscription,
 } from '@/features/abonnement/types/index'
@@ -25,9 +25,12 @@ const emit = defineEmits<{
 
 const statusLabel = computed(() => SUBSCRIPTION_STATUS_LABELS[props.subscription?.status ?? 'NONE'])
 
+// Le cycle affiché doit être Mensuel/Annuel, jamais le tarif du catalogue
+// courant (SUBSCRIPTION_PRICING) : un abonné historique ou promotionnel ne
+// paie pas nécessairement le tarif catalogue affiché sur /upgrade.
 const cycleLabel = computed(() => {
   const cycle = props.subscription?.billingCycle
-  return cycle ? SUBSCRIPTION_PRICING[cycle].label : null
+  return cycle ? BILLING_CYCLE_LABELS[cycle] : null
 })
 
 const periodEndLabel = computed(() => {
@@ -78,5 +81,18 @@ function handleManagePortal(): void {
       <CreditCard class="h-4 w-4" aria-hidden="true" />
       Gérer mon abonnement
     </Button>
+
+    <!-- Sans client Stripe rattaché (grâce historique, don d'accès admin, ou
+         aucun abonnement), le Customer Portal n'existe pas : c'est le seul
+         moyen de payer depuis le portail qu'il faut alors proposer. -->
+    <NuxtLink
+      v-else
+      to="/upgrade"
+      :class="buttonVariants({ variant: 'default' }) + ' mt-4'"
+      data-test="subscription-status-upgrade-link"
+    >
+      S'abonner
+      <ArrowRight class="h-4 w-4" aria-hidden="true" />
+    </NuxtLink>
   </div>
 </template>

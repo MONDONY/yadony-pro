@@ -26,6 +26,28 @@ describe('PricingCard', () => {
     expect(wrapper.find('[data-test="pricing-card-savings"]').text()).toMatch(/mois/i)
   })
 
+  // Correctif 5 : la phrase se contredisait elle-même — 11,98 € par an
+  // représente 2,4 mois de tarif mensuel, pas "2 mois offerts" écrit en dur.
+  // Le nombre de mois doit être DÉRIVÉ des constantes, jamais hardcodé.
+  it('derives the savings amount and the equivalent number of months from the pricing constants, never a hardcoded figure', () => {
+    const wrapper = mount(PricingCard, {
+      props: { cycle: 'YEARLY' },
+    })
+    const { MONTHLY, YEARLY } = SUBSCRIPTION_PRICING
+    const expectedSavings = MONTHLY.amount * 12 - YEARLY.amount
+    const expectedMonths = expectedSavings / MONTHLY.amount
+    const formattedSavings = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: YEARLY.currency }).format(
+      expectedSavings,
+    )
+    const formattedMonths = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(expectedMonths)
+
+    const text = wrapper.find('[data-test="pricing-card-savings"]').text()
+    expect(text).toContain(formattedSavings)
+    expect(text).toContain(formattedMonths)
+    // La phrase ne doit plus affirmer "2 mois" quand le nombre réel n'est pas 2.
+    expect(text).not.toMatch(/\b2 mois\b/)
+  })
+
   it('shows the featured badge only when featured is true', () => {
     const wrapper = mount(PricingCard, {
       props: { cycle: 'YEARLY', featured: true },

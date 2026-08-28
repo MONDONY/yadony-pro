@@ -29,8 +29,16 @@ const savingsLabel = computed(() => {
   if (props.cycle !== 'YEARLY') return null
   const { MONTHLY, YEARLY } = SUBSCRIPTION_PRICING
   const savings = MONTHLY.amount * 12 - YEARLY.amount
-  const formatted = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: YEARLY.currency }).format(savings)
-  return `Économisez ${formatted} par an, soit l'équivalent de 2 mois offerts`
+  const formattedSavings = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: YEARLY.currency,
+  }).format(savings)
+  // Le nombre de mois "offerts" est DÉRIVÉ du tarif mensuel, jamais écrit en
+  // dur : 11,98 € d'économie représente 2,4 mois de tarif mensuel, pas 2 —
+  // les deux chiffres de la phrase doivent rester cohérents entre eux.
+  const monthsSaved = savings / MONTHLY.amount
+  const formattedMonths = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(monthsSaved)
+  return `Économisez ${formattedSavings} par an, soit l'équivalent de ${formattedMonths} mois offerts`
 })
 
 function handleSubscribe(): void {

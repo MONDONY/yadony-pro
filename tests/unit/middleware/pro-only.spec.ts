@@ -46,7 +46,12 @@ describe('pro-only middleware', () => {
   })
 
   describe('retour de Stripe Checkout (?success=1)', () => {
-    it('refreshes the profile before deciding, and still redirects if it is not pro yet', async () => {
+    // Correctif 2 : si le webhook Stripe tarde encore après ce rafraîchissement,
+    // le paramètre de succès DOIT survivre au renvoi vers /upgrade — sans quoi
+    // la page de vente n'a aucun moyen de savoir qu'un paiement vient d'avoir
+    // lieu, et rafficherait la grille tarifaire à un utilisateur qui vient
+    // d'être débité, sans un mot (boucle fermée décrite en revue finale).
+    it('refreshes the profile before deciding, and redirects to /upgrade preserving success=1 if it is not pro yet', async () => {
       useAuthStore().setSession('t', fakeUser(false))
       mockApiFn.mockResolvedValue(fakeUser(false))
       const middleware = await importMiddleware()
@@ -54,7 +59,7 @@ describe('pro-only middleware', () => {
       await middleware({ query: { success: '1' } })
 
       expect(mockApiFn).toHaveBeenCalledWith('/auth/me')
-      expect(navigateToMock).toHaveBeenCalledWith('/upgrade')
+      expect(navigateToMock).toHaveBeenCalledWith({ path: '/upgrade', query: { success: '1' } })
     })
 
     it('does not redirect once the refreshed profile is pro — the exact bug this middleware must avoid', async () => {

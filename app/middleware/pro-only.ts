@@ -15,6 +15,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   if (!auth.isProAccount) {
+    // Le paramètre de succès doit survivre au renvoi : si le webhook Stripe
+    // n'a toujours pas atterri après le rafraîchissement ci-dessus, la page
+    // de vente doit savoir qu'un paiement vient d'avoir lieu (état
+    // d'activation en cours) plutôt que de rafficher la grille tarifaire à
+    // un utilisateur qui vient d'être débité, sans un mot.
+    if (to?.query?.success === '1') {
+      return navigateTo({ path: '/upgrade', query: { success: '1' } })
+    }
     return navigateTo('/upgrade')
   }
 })

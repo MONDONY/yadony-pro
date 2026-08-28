@@ -56,3 +56,10 @@ export const SUBSCRIPTION_PRICING: Record<BillingCycle, SubscriptionPricingPlan>
     label: '47,90 € / an',
   },
 }
+
+// Le cycle facturé peut différer du tarif catalogue courant (abonné historique
+// ou promotionnel) : ce libellé décrit UNIQUEMENT la périodicité, jamais un prix.
+export const BILLING_CYCLE_LABELS: Record<BillingCycle, string> = {
+  MONTHLY: 'Mensuel',
+  YEARLY: 'Annuel',
+}

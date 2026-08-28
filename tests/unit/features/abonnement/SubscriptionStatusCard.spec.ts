@@ -3,6 +3,12 @@ import { mount } from '@vue/test-utils'
 import SubscriptionStatusCard from '@/features/abonnement/components/SubscriptionStatusCard.vue'
 import type { ProSubscription } from '@/features/abonnement/types/index'
 
+const NuxtLink = {
+  name: 'NuxtLink',
+  template: '<a :href="to"><slot /></a>',
+  props: ['to'],
+}
+
 function buildSubscription(overrides: Partial<ProSubscription> = {}): ProSubscription {
   return {
     active: true,
@@ -25,6 +31,18 @@ describe('SubscriptionStatusCard', () => {
     expect(wrapper.find('[data-test="subscription-status-cycle"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="subscription-status-period-end"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="subscription-status-portal-button"]').exists()).toBe(true)
+  })
+
+  it('shows a dedicated billing-cycle label, never the catalogue price (a legacy or promo subscriber may not pay the current rate)', () => {
+    const monthly = mount(SubscriptionStatusCard, {
+      props: { subscription: buildSubscription({ billingCycle: 'MONTHLY' }) },
+    })
+    expect(monthly.find('[data-test="subscription-status-cycle"]').text()).toBe('Mensuel')
+
+    const yearly = mount(SubscriptionStatusCard, {
+      props: { subscription: buildSubscription({ billingCycle: 'YEARLY' }) },
+    })
+    expect(yearly.find('[data-test="subscription-status-cycle"]').text()).toBe('Annuel')
   })
 
   it('shows a cancellation notice when cancelAtPeriodEnd is true', () => {
@@ -58,16 +76,31 @@ describe('SubscriptionStatusCard', () => {
   it('hides the portal button when no paid subscription is attached (no subscription at all)', () => {
     const wrapper = mount(SubscriptionStatusCard, {
       props: { subscription: null },
+      global: { stubs: { NuxtLink } },
     })
     expect(wrapper.find('[data-test="subscription-status-portal-button"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="subscription-status-label"]').text()).toBe('Aucun abonnement')
+    // Sans client Stripe, l'utilisateur n'a physiquement aucun autre moyen de
+    // payer depuis le portail : ce lien vers /upgrade doit exister.
+    expect(wrapper.find('[data-test="subscription-status-upgrade-link"]').exists()).toBe(true)
   })
 
-  it('hides the portal button when the subscription is not a Stripe customer (admin grant)', () => {
+  it('hides the portal button when the subscription is not a Stripe customer (admin grant), but offers a link to subscribe', () => {
     const wrapper = mount(SubscriptionStatusCard, {
       props: { subscription: buildSubscription({ source: 'ADMIN_GRANT', status: 'ACTIVE' }) },
+      global: { stubs: { NuxtLink } },
     })
     expect(wrapper.find('[data-test="subscription-status-portal-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="subscription-status-upgrade-link"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="subscription-status-upgrade-link"]').attributes('href')).toBe('/upgrade')
+  })
+
+  it('hides the upgrade link when a Stripe subscription is already attached', () => {
+    const wrapper = mount(SubscriptionStatusCard, {
+      props: { subscription: buildSubscription({ source: 'STRIPE' }) },
+      global: { stubs: { NuxtLink } },
+    })
+    expect(wrapper.find('[data-test="subscription-status-upgrade-link"]').exists()).toBe(false)
   })
 
   it('emits manage-portal when the portal button is clicked', async () => {

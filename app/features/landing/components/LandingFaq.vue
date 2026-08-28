@@ -54,6 +54,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { SUBSCRIPTION_PRICING } from '@/features/abonnement/types/index'
+
 const faqItems = [
   {
     question: "C'est quoi yadony PRO ?",
@@ -61,7 +64,11 @@ const faqItems = [
   },
   {
     question: 'Comment accéder à yadony PRO ?',
-    answer: "Connecte-toi avec ton numéro de téléphone, puis choisis une formule d'abonnement (mensuelle ou annuelle) directement sur cette page. Le paiement se fait en ligne via Stripe, et ton espace PRO est actif dès la confirmation.",
+    answer: "Connecte-toi avec ton numéro de téléphone, puis choisis une formule d'abonnement (mensuelle ou annuelle) sur la page d'abonnement. Le paiement se fait en ligne via Stripe, et ton espace PRO est actif dès la confirmation.",
+  },
+  {
+    question: 'Combien coûte yadony PRO ?',
+    answer: `yadony PRO coûte ${SUBSCRIPTION_PRICING.MONTHLY.label} ou ${SUBSCRIPTION_PRICING.YEARLY.label}, sans engagement. Tu choisis ta formule après connexion, sur la page d'abonnement.`,
   },
   {
     question: 'Comment fonctionne le paiement sécurisé ?',

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
 import { useSubscription } from '@/features/abonnement/composables/useSubscription'
 import SubscriptionStatusCard from '@/features/abonnement/components/SubscriptionStatusCard.vue'
@@ -43,6 +44,20 @@ async function onManagePortal() {
   <div class="max-w-3xl space-y-6" data-test="subscription-page">
     <div v-if="isLoading" class="py-8 text-center text-sm text-text-muted" data-test="subscription-page-loading">
       Chargement…
+    </div>
+
+    <!-- Un échec réseau ne laisse aucun abonnement lisible : la carte de statut
+         ne doit pas se monter, sous peine d'affirmer « Aucun abonnement » à un
+         utilisateur nécessairement PRO (la page est derrière pro-only). -->
+    <div
+      v-else-if="error && !subscription"
+      class="bg-surface border border-border rounded-card p-5 space-y-3"
+      data-test="subscription-page-error-state"
+    >
+      <p class="text-sm text-danger" data-test="subscription-page-error">{{ error }}</p>
+      <Button variant="outline" data-test="subscription-page-retry-button" @click="fetchSubscription">
+        Réessayer
+      </Button>
     </div>
 
     <template v-else>
