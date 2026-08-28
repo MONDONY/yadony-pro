@@ -61,7 +61,7 @@ const faqItems = [
   },
   {
     question: 'Comment accéder à yadony PRO ?',
-    answer: "L'accès à yadony PRO se débloque depuis l'application mobile yadony après validation de ton identité. Va dans Profil → PRO → Activer. Une fois activé, connecte-toi sur cette page avec ton numéro de téléphone.",
+    answer: "Connecte-toi avec ton numéro de téléphone, puis choisis une formule d'abonnement (mensuelle ou annuelle) directement sur cette page. Le paiement se fait en ligne via Stripe, et ton espace PRO est actif dès la confirmation.",
   },
   {
     question: 'Comment fonctionne le paiement sécurisé ?',

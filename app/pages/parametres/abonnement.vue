@@ -20,11 +20,12 @@ onMounted(async () => {
   // être encore périmé si la restauration de session a eu lieu avant que le
   // webhook Stripe ne mette à jour le compte. Le middleware pro-only se
   // charge déjà de rafraîchir avant de décider d'un éventuel renvoi vers la
-  // page de vente ; on rafraîchit ici aussi, avant de charger l'abonnement,
-  // pour que les données affichées soient à jour même si l'utilisateur
+  // page de vente ; on rafraîchit ici aussi (même garde `!isProAccount` pour
+  // ne pas doubler systématiquement l'appel réseau que le middleware vient de
+  // faire), pour que les données affichées soient à jour même si l'utilisateur
   // arrive sur cette page sans repasser par le middleware (navigation
   // interne, par exemple).
-  if (route.query.success === '1') {
+  if (route.query.success === '1' && !auth.isProAccount) {
     await auth.refreshUser()
   }
   await fetchSubscription()

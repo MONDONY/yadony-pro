@@ -148,6 +148,48 @@ test.describe('Abonnement — Voyageur non-PRO sur la page de vente', () => {
   })
 })
 
+test.describe('Abonnement — Retour de paiement Stripe (régression middleware)', () => {
+  test.beforeEach(async ({ page }) => {
+    await blockFirebaseAuthCalls(page)
+  })
+
+  test('une session encore périmée atteint la page de gestion après rafraîchissement, sans repasser par la page de vente', async ({ page }) => {
+    // État client exact juste après un paiement Stripe réussi : la session
+    // restaurée porte encore isProAccount=false, le webhook n'ayant pas eu le
+    // temps d'être traité par le backend au moment où le navigateur revient.
+    await fakeLogin(page, { ...PRO_USER, id: 'traveler-abo-003', isProAccount: false })
+
+    let authMeCalled = false
+    await page.route('**/auth/me', async (route) => {
+      authMeCalled = true
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ...PRO_USER, id: 'traveler-abo-003', isProAccount: true }),
+      })
+    })
+    await mockSubscription(page, ACTIVE_SUBSCRIPTION)
+
+    // Navigation complète (pas un clic interne) : reproduit fidèlement le
+    // retour du navigateur depuis Stripe Checkout, avec le pipeline de
+    // middleware réel (auth.global.ts puis pro-only) exécuté sur cette route,
+    // exactement le scénario que la déviation de app/middleware/pro-only.ts
+    // existe pour empêcher.
+    await page.goto('/parametres/abonnement?success=1')
+    // Le rafraîchissement (appel réseau à /auth/me) puis la décision du
+    // middleware ne sont pas synchrones avec la navigation initiale : on
+    // laisse le réseau se stabiliser avant de vérifier où on a atterri,
+    // sans quoi l'assertion pourrait s'exécuter avant que le middleware
+    // n'ait tranché.
+    await page.waitForLoadState('networkidle')
+
+    await expect(page).toHaveURL(/\/parametres\/abonnement/, { timeout: 10000 })
+    await expect(page.locator('[data-test="subscription-status-card"]')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('[data-test="subscription-status-label"]')).toHaveText('Actif', { timeout: 10000 })
+    expect(authMeCalled).toBe(true)
+  })
+})
+
 test.describe('Abonnement — Visiteur non connecté', () => {
   test.beforeEach(async ({ page }) => {
     await blockFirebaseAuthCalls(page)
