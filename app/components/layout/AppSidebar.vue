@@ -14,6 +14,7 @@ import {
   Gift,
   UserCircle,
   Settings,
+  CreditCard,
   ShieldAlert,
   BellRing,
   Plus,
@@ -140,6 +141,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/parametres" label="Paramètres">
         <template #icon><Settings class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/parametres/abonnement" label="Abonnement">
+        <template #icon><CreditCard class="w-4 h-4" /></template>
       </NavItem>
     </nav>
 

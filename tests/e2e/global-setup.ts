@@ -18,7 +18,10 @@ async function warmUp(url: string, attempts = 3): Promise<void> {
 
 export default async function globalSetup() {
   const base = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000'
-  const routes = ['/', '/login', '/cockpit', '/trajets', '/trajets/nouvelle-annonce', '/demandes']
+  const routes = [
+    '/', '/login', '/cockpit', '/trajets', '/trajets/nouvelle-annonce', '/demandes',
+    '/upgrade', '/parametres/abonnement',
+  ]
   for (const route of routes) {
     await warmUp(`${base}${route}`)
   }
