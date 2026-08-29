@@ -10,10 +10,13 @@ const props = withDefaults(
     cycle: BillingCycle
     isLoading?: boolean
     featured?: boolean
+    /** Durée de l'essai auquel CET utilisateur a droit, ou `null` s'il n'y a pas droit. */
+    trialDays?: number | null
   }>(),
   {
     isLoading: false,
     featured: false,
+    trialDays: null,
   },
 )
 
@@ -39,6 +42,16 @@ const savingsLabel = computed(() => {
   const monthsSaved = savings / MONTHLY.amount
   const formattedMonths = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(monthsSaved)
   return `Économisez ${formattedSavings} par an, soit l'équivalent de ${formattedMonths} mois offerts`
+})
+
+/**
+ * Le libellé du bouton dit ce qui se passe au clic, et rien d'autre. Avec un essai, le
+ * premier geste n'est pas un paiement : promettre « S'abonner » là où rien n'est prélevé
+ * pendant sept jours est une imprécision que l'utilisateur découvre trop tard.
+ */
+const ctaLabel = computed(() => {
+  if (props.isLoading) return 'Chargement…'
+  return props.trialDays ? `Commencer l'essai de ${props.trialDays} jours` : "S'abonner"
 })
 
 function handleSubscribe(): void {
@@ -69,6 +82,10 @@ function handleSubscribe(): void {
       {{ plan.label }}
     </p>
 
+    <p v-if="trialDays" class="text-sm text-success mt-2" data-test="pricing-card-trial">
+      {{ trialDays }} jours offerts, puis {{ plan.label }}
+    </p>
+
     <p v-if="savingsLabel" class="text-sm text-success mt-2" data-test="pricing-card-savings">
       {{ savingsLabel }}
     </p>
@@ -80,7 +97,7 @@ function handleSubscribe(): void {
       data-test="pricing-card-subscribe-button"
       @click="handleSubscribe"
     >
-      {{ isLoading ? 'Chargement…' : "S'abonner" }}
+      {{ ctaLabel }}
     </Button>
   </div>
 </template>

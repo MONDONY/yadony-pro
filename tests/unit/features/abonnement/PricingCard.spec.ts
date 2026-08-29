@@ -69,4 +69,35 @@ describe('PricingCard', () => {
     })
     expect(wrapper.find('[data-test="pricing-card-subscribe-button"]').attributes('disabled')).toBeDefined()
   })
+
+  // L'essai vient du backend, jamais d'un calcul local : la carte se contente de
+  // l'afficher. Sans essai, elle doit se comporter exactement comme avant.
+  describe('essai gratuit', () => {
+    it("annonce les jours offerts et le tarif qui suit", () => {
+      const wrapper = mount(PricingCard, { props: { cycle: 'MONTHLY', trialDays: 7 } })
+      const trial = wrapper.find('[data-test="pricing-card-trial"]')
+      expect(trial.exists()).toBe(true)
+      expect(trial.text()).toContain('7 jours offerts')
+      expect(trial.text()).toContain(SUBSCRIPTION_PRICING.MONTHLY.label)
+    })
+
+    // Le bouton doit dire ce que fait le clic. Promettre « S'abonner » là où rien n'est
+    // prélevé pendant sept jours est une imprécision découverte trop tard.
+    it("le bouton annonce l'essai plutôt qu'un abonnement immédiat", () => {
+      const wrapper = mount(PricingCard, { props: { cycle: 'YEARLY', trialDays: 7 } })
+      expect(wrapper.find('[data-test="pricing-card-subscribe-button"]').text())
+        .toContain("Commencer l'essai de 7 jours")
+    })
+
+    it("sans essai, la carte ne l'évoque pas et le bouton reste « S'abonner »", () => {
+      const wrapper = mount(PricingCard, { props: { cycle: 'MONTHLY' } })
+      expect(wrapper.find('[data-test="pricing-card-trial"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="pricing-card-subscribe-button"]').text()).toContain("S'abonner")
+    })
+
+    it("le chargement l'emporte sur le libellé d'essai", () => {
+      const wrapper = mount(PricingCard, { props: { cycle: 'MONTHLY', trialDays: 7, isLoading: true } })
+      expect(wrapper.find('[data-test="pricing-card-subscribe-button"]').text()).toContain('Chargement')
+    })
+  })
 })
