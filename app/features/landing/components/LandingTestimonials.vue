@@ -69,7 +69,7 @@ const testimonials = [
       </div>
 
       <p class="mt-8 text-center text-xs italic text-text-muted">
-        * Témoignages représentatifs — à remplacer par de vrais retours dès disponibles.
+        * Témoignages représentatifs, à remplacer par de vrais retours dès disponibles.
       </p>
     </div>
   </section>
