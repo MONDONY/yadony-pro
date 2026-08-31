@@ -55,7 +55,7 @@ describe('searchService', () => {
       {
         id: 'bid-1',
         type: 'colis',
-        title: 'Alice Ba — Vêtements',
+        title: 'Alice Ba : Vêtements',
         subtitle: 'Paris → Dakar · En transit',
         to: '/colis?bid=bid-1',
       },

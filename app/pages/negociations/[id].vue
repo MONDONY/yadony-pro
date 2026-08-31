@@ -196,7 +196,7 @@ watch(isLoading, async (val) => {
           class="flex items-center gap-2 px-3 py-2 rounded-btn bg-amber-500/10 border border-amber-500/30"
         >
           <span class="text-amber-400 text-sm">⚠</span>
-          <p class="text-xs text-amber-400 font-medium">Dernier round atteint — Accepter ou Refuser uniquement</p>
+          <p class="text-xs text-amber-400 font-medium">Dernier round atteint : Accepter ou Refuser uniquement</p>
         </div>
 
         <div v-if="thread.status === 'OPEN' && isMyTurn" class="flex flex-col sm:flex-row gap-2">
@@ -237,7 +237,7 @@ watch(isLoading, async (val) => {
 
         <div v-else-if="thread.status === 'AWAITING_TRIP'" class="space-y-2">
           <p class="text-xs text-amber-400 text-center font-medium">
-            ⚠ L'expéditeur a accepté votre prix — liez un trajet pour continuer.
+            ⚠ L'expéditeur a accepté votre prix. Liez un trajet pour continuer.
           </p>
           <button
             class="w-full h-10 rounded-btn bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
@@ -265,7 +265,7 @@ watch(isLoading, async (val) => {
           :class="thread.status === 'ACCEPTED' ? 'text-green-400' : 'text-text-muted'"
         >
           {{
-            thread.status === 'ACCEPTED' ? '✓ Négociation acceptée — colis en route !' :
+            thread.status === 'ACCEPTED' ? '✓ Négociation acceptée, colis en route !' :
             thread.status === 'REJECTED' ? 'Négociation refusée.' :
             thread.status === 'AUTO_REJECTED' ? "L'expéditeur a choisi un autre voyageur." :
             'Négociation expirée.'

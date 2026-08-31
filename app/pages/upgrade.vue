@@ -188,7 +188,7 @@ async function onSubscribe(cycle: BillingCycle) {
                 />
                 <span class="text-sm leading-snug">
                   <span class="font-medium text-text">{{ item.label }}</span>
-                  <span class="text-text-muted"> — {{ item.detail }}</span>
+                  <span class="text-text-muted"> : {{ item.detail }}</span>
                 </span>
               </li>
             </ul>

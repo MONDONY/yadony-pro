@@ -48,7 +48,7 @@ function formatDate(iso: string): string {
 
       <!-- État vide -->
       <p v-if="summary.ratings.length === 0" class="text-sm text-text-muted" data-test="ratings-empty">
-        Pas encore de note — elles apparaîtront après tes premières livraisons.
+        Pas encore de note. Elles apparaîtront après tes premières livraisons.
       </p>
 
       <!-- Liste -->

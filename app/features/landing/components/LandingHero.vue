@@ -37,7 +37,7 @@ const badgeClass = {
 
         <p class="max-w-[46ch] text-lg leading-relaxed text-text-muted">
           yadony PRO est l'espace de gestion des voyageurs vérifiés. Publiez vos trajets,
-          acceptez des colis et suivez vos encaissements en séquestre — depuis le web.
+          acceptez des colis et suivez vos encaissements en séquestre, depuis le web.
         </p>
 
         <div class="flex flex-wrap gap-3">

@@ -40,7 +40,7 @@ const items = [
         L'espace de gestion des voyageurs vérifiés.
       </h2>
       <p class="mt-3 max-w-sm text-sm leading-relaxed text-text-muted">
-        Publiez vos trajets, acceptez des colis et suivez vos encaissements en séquestre — en toute confiance.
+        Publiez vos trajets, acceptez des colis et suivez vos encaissements en séquestre, en toute confiance.
       </p>
     </div>
 

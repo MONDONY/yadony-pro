@@ -67,7 +67,7 @@ const actionLabel = computed(() =>
         :disabled="isWorking"
         @click="emit('refresh')"
       >
-        J’ai terminé — actualiser
+        J’ai terminé, actualiser
       </Button>
     </div>
   </div>

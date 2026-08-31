@@ -44,7 +44,7 @@ function initials(name: string): string {
       data-test="subscribers-empty"
     >
       <UsersRound class="w-7 h-7 text-text-subtle mb-2" />
-      <p class="text-sm text-text-muted">Pas encore d'abonné — publie régulièrement pour fidéliser tes expéditeurs.</p>
+      <p class="text-sm text-text-muted">Pas encore d'abonné. Publie régulièrement pour fidéliser tes expéditeurs.</p>
     </div>
 
     <ul v-else class="divide-y divide-border">
