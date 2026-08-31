@@ -24,7 +24,7 @@ async function submit() {
   if (loading.value) return
   error.value = null
   if (!/^\+\d{8,15}$/.test(fullPhone.value)) {
-    error.value = 'Numéro invalide — ex : 6 12 34 56 78'
+    error.value = 'Numéro invalide (ex : 6 12 34 56 78)'
     return
   }
   loading.value = true

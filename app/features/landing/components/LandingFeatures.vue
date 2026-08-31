@@ -7,7 +7,7 @@ const features = [
     icon: LayoutDashboard,
     badge: 'Cockpit opérationnel',
     title: 'Une vue 360° de ton activité',
-    description: 'KPIs en temps réel, historique des trajets, revenus encaissés, taux d\'acceptation — tout au même endroit.',
+    description: 'KPIs en temps réel, historique des trajets, revenus encaissés, taux d\'acceptation. Tout au même endroit.',
     bullets: [
       'Revenus du mois en un coup d\'œil',
       'Suivi des colis actifs par trajet',
@@ -33,7 +33,7 @@ const features = [
     title: 'Encaisse sans risque',
     description: 'Les fonds sont bloqués en séquestre Stripe dès la confirmation. Tu es payé automatiquement à la livraison confirmée.',
     bullets: [
-      'Séquestre Stripe — fonds garantis avant le vol',
+      'Séquestre Stripe : fonds garantis avant le vol',
       'Libération automatique après lecture du QR de livraison',
       'Protection en cas de litige via yadony',
     ],

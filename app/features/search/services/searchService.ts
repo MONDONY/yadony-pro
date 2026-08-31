@@ -77,7 +77,7 @@ export function searchService() {
     return page.content.map((b) => ({
       id: b.id,
       type: 'colis' as const,
-      title: `${b.senderName ?? 'Expéditeur'} — ${b.description ?? b.contentCategory ?? 'Colis'}`,
+      title: `${b.senderName ?? 'Expéditeur'} : ${b.description ?? b.contentCategory ?? 'Colis'}`,
       subtitle: `${b.departureCity} → ${b.arrivalCity} · ${statusLabel(b.status)}`,
       to: `/colis?bid=${b.id}`,
     }))

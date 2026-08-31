@@ -174,7 +174,7 @@ function onExportCsv() {
         <div class="flex items-start justify-between gap-4 flex-wrap">
           <p class="text-sm text-text">
             <span class="font-medium">Ce trajet est un brouillon</span>
-            <span class="text-text-muted"> — invisible pour les expéditeurs tant qu'il n'est pas publié.</span>
+            <span class="text-text-muted"> : invisible pour les expéditeurs tant qu'il n'est pas publié.</span>
           </p>
           <button
             data-test="btn-publish-trip"

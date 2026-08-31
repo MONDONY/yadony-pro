@@ -53,7 +53,7 @@ const canNegotiate = computed(() => props.request.tripNegotiable !== false)
     <img
       v-if="request.packagePhotoUrl"
       :src="request.packagePhotoUrl"
-      :alt="`Colis — ${request.contentType}`"
+      :alt="`Colis : ${request.contentType}`"
       class="h-32 w-full object-cover shrink-0"
     />
     <PackageTypePlaceholder

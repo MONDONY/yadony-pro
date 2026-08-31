@@ -25,7 +25,7 @@ function submit() {
     <header>
       <h2 class="font-display font-semibold text-base text-text">Note ton expéditeur</h2>
       <p class="text-sm text-text-muted">
-        Livraison terminée avec <span class="font-medium text-text">{{ pending.otherPartyName }}</span> — partage ton expérience.
+        Livraison terminée avec <span class="font-medium text-text">{{ pending.otherPartyName }}</span>. Partage ton expérience.
       </p>
     </header>
 

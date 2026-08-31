@@ -38,7 +38,7 @@ const formattedDate = computed(() => {
     <div class="flex-1 min-w-0 space-y-0.5">
       <p class="text-sm text-text leading-snug">
         <span class="font-medium text-primary">{{ entry.ruleLabel }}</span>
-        <span class="text-text-muted"> — {{ entry.actionTaken }}</span>
+        <span class="text-text-muted"> : {{ entry.actionTaken }}</span>
       </p>
       <div class="flex items-center gap-2 text-xs text-text-muted flex-wrap">
         <time :datetime="entry.triggeredAt" class="font-mono tabular-nums">{{ formattedDate }}</time>

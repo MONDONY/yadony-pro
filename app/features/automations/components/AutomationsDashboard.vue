@@ -111,7 +111,7 @@ async function handleDeleteCustomRule(id: string): Promise<void> {
         <div class="mb-4">
           <SectionLabel as="h2">Règles préconfigurées</SectionLabel>
           <p class="text-xs text-text-muted mt-1">
-            6 règles prêtes à l'emploi — activez-les en un clic.
+            6 règles prêtes à l'emploi. Activez-les en un clic.
           </p>
         </div>
 

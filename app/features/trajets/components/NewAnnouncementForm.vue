@@ -190,7 +190,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <p class="flex items-center gap-2 text-sm font-medium text-text">
           <LayoutTemplate class="w-4 h-4 text-primary" />
           Mes modèles
-          <span class="text-xs font-normal text-text-muted">— tes trajets enregistrés</span>
+          <span class="text-xs font-normal text-text-muted">(tes trajets enregistrés)</span>
         </p>
         <button
           type="button"
@@ -263,7 +263,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
       <p class="flex items-center gap-2 text-sm font-medium text-text mb-3">
         <LayoutTemplate class="w-4 h-4 text-primary" />
         Suggestions
-        <span class="text-xs font-normal text-text-muted">— corridors courants pré-remplis</span>
+        <span class="text-xs font-normal text-text-muted">(corridors courants pré-remplis)</span>
       </p>
       <div class="flex flex-wrap gap-2">
         <button

@@ -48,7 +48,7 @@ const conditionSummary = computed(() =>
 const actionSummary = computed(() => {
   const base = actionLabels[props.rule.action.type]
   if (props.rule.action.type === 'auto_reject' && props.rule.action.message) {
-    return `${base} — "${props.rule.action.message}"`
+    return `${base} : "${props.rule.action.message}"`
   }
   return base
 })

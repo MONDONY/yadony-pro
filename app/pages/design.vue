@@ -49,7 +49,7 @@ const query = ref('')
 
       <!-- KPI row -->
       <section class="mt-12">
-        <SectionLabel>StatTile — vue d'ensemble</SectionLabel>
+        <SectionLabel>StatTile : vue d'ensemble</SectionLabel>
         <div class="mt-4 grid grid-cols-2 gap-3.5 md:grid-cols-4">
           <StatTile label="En séquestre" value="4 820,00 €" trend="up" trend-value="12,4 %" />
           <StatTile label="Commission (juil.)" value="578,40 €" trend="up" trend-value="8,1 %" />
@@ -61,7 +61,7 @@ const query = ref('')
       <!-- Cards + buttons -->
       <section class="mt-12 grid gap-6 md:grid-cols-2">
         <div>
-          <SectionLabel>Card — trajet en cours</SectionLabel>
+          <SectionLabel>Card : trajet en cours</SectionLabel>
           <Card class="mt-4" interactive>
             <CardHeader>
               <CardTitle>Paris CDG <span class="text-primary">→</span> Dakar DSS</CardTitle>
@@ -83,7 +83,7 @@ const query = ref('')
         </div>
 
         <div>
-          <SectionLabel>Button — variantes</SectionLabel>
+          <SectionLabel>Button : variantes</SectionLabel>
           <Card variant="flat" class="mt-4">
             <CardBody class="flex flex-wrap items-center gap-3">
               <Button>Accepter l'offre</Button>
@@ -105,7 +105,7 @@ const query = ref('')
 
       <!-- Table -->
       <section class="mt-12">
-        <SectionLabel>DataTable — offres reçues</SectionLabel>
+        <SectionLabel>DataTable : offres reçues</SectionLabel>
         <Card class="mt-4">
           <CardBody>
             <DataTable>
