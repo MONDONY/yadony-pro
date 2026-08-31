@@ -76,7 +76,7 @@ const faqItems = [
   },
   {
     question: 'Quelle commission prend yadony ?',
-    answer: "yadony prélève 12 % sur chaque transaction, déduits du montant versé à l'expéditeur. Tu encaisses le montant négocié avec l'expéditeur, sans surprise.",
+    answer: "yadony prélève une commission de service sur chaque transaction, déjà déduite du montant qui t'est versé. Ton montant net est affiché avant que tu acceptes une offre, sans surprise.",
   },
   {
     question: 'Que se passe-t-il en cas de litige ?',
