@@ -3,7 +3,7 @@ import { ArrowRight, Lock, ShieldCheck } from 'lucide-vue-next'
 
 const payout = [
   { label: 'Encaissé', value: '5 480,00 €', tone: 'text-text' },
-  { label: 'Commission yadony · 12 %', value: '− 657,60 €', tone: 'text-text-muted' },
+  { label: 'Commission yadony', value: '− 657,60 €', tone: 'text-text-muted' },
 ] as const
 </script>
 

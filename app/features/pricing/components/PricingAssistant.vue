@@ -81,7 +81,7 @@ const inputClass =
         <span class="text-sm font-medium" :class="comparisonInfo.class" data-test="comparison">{{ comparisonInfo.label }}</span>
       </div>
       <div class="flex items-center justify-between border-t border-border pt-3">
-        <span class="text-sm text-text-muted">Ton net après commission ({{ Math.round(commissionRate * 100) }} %)</span>
+        <span class="text-sm text-text-muted">Ton net après commission</span>
         <span class="text-sm font-semibold text-text" data-test="net-per-kg">
           <template v-if="net !== null">{{ net.toFixed(2) }} €/kg</template>
           <template v-else>—</template>

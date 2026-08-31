@@ -233,7 +233,7 @@ function formatHistoryDate(iso: string): string {
             </span>
           </div>
           <p class="text-xs text-text-muted mt-2">
-            Vos revenus nets (après commission 12 %) : <span class="text-primary font-mono font-semibold tabular-nums">{{ bid.earningsEuros !== null ? `${bid.earningsEuros.toFixed(2)} €` : '—' }}</span>
+            Vos revenus nets (après commission) : <span class="text-primary font-mono font-semibold tabular-nums">{{ bid.earningsEuros !== null ? `${bid.earningsEuros.toFixed(2)} €` : '—' }}</span>
           </p>
         </section>
 
