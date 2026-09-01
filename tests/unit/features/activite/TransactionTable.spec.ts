@@ -48,6 +48,31 @@ describe('TransactionTable', () => {
     expect(cells('b', wrapper)[5].classes()).toContain('text-success')    // net > 0
   })
 
+  it('formate une ligne XOF en unité pleine et en F CFA, jamais en euros', () => {
+    // 5000 F CFA en unités mineures = 5000 (le XOF n'a pas de sous-unité) :
+    // l'ancien formatEuros divisait par 100 et affichait « 50,00 € ».
+    const xofRow: TransactionRow = {
+      tripId: 'c',
+      corridor: 'Dakar → Paris',
+      departureDate: '2026-07-02',
+      parcelCount: 1,
+      grossRevenue: 5000,
+      commission: 0,
+      netRevenue: 5000,
+      currency: 'XOF',
+    }
+    const wrapper = mount(TransactionTable, { props: { transactions: [xofRow] } })
+    const gross = cells('c', wrapper)[3].text()
+    expect(gross).not.toContain('€')
+    expect(gross.replace(/[^0-9]/g, '')).toBe('5000')
+  })
+
+  it('replie sur l\'euro quand le backend n\'envoie pas encore la devise', () => {
+    const wrapper = mount(TransactionTable, { props: { transactions: [paidRow] } })
+    expect(cells('b', wrapper)[3].text()).toContain('€')
+    expect(cells('b', wrapper)[3].text()).toContain('100,00')
+  })
+
   it('affiche un état vide sans transaction', () => {
     const wrapper = mount(TransactionTable, { props: { transactions: [] } })
     expect(wrapper.text()).toContain('Aucune transaction')
