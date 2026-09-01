@@ -13,9 +13,12 @@ export interface TransactionRow {
   corridor: string
   departureDate: string
   parcelCount: number
+  /** Montants en unités MINEURES de `currency` (centimes EUR, unité pleine XOF). */
   grossRevenue: number
   commission: number
   netRevenue: number
+  /** Devise de l'annonce — absente d'un backend pas encore déployé : repli EUR. */
+  currency?: string
 }
 
 export interface ActivityAnalytics {
