@@ -20,8 +20,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:coverage
+      # Le rapport est un confort : un quota d'artefacts atteint ne doit pas
+      # rougir une suite verte.
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: coverage
           path: coverage/
