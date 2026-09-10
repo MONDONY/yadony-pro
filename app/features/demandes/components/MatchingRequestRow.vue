@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { cn } from '@/lib/utils'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { MatchingRequest } from '@/features/demandes/types/index'
+import { formatPerKg } from '@/lib/money'
 
 /**
  * Ligne « liste » d'une demande compatible (variante compacte de
@@ -59,7 +60,7 @@ const canNegotiate = computed(() => props.request.tripNegotiable !== false)
     <div class="hidden w-20 text-right font-mono text-sm tabular-nums text-text sm:block">{{ request.weightKg }} kg</div>
 
     <!-- Budget -->
-    <div class="w-24 text-right font-mono text-sm tabular-nums text-text">{{ request.budgetPerKg }} €/kg</div>
+    <div class="w-24 text-right font-mono text-sm tabular-nums text-text">{{ formatPerKg(request.budgetPerKg, request.currency) }}</div>
 
     <!-- Score -->
     <div class="w-16 text-right">

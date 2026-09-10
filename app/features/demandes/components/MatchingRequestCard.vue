@@ -6,6 +6,7 @@ import { Check, Star } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import PackageTypePlaceholder from '@/features/demandes/components/PackageTypePlaceholder.vue'
 import type { MatchingRequest } from '@/features/demandes/types/index'
+import { formatPerKg } from '@/lib/money'
 
 const props = withDefaults(
   defineProps<{
@@ -115,7 +116,7 @@ const canNegotiate = computed(() => props.request.tripNegotiable !== false)
         </div>
         <div class="rounded-el bg-surface-el p-2 text-center">
           <p class="text-text-muted">Budget</p>
-          <p class="font-semibold text-text mt-0.5 font-mono tabular-nums">{{ request.budgetPerKg }} €/kg</p>
+          <p class="font-semibold text-text mt-0.5 font-mono tabular-nums">{{ formatPerKg(request.budgetPerKg, request.currency) }}</p>
         </div>
         <div class="rounded-el bg-surface-el p-2 text-center">
           <p class="text-text-muted">Type</p>

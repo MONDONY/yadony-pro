@@ -2,10 +2,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { NegotiationMessage } from '@/features/negociations/types'
+import { formatMoney } from '@/lib/money'
 
 const props = defineProps<{
   message: NegotiationMessage
   isMine: boolean
+  /** Devise du fil : un message n'en porte pas, il hérite de celle du fil. */
+  currency?: string
 }>()
 
 const KIND_LABEL: Record<string, string> = {
@@ -46,7 +49,7 @@ const formattedDate = computed(() =>
           v-if="message.proposedPriceEur !== null"
           class="font-mono text-lg font-semibold tabular-nums"
         >
-          {{ message.proposedPriceEur }} €
+          {{ formatMoney(message.proposedPriceEur, currency) }}
         </p>
 
         <p v-if="message.body" class="text-sm leading-relaxed">{{ message.body }}</p>

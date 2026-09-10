@@ -1,6 +1,7 @@
 import { useApi } from '@/composables/useApi'
 import { useCommissionRate } from '@/composables/useCommissionRate'
 import type { Bid, BidPage, BidFilter, BidStatus } from '@/features/colis/types/index'
+import { normalizeCurrency, roundToCurrency } from '@/lib/money'
 
 interface BackendBidResponse {
   id: string
@@ -9,7 +10,6 @@ interface BackendBidResponse {
   senderName: string | null
   senderTotalShipments: number | null
   weightKg: number
-  declaredValueEur: number
   description: string | null
   contentCategory: string | null
   status: string
@@ -21,6 +21,12 @@ interface BackendBidResponse {
   paymentMethod: string | null
   trackingNumber: string | null
   trackingToken: string | null
+  /** Devise du bid ; les montants « Eur » ci-dessous s'y expriment malgré leur nom. */
+  currency?: string | null
+  /** Net voyageur calculé par le backend (négocié, grille, taux figé). */
+  totalNetAmountEur?: number | null
+  /** Brut payé par l'expéditeur, calculé par le backend. */
+  totalSenderAmountEur?: number | null
 }
 
 interface BackendPage {
@@ -47,21 +53,30 @@ function inferPaymentStatus(status: string): Bid['paymentStatus'] {
   return 'PENDING'
 }
 
+function finiteOrNull(value: unknown): number | null {
+  const n = typeof value === 'number' ? value : Number(value)
+  return value !== null && value !== undefined && Number.isFinite(n) ? n : null
+}
+
 function mapBackendToBid(b: BackendBidResponse, commissionRate: number): Bid {
+  const currency = normalizeCurrency(b.currency)
   // Le poids peut être absent (mode GRID) ou null (bid rejeté sans pesée) → on
   // n'invente pas de 0 : weightKg reste null et les revenus qui en dépendent aussi
   // (évite les « NaN kg » / « NaN € » à l'affichage).
   const rawWeight = Number(b.weightKg)
   const weightKg = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : null
   const pricePerKg = Number(b.pricePerKg)
-  const paymentAmountEuros =
+  // Montants du backend d'abord : ils portent l'accord négocié, la grille et le
+  // taux figé sur le bid. Le produit prix/kg × poids × (1 − taux global) ne
+  // sert plus que de repli, arrondi à la précision de la devise.
+  const localGross =
     weightKg !== null && Number.isFinite(pricePerKg)
-      ? Math.round(pricePerKg * weightKg * 100) / 100
+      ? roundToCurrency(pricePerKg * weightKg, currency)
       : null
+  const paymentAmountEuros = finiteOrNull(b.totalSenderAmountEur) ?? localGross
   const earningsEuros =
-    paymentAmountEuros !== null
-      ? Math.round(paymentAmountEuros * (1 - commissionRate) * 100) / 100
-      : null
+    finiteOrNull(b.totalNetAmountEur)
+    ?? (localGross !== null ? roundToCurrency(localGross * (1 - commissionRate), currency) : null)
   const senderName = b.senderName ?? 'Expéditeur'
 
   return {
@@ -79,7 +94,7 @@ function mapBackendToBid(b: BackendBidResponse, commissionRate: number): Bid {
     },
     weightKg,
     contentDescription: b.description ?? b.contentCategory ?? '',
-    declaredValueEuros: Number(b.declaredValueEur),
+    currency,
     earningsEuros,
     paymentStatus: inferPaymentStatus(b.status),
     paymentAmountEuros,

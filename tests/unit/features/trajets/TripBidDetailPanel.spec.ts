@@ -11,7 +11,7 @@ function bid(over: Partial<TripBid> = {}): TripBid {
     senderInitials: 'AD',
     senderTotalShipments: 3,
     weightKg: 8,
-    declaredValueEuros: 300,
+    currency: 'EUR',
     contentDescription: 'tee short',
     status: 'ACCEPTED',
     paymentAmountEuros: 64,
@@ -90,7 +90,7 @@ describe('TripBidDetailPanel', () => {
       negotiationCanCounter: true,
     }))
     expect(wrapper.text()).toContain('Proposition expéditeur')
-    expect(wrapper.text()).toContain('44.00 EUR')
+    expect(wrapper.text().replace(/[\s  ]/g, '')).toContain('44,00€')
     expect(wrapper.find('[data-test="detail-open-counter-negotiation"]').exists()).toBe(true)
 
     await wrapper.find('[data-test="detail-accept-negotiation"]').trigger('click')

@@ -32,7 +32,7 @@ const fakeBid = {
   sender: { id: 'u1', name: 'Alice', avatarInitials: 'AL', rating: 4.5, totalSentParcels: 12 },
   weightKg: 5,
   contentDescription: 'Vêtements',
-  declaredValueEuros: 200,
+  currency: 'EUR',
   earningsEuros: 30.8,
   paymentStatus: 'ESCROWED' as const,
   paymentAmountEuros: 35,
@@ -189,7 +189,7 @@ describe('useBids', () => {
     await fetchBids()
     selectedIds.value = ['bid-1']
     const csv = exportCsv()
-    expect(csv).toContain('id,n°suivi,expéditeur,corridor,date départ,poids (kg),statut,revenus (€)')
+    expect(csv).toContain('id,n°suivi,expéditeur,corridor,date départ,poids (kg),statut,revenus,devise')
     expect(csv).toContain('bid-1')
     expect(csv).toContain('Alice')
     expect(csv).toContain('Paris → Dakar')

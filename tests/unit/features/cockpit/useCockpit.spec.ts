@@ -59,7 +59,7 @@ const fakePendingBid = {
   sender: { id: 'u1', name: 'Alice', avatarInitials: 'AL', rating: 4.5, totalSentParcels: 5 },
   weightKg: 5,
   contentDescription: 'Vêtements',
-  declaredValueEuros: 100,
+  currency: 'EUR',
   earningsEuros: 30,
   paymentStatus: 'PENDING' as const,
   paymentAmountEuros: 35,
@@ -185,6 +185,17 @@ describe('useCockpit', () => {
     expect(byId('active-trips')?.value).toBe('2')
     expect(byId('parcels-delivered')?.value).toBe('15')
     expect(byId('parcels-transit')?.value).toBe('1')
+  })
+
+  it('kpis et action « revenus » sont formatés dans la devise active des stats', async () => {
+    mockFetchStats.mockResolvedValue({ ...fakeStats, currency: 'XOF', monthlyRevenue: 275000, totalRevenue: 1310000 })
+    const useCockpit = await importUseCockpit()
+    const { kpis, urgentActions, fetchAll } = useCockpit()
+    await fetchAll()
+    const compact = (t: string | undefined) => (t ?? '').replace(/[\s  ]/g, '')
+    expect(compact(kpis.value.find((k) => k.id === 'revenue-total')?.value)).toBe('1310000FCFA')
+    expect(compact(kpis.value.find((k) => k.id === 'revenue-month')?.value)).toBe('275000FCFA')
+    expect(compact(urgentActions.value.find((a) => a.id === 'earnings')?.label)).toContain('275000FCFA')
   })
 
   it('kpis acceptance rate is formatted as percent (67%)', async () => {

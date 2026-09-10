@@ -5,6 +5,7 @@ import { Star, CheckCircle, XCircle, Eye, Copy } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { Bid, BidStatus } from '@/features/colis/types/index'
+import { formatMoney } from '@/lib/money'
 
 function copyTracking(trackingNumber: string) {
   navigator.clipboard.writeText(trackingNumber).catch(() => {})
@@ -145,7 +146,7 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
 
     <!-- Earnings -->
     <td class="py-3 pr-4 text-sm font-mono font-semibold tabular-nums whitespace-nowrap">
-      <span v-if="bid.earningsEuros !== null" class="text-primary">{{ bid.earningsEuros.toFixed(2) }} €</span>
+      <span v-if="bid.earningsEuros !== null" class="text-primary">{{ formatMoney(bid.earningsEuros, bid.currency) }}</span>
       <span v-else class="text-text-muted">—</span>
     </td>
 

@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import TripBidDetailPanel from '@/features/trajets/components/TripBidDetailPanel.vue'
 import QrScanner from '@/features/trajets/components/QrScanner.vue'
 import type { TripBid } from '@/features/trajets/types/index'
+import { formatMoney } from '@/lib/money'
 
 const props = defineProps<{
   bids: TripBid[]
@@ -242,7 +243,6 @@ const negotiationCount = computed(() => props.bids.filter((b) => b.status === 'N
           <tr class="border-b border-border bg-surface-el">
             <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Expéditeur</th>
             <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Poids</th>
-            <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Valeur</th>
             <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Contenu</th>
             <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Revenus nets</th>
             <th class="text-left px-4 py-3 text-2xs font-semibold text-text-subtle uppercase tracking-[0.07em]">Statut</th>
@@ -269,9 +269,8 @@ const negotiationCount = computed(() => props.bids.filter((b) => b.status === 'N
               </div>
             </td>
             <td class="px-4 py-3 font-mono tabular-nums text-text font-medium">{{ bid.weightKg }} kg</td>
-            <td class="px-4 py-3 font-mono tabular-nums text-text-muted">{{ bid.declaredValueEuros }} €</td>
             <td class="px-4 py-3 text-text-muted max-w-[150px] truncate">{{ bid.contentDescription || '—' }}</td>
-            <td class="px-4 py-3 font-mono tabular-nums text-primary font-semibold">{{ bid.earningsEuros.toFixed(2) }} €</td>
+            <td class="px-4 py-3 font-mono tabular-nums text-primary font-semibold">{{ formatMoney(bid.earningsEuros, bid.currency) }}</td>
             <td class="px-4 py-3">
               <Badge :variant="STATUS_VARIANT[bid.status] ?? 'neutral'" size="sm">
                 {{ STATUS_LABELS[bid.status] ?? bid.status }}
@@ -368,11 +367,7 @@ const negotiationCount = computed(() => props.bids.filter((b) => b.status === 'N
             <p class="text-xs text-text-subtle">Poids</p>
           </div>
           <div class="bg-surface-el rounded-el px-2 py-2">
-            <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ bid.declaredValueEuros }} €</p>
-            <p class="text-xs text-text-subtle">Valeur</p>
-          </div>
-          <div class="bg-surface-el rounded-el px-2 py-2">
-            <p class="font-mono text-sm font-semibold tabular-nums text-primary">{{ bid.earningsEuros.toFixed(2) }} €</p>
+            <p class="font-mono text-sm font-semibold tabular-nums text-primary">{{ formatMoney(bid.earningsEuros, bid.currency) }}</p>
             <p class="text-xs text-text-subtle">Revenus nets</p>
           </div>
         </div>
@@ -382,7 +377,7 @@ const negotiationCount = computed(() => props.bids.filter((b) => b.status === 'N
           Contenu : {{ bid.contentDescription }}
         </p>
         <p v-if="bid.status === 'NEGOTIATING'" class="text-xs text-warning">
-          Proposition à {{ (bid.negotiationProposedGrossEuros ?? bid.paymentAmountEuros).toFixed(2) }} {{ bid.negotiationCurrency ?? 'EUR' }}
+          Proposition à {{ formatMoney(bid.negotiationProposedGrossEuros ?? bid.paymentAmountEuros, bid.currency) }}
         </p>
 
         <!-- Actions PAYMENT_ESCROWED -->

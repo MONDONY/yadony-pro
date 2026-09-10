@@ -30,6 +30,18 @@ vi.mock('@/composables/useCommissionRate', () => ({
   useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
 }))
 
+// Devise active du voyageur (préférences métier) : EUR par défaut, XOF dans les
+// cas de test qui la changent.
+let mockActiveCurrency = 'EUR'
+vi.mock('@/stores/preferences', () => ({
+  usePreferencesStore: () => ({
+    get currency() { return mockActiveCurrency },
+    loaded: true,
+    load: async () => mockActiveCurrency,
+    setCurrency: vi.fn(),
+  }),
+}))
+
 async function importUseAnnouncementForm() {
   const mod = await import('@/features/trajets/composables/useAnnouncementForm')
   return mod.useAnnouncementForm
@@ -43,7 +55,66 @@ describe('useAnnouncementForm', () => {
     vi.clearAllMocks()
     vi.resetModules()
     mockCommissionRate = 0.12
+    mockActiveCurrency = 'EUR'
     setActivePinia(createPinia())
+  })
+
+  it('publie dans la devise active du voyageur, avec les rails de cette devise', async () => {
+    // Un voyageur en francs CFA publiait en euros (« EUR » en dur) avec la carte,
+    // que le backend retirait en silence.
+    mockActiveCurrency = 'XOF'
+    mockCreate.mockResolvedValue({ id: 'trip-xof', status: 'PUBLISHED' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, netPrice, submit } = useAnnouncementForm()
+    await Promise.resolve()
+    expect(form.currency).toBe('XOF')
+    expect(form.pricePerKg).toBe(5000)
+    expect(netPrice.value).toBe(4400)
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-06-10'
+    form.transportMode = 'PLANE'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    form.handoverDeadline = '2026-06-01'
+    await submit('PUBLISHED')
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'XOF', acceptedPaymentMethods: ['MOBILE_MONEY', 'CASH'] }),
+      { saveAsDraft: false },
+    )
+  })
+
+  it('n’envoie les espèces en euros que si le voyageur les a cochées', async () => {
+    mockCreate.mockResolvedValue({ id: 'trip-eur', status: 'PUBLISHED' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, submit } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-06-10'
+    form.transportMode = 'PLANE'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    form.handoverDeadline = '2026-06-01'
+    form.cashAccepted = true
+    await submit('PUBLISHED')
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: 'EUR', acceptedPaymentMethods: ['STRIPE', 'CASH'] }),
+      { saveAsDraft: false },
+    )
+  })
+
+  it('garde la devise d’un modèle appliqué quand la devise active arrive ensuite', async () => {
+    mockActiveCurrency = 'XOF'
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, applyQuickTemplate } = useAnnouncementForm()
+    applyQuickTemplate({
+      id: 'tpl-eur', label: 'Paris → Dakar', departureCity: validPlace, arrivalCity: validPlace2,
+      transportMode: 'PLANE', capacityUnit: 'SUITCASE_23KG', availableWeightKg: 20, pricePerKg: 8,
+      acceptedCategories: [], currency: 'EUR',
+    } as never)
+    await Promise.resolve()
+    expect(form.currency).toBe('EUR')
+    expect(form.pricePerKg).toBe(8)
   })
 
   it('initializes with correct defaults', async () => {

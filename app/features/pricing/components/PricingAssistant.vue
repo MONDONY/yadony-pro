@@ -7,6 +7,7 @@ import {
   type MarketPrice,
   type PricingCorridor,
 } from '@/features/pricing/types/index'
+import { amountStep, currencySymbol, formatPerKg, roundToCurrency } from '@/lib/money'
 
 const props = defineProps<{
   corridors: PricingCorridor[]
@@ -26,8 +27,13 @@ function onCorridorChange() {
 
 const median = computed(() => props.marketPrice?.median ?? null)
 
+// Devise du marché du corridor : la saisie et le net s'y expriment.
+const currency = computed(() => props.marketPrice?.currency)
+
 const net = computed(() =>
-  pricePerKg.value === null ? null : netPerKg(Number(pricePerKg.value), props.commissionRate),
+  pricePerKg.value === null
+    ? null
+    : roundToCurrency(netPerKg(Number(pricePerKg.value), props.commissionRate), currency.value),
 )
 
 const comparison = computed(() =>
@@ -62,8 +68,8 @@ const inputClass =
         </select>
       </div>
       <div>
-        <label class="block text-sm font-medium text-text mb-1.5" for="price">Ton prix (€/kg)</label>
-        <input id="price" v-model.number="pricePerKg" data-test="price-input" type="number" min="0" step="0.5" :class="inputClass" />
+        <label class="block text-sm font-medium text-text mb-1.5" for="price">Ton prix ({{ currencySymbol(currency) }}/kg)</label>
+        <input id="price" v-model.number="pricePerKg" data-test="price-input" type="number" min="0" :step="amountStep(currency)" :class="inputClass" />
       </div>
     </div>
 
@@ -72,7 +78,7 @@ const inputClass =
         <span class="text-sm text-text-muted">Prix médian du marché</span>
         <span class="text-sm font-semibold text-text" data-test="market-median">
           <template v-if="isLoading">…</template>
-          <template v-else-if="median !== null">{{ median.toFixed(2) }} €/kg</template>
+          <template v-else-if="median !== null">{{ formatPerKg(median, currency) }}</template>
           <template v-else>—</template>
         </span>
       </div>
@@ -83,7 +89,7 @@ const inputClass =
       <div class="flex items-center justify-between border-t border-border pt-3">
         <span class="text-sm text-text-muted">Ton net après commission</span>
         <span class="text-sm font-semibold text-text" data-test="net-per-kg">
-          <template v-if="net !== null">{{ net.toFixed(2) }} €/kg</template>
+          <template v-if="net !== null">{{ formatPerKg(net, currency) }}</template>
           <template v-else>—</template>
         </span>
       </div>

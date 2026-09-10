@@ -33,36 +33,44 @@ describe('WalletCard', () => {
     state.error.value = null
   })
 
-  it('affiche le solde et la devise', async () => {
+  it('affiche le solde dans la devise du portefeuille', async () => {
     const wrapper = await mountCard()
-    expect(wrapper.text()).toContain('42.50')
-    expect(wrapper.text()).toContain('€')
+    expect(wrapper.find('[data-test="wallet-balance"]').text().replace(/[\s  ]/g, '')).toBe('42,50€')
   })
 
-  it('liste les transactions', async () => {
+  it('affiche le solde en francs CFA sans centime', async () => {
+    state.balance.value = 15000
+    state.currency.value = 'XOF'
+    const wrapper = await mountCard()
+    expect(wrapper.find('[data-test="wallet-balance"]').text().replace(/[\s  ]/g, '')).toBe('15000FCFA')
+    expect(wrapper.text()).not.toContain('€')
+    state.currency.value = 'EUR'
+  })
+
+  it('liste les transactions, chacune dans sa devise', async () => {
+    state.transactions.value = [
+      { type: 'TOPUP', amount: 20, balanceAfter: 42.5, paymentRef: 'pi_1', createdAt: '2026-07-01T10:00:00Z' },
+      { type: 'COMMISSION', amount: -6000, balanceAfter: 9000, paymentRef: null, createdAt: '2026-07-02T10:00:00Z', currency: 'XOF' },
+    ]
     const wrapper = await mountCard()
     expect(wrapper.text()).toContain('Recharge')
+    expect(wrapper.find('[data-test="wallet-tx-0"]').text().replace(/[\s  ]/g, '')).toBe('+20,00€')
+    expect(wrapper.find('[data-test="wallet-tx-1"]').text().replace(/[\s  ]/g, '')).toBe('−6000FCFA')
   })
 
-  it('recharge Wave : appelle startTopup et redirige', async () => {
-    state.startTopup.mockResolvedValue('https://wave.example/pay')
-    const assignSpy = vi.fn()
-    const original = window.location
-    Object.defineProperty(window, 'location', { value: { ...original, assign: assignSpy }, writable: true })
-
+  it('ne propose plus de recharge depuis le portail mais renvoie vers l’app mobile', async () => {
+    // Le backend refuse Wave et Orange Money (422) et la carte exige un SDK Stripe :
+    // le formulaire menait à une erreur muette.
     const wrapper = await mountCard()
-    await wrapper.find('[data-test="topup-amount"]').setValue('25')
-    await wrapper.find('[data-test="topup-method"]').setValue('WAVE')
-    await wrapper.find('[data-test="topup-submit"]').trigger('click')
-    await vi.waitFor(() => expect(state.startTopup).toHaveBeenCalledWith(25, 'WAVE'))
-    await vi.waitFor(() => expect(assignSpy).toHaveBeenCalledWith('https://wave.example/pay'))
-
-    Object.defineProperty(window, 'location', { value: original, writable: true })
+    expect(wrapper.find('[data-test="topup-submit"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="topup-method"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="topup-mobile-hint"]').text()).toContain('app mobile Yadony')
+    expect(state.startTopup).not.toHaveBeenCalled()
   })
 
-  it('bouton recharge désactivé sans montant valide', async () => {
+  it('affiche l’erreur de chargement', async () => {
+    state.error.value = 'Impossible de charger ton portefeuille.'
     const wrapper = await mountCard()
-    await wrapper.find('[data-test="topup-amount"]').setValue('0')
-    expect(wrapper.find('[data-test="topup-submit"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[data-test="wallet-error"]').text()).toContain('Impossible de charger')
   })
 })

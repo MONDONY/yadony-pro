@@ -8,7 +8,9 @@ const info = {
   totalInvited: 3,
   signedUp: 2,
   rewarded: 1,
-  totalEarnedCents: 500,
+  activeVoucherCount: 2,
+  voucherFactor: 0.5,
+  nextVoucherExpiresAt: '2026-12-31T00:00:00',
 }
 
 const writeText = vi.fn().mockResolvedValue(undefined)
@@ -27,7 +29,10 @@ describe('ReferralPanel', () => {
     expect(wrapper.find('[data-test="referral-code"]').text()).toBe('YADONY-AB12')
     expect(wrapper.find('[data-test="referral-url"]').text()).toContain('yadony.app/r/YADONY-AB12')
     expect(wrapper.find('[data-test="stat-invited"]').text()).toBe('3')
-    expect(wrapper.find('[data-test="stat-earned"]').text()).toContain('5.00')
+    expect(wrapper.find('[data-test="stat-vouchers"]').text()).toBe('2')
+    expect(wrapper.find('[data-test="voucher-discount"]').text()).toContain('−50 %')
+    expect(wrapper.find('[data-test="voucher-expiry"]').text()).toContain('2026')
+    expect(wrapper.text()).not.toContain('NaN')
   })
 
   it('copies the share url to the clipboard and shows a confirmation', async () => {

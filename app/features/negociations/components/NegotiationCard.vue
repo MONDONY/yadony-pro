@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { Plane, AlertTriangle } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { NegotiationThread } from '@/features/negociations/types'
+import { formatMoney } from '@/lib/money'
 
 const props = defineProps<{ thread: NegotiationThread }>()
 const router = useRouter()
@@ -100,7 +101,7 @@ function timeAgo(isoDate: string): string {
         </p>
         <div class="text-right flex-shrink-0">
           <p class="font-mono text-lg font-semibold text-text leading-none tracking-tight tabular-nums">
-            {{ thread.currentPriceEur }} €
+            {{ formatMoney(thread.currentPriceEur, thread.currency) }}
           </p>
           <p class="text-[10px] text-text-muted font-semibold">
             {{ PRICE_LABEL[thread.status] ?? '' }}

@@ -14,7 +14,21 @@ const emit = defineEmits<{ regenerate: [] }>()
 
 const copied = ref(false)
 
-const earnedEuros = computed(() => (props.referral.totalEarnedCents / 100).toFixed(2))
+const activeVouchers = computed(() => props.referral.activeVoucherCount ?? 0)
+
+/** « −50 % » pour un facteur de 0,5 ; vide si le barème n'est pas connu. */
+const voucherDiscount = computed(() => {
+  const factor = props.referral.voucherFactor
+  if (typeof factor !== 'number' || !Number.isFinite(factor) || factor <= 0 || factor >= 1) return ''
+  return `−${Math.round((1 - factor) * 100)} %`
+})
+
+const nextExpiry = computed(() => {
+  const iso = props.referral.nextVoucherExpiresAt
+  if (!iso) return ''
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+})
 
 async function copyLink() {
   try {
@@ -78,8 +92,11 @@ async function copyLink() {
         <p class="text-xs text-text-muted">Récompensés</p>
       </div>
       <div class="bg-surface border border-border rounded-card p-3 text-center">
-        <p class="text-lg font-semibold text-success" data-test="stat-earned">{{ earnedEuros }} €</p>
-        <p class="text-xs text-text-muted">Gagnés</p>
+        <p class="text-lg font-semibold text-success" data-test="stat-vouchers">{{ activeVouchers }}</p>
+        <p class="text-xs text-text-muted">
+          Bons actifs<template v-if="voucherDiscount"> · <span data-test="voucher-discount">{{ voucherDiscount }} de commission</span></template>
+        </p>
+        <p v-if="nextExpiry" class="text-2xs text-text-subtle mt-0.5" data-test="voucher-expiry">Prochain bon expire le {{ nextExpiry }}</p>
       </div>
     </div>
   </div>

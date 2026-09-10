@@ -3,6 +3,7 @@
 import { TrendingUp, Percent, Euro, Weight } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
 import type { Trip, TripKpis } from '@/features/trajets/types/index'
+import { formatMoney } from '@/lib/money'
 
 defineProps<{
   trip: Trip
@@ -45,7 +46,7 @@ defineProps<{
           <span class="text-xs text-text-muted font-medium">Revenu brut</span>
         </div>
         <div>
-          <p class="font-mono text-3xl font-semibold tabular-nums text-text">{{ kpis.grossRevenueEuros.toFixed(2) }} €</p>
+          <p class="font-mono text-3xl font-semibold tabular-nums text-text">{{ formatMoney(kpis.grossRevenueEuros, trip.currency) }}</p>
           <p class="text-xs text-text-muted mt-1">Colis confirmés</p>
         </div>
       </div>
@@ -59,7 +60,7 @@ defineProps<{
           <span class="text-xs text-text-muted font-medium">Revenu net</span>
         </div>
         <div>
-          <p class="font-mono text-3xl font-semibold tabular-nums text-success">{{ kpis.netRevenueEuros.toFixed(2) }} €</p>
+          <p class="font-mono text-3xl font-semibold tabular-nums text-success">{{ formatMoney(kpis.netRevenueEuros, trip.currency) }}</p>
           <p class="text-xs text-text-muted mt-1">Après commission yadony</p>
         </div>
       </div>
@@ -73,7 +74,7 @@ defineProps<{
           <span class="text-xs text-text-muted font-medium">Revenu / kg</span>
         </div>
         <div>
-          <p class="font-mono text-3xl font-semibold tabular-nums text-text">{{ kpis.revenuePerKg.toFixed(2) }} €</p>
+          <p class="font-mono text-3xl font-semibold tabular-nums text-text">{{ formatMoney(kpis.revenuePerKg, trip.currency) }}</p>
           <p class="text-xs text-text-muted mt-1">Net par kilogramme</p>
         </div>
       </div>
@@ -86,15 +87,15 @@ defineProps<{
       <div class="space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-sm text-text-muted">Revenu brut (expéditeurs)</span>
-          <span class="font-mono tabular-nums text-sm font-medium text-text">{{ kpis.grossRevenueEuros.toFixed(2) }} €</span>
+          <span class="font-mono tabular-nums text-sm font-medium text-text">{{ formatMoney(kpis.grossRevenueEuros, trip.currency) }}</span>
         </div>
         <div class="flex items-center justify-between text-danger">
           <span class="text-sm">Commission yadony</span>
-          <span class="font-mono tabular-nums text-sm font-medium">− {{ kpis.commissionEuros.toFixed(2) }} €</span>
+          <span class="font-mono tabular-nums text-sm font-medium">− {{ formatMoney(kpis.commissionEuros, trip.currency) }}</span>
         </div>
         <div class="border-t border-border pt-3 flex items-center justify-between">
           <span class="text-sm font-semibold text-text">Vos revenus nets</span>
-          <span class="font-mono tabular-nums text-sm font-semibold text-success">{{ kpis.netRevenueEuros.toFixed(2) }} €</span>
+          <span class="font-mono tabular-nums text-sm font-semibold text-success">{{ formatMoney(kpis.netRevenueEuros, trip.currency) }}</span>
         </div>
       </div>
       <p class="text-xs text-text-muted mt-4">

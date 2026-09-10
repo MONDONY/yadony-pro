@@ -11,6 +11,7 @@ import NegotiationCreateTripModal from '@/features/negociations/components/Negot
 import NegotiationLinkedTripBanner from '@/features/negociations/components/NegotiationLinkedTripBanner.vue'
 import NegotiationTripDetailModal from '@/features/negociations/components/NegotiationTripDetailModal.vue'
 import type { CounterPayload, CreateDedicatedTripPayload } from '@/features/negociations/types'
+import { formatMoney, roundToCurrency } from '@/lib/money'
 
 definePageMeta({
   middleware: ['pro-only'],
@@ -151,7 +152,7 @@ watch(isLoading, async (val) => {
       <div class="flex-shrink-0 grid grid-cols-3 gap-2 sm:gap-3 mb-4 px-1">
         <div class="bg-surface border border-border rounded-btn px-2 sm:px-4 py-2 text-center">
           <p class="text-xs text-text-muted">Prix actuel</p>
-          <p class="text-xl font-bold text-accent">{{ thread.currentPriceEur }} €</p>
+          <p class="text-xl font-bold text-accent">{{ formatMoney(thread.currentPriceEur, thread.currency) }}</p>
         </div>
         <div class="bg-surface border border-border rounded-btn px-2 sm:px-4 py-2 text-center">
           <p class="text-xs text-text-muted">Échanges</p>
@@ -159,7 +160,7 @@ watch(isLoading, async (val) => {
         </div>
         <div class="bg-surface border border-border rounded-btn px-2 sm:px-4 py-2 text-center">
           <p class="text-xs text-text-muted">Prix/kg</p>
-          <p class="text-xl font-bold text-text">{{ (thread.currentPriceEur / thread.weightKg).toFixed(2) }} €</p>
+          <p class="text-xl font-bold text-text">{{ formatMoney(thread.weightKg > 0 ? roundToCurrency(thread.currentPriceEur / thread.weightKg, thread.currency) : 0, thread.currency) }}</p>
         </div>
       </div>
 
@@ -170,6 +171,7 @@ watch(isLoading, async (val) => {
           :key="msg.id"
           :message="msg"
           :is-mine="msg.fromUserId === thread.travelerId"
+          :currency="thread.currency"
         />
         <p
           v-if="thread.messages.length === 0"
@@ -207,7 +209,7 @@ watch(isLoading, async (val) => {
             :disabled="actionLoading"
             @click="showAcceptConfirm = true"
           >
-            ✓ Accepter {{ thread.currentPriceEur }} €
+            ✓ Accepter {{ formatMoney(thread.currentPriceEur, thread.currency) }}
           </button>
           <!-- Bouton Refuser -->
           <button
@@ -279,6 +281,7 @@ watch(isLoading, async (val) => {
       :open="showCounterModal"
       :current-price-eur="thread?.currentPriceEur ?? 0"
       :weight-kg="thread?.weightKg ?? 1"
+      :currency="thread?.currency"
       :is-loading="actionLoading"
       @close="showCounterModal = false"
       @submit="onCounter"
@@ -350,7 +353,7 @@ watch(isLoading, async (val) => {
         <div class="relative w-full max-w-sm bg-surface border border-border rounded-card shadow-2xl p-6 space-y-4">
           <h3 class="font-semibold text-text">Accepter cette offre ?</h3>
           <p class="text-sm text-text-muted">
-            Vous acceptez le prix de <strong class="text-text">{{ thread?.currentPriceEur }} €</strong>.
+            Vous acceptez le prix de <strong class="text-text">{{ formatMoney(thread?.currentPriceEur ?? 0, thread?.currency) }}</strong>.
           </p>
           <div class="flex gap-2.5">
             <button

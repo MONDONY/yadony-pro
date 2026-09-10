@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { roundToCurrency } from '@/lib/money'
 import { useRouter } from 'vue-router'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
@@ -184,30 +185,34 @@ export function useTripDetail(tripId: string) {
     const confirmed = bids.value.filter((b) =>
       ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'COMPLETED'].includes(b.status),
     )
+    // Sommes dans la devise du trajet, arrondies à sa précision : en francs CFA
+    // un centime n'existe pas. Le net vient des bids quand le backend l'a servi
+    // (accord négocié, taux figé), le taux global ne sert qu'en repli.
+    const currency = t.currency
     const gross = confirmed.reduce((sum, b) => sum + b.paymentAmountEuros, 0)
-    const commission = Math.round(gross * commissionRate.value * 100) / 100
-    const net = Math.round(gross * (1 - commissionRate.value) * 100) / 100
+    const net = roundToCurrency(confirmed.reduce((sum, b) => sum + b.earningsEuros, 0), currency)
+    const commission = roundToCurrency(gross - net, currency)
     const used = t.usedWeightKg
     return {
       fillRatePct: t.availableWeightKg > 0 ? Math.round((used / t.availableWeightKg) * 100) : 0,
-      grossRevenueEuros: Math.round(gross * 100) / 100,
+      grossRevenueEuros: roundToCurrency(gross, currency),
       commissionEuros: commission,
       netRevenueEuros: net,
-      revenuePerKg: used > 0 ? Math.round((net / used) * 100) / 100 : 0,
+      revenuePerKg: used > 0 ? roundToCurrency(net / used, currency) : 0,
     }
   })
 
   function exportBidsCsv(): string {
-    const header = 'id,expéditeur,envois,poids (kg),valeur déclarée (€),statut,revenus nets (€),créé le'
+    const header = 'id,expéditeur,envois,poids (kg),statut,revenus nets,devise,créé le'
     const rows = bids.value.map((b) =>
       [
         b.id,
         `"${b.senderName}"`,
         b.senderTotalShipments,
         b.weightKg,
-        b.declaredValueEuros,
         b.status,
         b.earningsEuros,
+        b.currency,
         new Date(b.createdAt).toLocaleDateString('fr-FR'),
       ].join(','),
     )

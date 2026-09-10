@@ -28,8 +28,11 @@ export interface TravelerStatsDestination {
 
 /** Vue d'ensemble tout-temps du voyageur — miroir de TravelerStatsDto côté back. */
 export interface TravelerStats {
+  /** Revenus exprimés dans `currency` (devise active du voyageur, conversion d'affichage côté backend). */
   monthlyRevenue: number
   totalRevenue: number
+  /** ISO 4217, EUR en repli. */
+  currency?: string
   monthlyTrips: number
   monthlyParcelsDelivered: number
   acceptanceRate: number // ratio 0..1

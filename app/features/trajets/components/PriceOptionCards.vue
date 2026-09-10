@@ -1,22 +1,26 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils'
+import { computed } from 'vue'
 import { FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
+import { formatMoney, pricePerKgOptions, roundToCurrency } from '@/lib/money'
 
 const props = withDefaults(
   defineProps<{
     modelValue: number
     error?: string
     commissionRate?: number
+    /** Devise du trajet : les paliers et les nets s'y expriment. */
+    currency?: string
   }>(),
-  { commissionRate: FALLBACK_COMMISSION_RATE },
+  { commissionRate: FALLBACK_COMMISSION_RATE, currency: 'EUR' },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [v: number] }>()
 
-const options = [5, 6, 7, 8]
+const options = computed(() => pricePerKgOptions(props.currency))
 
 function net(price: number): string {
-  return (Math.round(price * (1 - props.commissionRate) * 100) / 100).toFixed(2)
+  return formatMoney(roundToCurrency(price * (1 - props.commissionRate), props.currency), props.currency)
 }
 </script>
 
@@ -37,9 +41,9 @@ function net(price: number): string {
         @click="emit('update:modelValue', price)"
       >
         <span :class="cn('font-mono text-xl font-semibold tabular-nums', modelValue === price ? 'text-primary' : 'text-text')">
-          {{ price }}€
+          {{ formatMoney(price, currency) }}
         </span>
-        <span class="text-xs text-text-muted">→ <span class="font-mono tabular-nums">{{ net(price) }}€</span> nets</span>
+        <span class="text-xs text-text-muted">→ <span class="font-mono tabular-nums">{{ net(price) }}</span> nets</span>
       </button>
     </div>
     <p v-if="error" class="mt-1 text-xs text-danger">{{ error }}</p>

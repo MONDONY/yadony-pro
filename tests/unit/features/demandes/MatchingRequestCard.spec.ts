@@ -60,4 +60,10 @@ describe('MatchingRequestCard — favoris', () => {
     expect((btn.element as HTMLButtonElement).disabled).toBe(true)
     expect(btn.text()).toContain('Prix fixe')
   })
+
+  it('affiche le budget au kilo dans la devise de la demande', () => {
+    const compact = (t: string) => t.replace(/[\s  ]/g, '')
+    expect(compact(mountCard().text())).toContain('8,00€/kg')
+    expect(compact(mountCard({ currency: 'XOF', budgetPerKg: 5000 }).text())).toContain('5000FCFA/kg')
+  })
 })

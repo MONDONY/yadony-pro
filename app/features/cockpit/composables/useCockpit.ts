@@ -4,13 +4,10 @@ import { cockpitService } from '@/features/cockpit/services/cockpitService'
 import { bidsService } from '@/features/colis/services/bidsService'
 import type { TravelerStats, UrgentAction, KpiData } from '@/features/cockpit/types/index'
 import type { Bid } from '@/features/colis/types/index'
+import { formatMoney } from '@/lib/money'
 
 const FOUR_HOURS_MS = 4 * 60 * 60 * 1000
 const TWENTYFOUR_HOURS_MS = 24 * 60 * 60 * 1000
-
-function euros(n: number): string {
-  return (n ?? 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
-}
 
 export function useCockpit() {
   const stats = ref<TravelerStats | null>(null)
@@ -99,7 +96,7 @@ export function useCockpit() {
     actions.push({
       id: 'earnings',
       severity: 'green',
-      label: `${euros(monthly)} de revenus nets ce mois`,
+      label: `${formatMoney(monthly, stats.value?.currency)} de revenus nets ce mois`,
       detail: monthly > 0 ? 'Bon travail ! Continuez ainsi.' : 'Aucun virement reçu ce mois.',
     })
 
@@ -114,8 +111,8 @@ export function useCockpit() {
     const acceptancePct = Math.round((s.acceptanceRate ?? 0) * 100)
     const pendingCount = pendingBids.value.length
     return [
-      { id: 'revenue-total', label: 'Revenus nets', value: euros(s.totalRevenue), subLabel: 'tout temps' },
-      { id: 'revenue-month', label: 'Revenus ce mois', value: euros(s.monthlyRevenue), subLabel: 'mois en cours' },
+      { id: 'revenue-total', label: 'Revenus nets', value: formatMoney(s.totalRevenue, s.currency), subLabel: 'tout temps' },
+      { id: 'revenue-month', label: 'Revenus ce mois', value: formatMoney(s.monthlyRevenue, s.currency), subLabel: 'mois en cours' },
       { id: 'trips-completed', label: 'Trajets réalisés', value: String(s.totalTripsCompleted) },
       { id: 'active-trips', label: 'Trajets actifs', value: String(s.activeTrips), subLabel: 'en ligne' },
       { id: 'parcels-delivered', label: 'Colis livrés', value: String(s.totalParcelsDelivered) },

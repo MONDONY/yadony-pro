@@ -1,6 +1,8 @@
 import { reactive, computed, ref } from 'vue'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
+import { usePreferencesStore } from '@/stores/preferences'
+import { defaultPricePerKg, normalizeCurrency, paymentMethodsFor, roundToCurrency } from '@/lib/money'
 import type {
   AnnouncementFormData,
   ValidationErrors,
@@ -38,6 +40,10 @@ function deadlineToIso(date: string, departureDate: string, departureTime: strin
 }
 
 export function useAnnouncementForm() {
+  // Devise active du voyageur : c'est celle dans laquelle le backend publie un
+  // trajet quand le client n'en impose pas. « EUR » en dur publiait en euros
+  // le trajet d'un voyageur en francs CFA.
+  const prefs = usePreferencesStore()
   const form = reactive<AnnouncementFormData>({
     departureCity: null,
     departureTime: '',
@@ -51,8 +57,8 @@ export function useAnnouncementForm() {
     capacityUnit: 'SUITCASE_23KG' as CapacityUnit,
     pricingMode: 'KG',
     negotiable: false,
-    currency: 'EUR',
-    pricePerKg: 7,
+    currency: prefs.currency,
+    pricePerKg: defaultPricePerKg(prefs.currency),
     acceptedCategories: [],
     refusedCategories: [],
     senderNote: '',
@@ -67,8 +73,20 @@ export function useAnnouncementForm() {
     commissionRate.value = rate
   })
 
+  // Un modèle ou un trajet en édition fixe sa propre devise : la devise active
+  // ne l'écrase pas quand elle arrive après coup.
+  let currencyPinned = false
+  prefs.load().then((code) => {
+    if (currencyPinned) return
+    const untouchedPrice = form.pricePerKg === defaultPricePerKg(form.currency)
+    form.currency = code
+    if (untouchedPrice) form.pricePerKg = defaultPricePerKg(code)
+  })
+
+  const currency = computed(() => form.currency)
+
   const netPrice = computed(
-    () => Math.round(form.pricePerKg * (1 - commissionRate.value) * 100) / 100,
+    () => roundToCurrency(form.pricePerKg * (1 - commissionRate.value), form.currency),
   )
 
   const svc = tripsService()
@@ -94,8 +112,10 @@ export function useAnnouncementForm() {
   function buildPayload(): CreateAnnouncementPayload {
     const pickup = form.pickupPlace!
     const dropoff = form.dropoffPlace!
-    const paymentMethods: string[] = ['STRIPE']
-    if (form.cashAccepted) paymentMethods.push('CASH')
+    // Rails de la devise du trajet : carte hors zone CFA, mobile money et espèces
+    // en zone CFA ; le backend refuse la carte en francs CFA et n'accepte plus
+    // les anciens rails Wave et Orange Money.
+    const paymentMethods = paymentMethodsFor(form.currency, { cash: form.cashAccepted })
     return {
       departureCity: form.departureCity!.label,
       arrivalCity: form.arrivalCity!.label,
@@ -156,7 +176,8 @@ export function useAnnouncementForm() {
     form.capacityUnit = trip.capacityUnit ?? 'SUITCASE_23KG'
     form.pricingMode = trip.pricingMode ?? 'KG'
     form.negotiable = trip.negotiable ?? false
-    form.currency = trip.currency ?? 'EUR'
+    form.currency = normalizeCurrency(trip.currency)
+    currencyPinned = true
     form.pricePerKg = trip.pricePerKg
     form.acceptedCategories = [...trip.acceptedCategories]
     form.refusedCategories = [...trip.refusedCategories]
@@ -180,7 +201,10 @@ export function useAnnouncementForm() {
     form.acceptedCategories = [...t.acceptedCategories]
     if ('pricingMode' in t) form.pricingMode = t.pricingMode
     if ('negotiable' in t) form.negotiable = t.negotiable
-    if ('currency' in t) form.currency = t.currency
+    if ('currency' in t && t.currency) {
+      form.currency = normalizeCurrency(t.currency)
+      currencyPinned = true
+    }
     if ('refusedCategories' in t) form.refusedCategories = [...t.refusedCategories]
     if ('handoverDeadline' in t) form.handoverDeadline = isoToDateInput(t.handoverDeadline)
     if ('cashAccepted' in t) form.cashAccepted = t.cashAccepted
@@ -218,5 +242,5 @@ export function useAnnouncementForm() {
     }
   }
 
-  return { form, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
+  return { form, currency, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
 }

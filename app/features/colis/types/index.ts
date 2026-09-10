@@ -47,9 +47,12 @@ export interface Bid {
   // les revenus en découlent, donc null aussi tant que le poids est inconnu.
   weightKg: number | null
   contentDescription: string
-  declaredValueEuros: number
+  /** Devise du bid (ISO 4217) : tous les montants ci-dessous s'y expriment. */
+  currency: string
+  /** Net voyageur, servi par le backend (accord négocié, grille, taux figé) ; calcul local en repli. */
   earningsEuros: number | null
   paymentStatus: 'PENDING' | 'ESCROWED' | 'RELEASED' | 'REFUNDED'
+  /** Brut payé par l'expéditeur, servi par le backend ; calcul local en repli. */
   paymentAmountEuros: number | null
   history: BidHistoryEntry[]
   createdAt: string
