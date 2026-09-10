@@ -1,7 +1,8 @@
 // app/features/wallet/composables/useWallet.ts
 import { ref } from 'vue'
 import { walletService } from '@/features/wallet/services/walletService'
-import type { WalletTransaction, TopupMethod } from '@/features/wallet/types/index'
+import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
+import type { CardTopupOutcome, WalletTransaction, TopupMethod } from '@/features/wallet/types/index'
 
 export function useWallet() {
   const balance = ref<number | null>(null)
@@ -46,5 +47,31 @@ export function useWallet() {
     }
   }
 
-  return { balance, currency, transactions, isLoading, isToppingUp, error, fetchBalance, startTopup }
+  /**
+   * Recharge par carte depuis le portail : le serveur ouvre une session Stripe
+   * Checkout hébergée et renvoie son URL. Un 404 signifie un serveur qui ne
+   * connaît pas encore cette recharge : l'écran renvoie alors vers l'app mobile
+   * au lieu d'afficher une erreur.
+   */
+  async function startCardTopup(amount: number): Promise<CardTopupOutcome> {
+    isToppingUp.value = true
+    try {
+      const session = await svc.createCardTopupSession(amount)
+      if (!session?.url) return { status: 'error', message: 'Impossible de préparer la recharge. Réessaie.' }
+      return { status: 'redirect', url: session.url }
+    } catch (e) {
+      const status = (e as { status?: number; response?: { status?: number } } | null)?.status
+        ?? (e as { response?: { status?: number } } | null)?.response?.status
+      if (status === 404 || status === 405) return { status: 'unavailable' }
+      const problem = extractProblem(e)
+      const message = problem.detail && !TECHNICAL_ERROR_PATTERN.test(problem.detail)
+        ? problem.detail
+        : 'Impossible de préparer la recharge. Réessaie.'
+      return { status: 'error', message }
+    } finally {
+      isToppingUp.value = false
+    }
+  }
+
+  return { balance, currency, transactions, isLoading, isToppingUp, error, fetchBalance, startTopup, startCardTopup }
 }

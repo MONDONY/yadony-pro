@@ -22,3 +22,14 @@ export interface WalletTopupResult {
   clientSecret: string | null
   redirectUrl: string | null
 }
+
+/** Session Stripe Checkout hébergée : le portail y redirige pour une recharge par carte. */
+export interface WalletCardTopupSession {
+  url: string
+}
+
+export type CardTopupOutcome =
+  | { status: 'redirect'; url: string }
+  /** Le serveur ne connaît pas encore la recharge web (déploiement en retard). */
+  | { status: 'unavailable' }
+  | { status: 'error'; message: string }

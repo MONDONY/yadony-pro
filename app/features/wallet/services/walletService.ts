@@ -1,6 +1,6 @@
 // app/features/wallet/services/walletService.ts
 import { useApi } from '@/composables/useApi'
-import type { WalletBalance, WalletTopupResult, TopupMethod } from '@/features/wallet/types/index'
+import type { WalletBalance, WalletCardTopupSession, WalletTopupResult, TopupMethod } from '@/features/wallet/types/index'
 
 export function walletService() {
   const api = useApi()
@@ -16,5 +16,13 @@ export function walletService() {
     })
   }
 
-  return { getBalance, topup }
+  /** Recharge par carte depuis le web : le serveur ouvre une session Stripe Checkout. */
+  async function createCardTopupSession(amount: number): Promise<WalletCardTopupSession> {
+    return api<WalletCardTopupSession>('/wallet/topup/checkout-session', {
+      method: 'POST',
+      body: { amount },
+    })
+  }
+
+  return { getBalance, topup, createCardTopupSession }
 }
