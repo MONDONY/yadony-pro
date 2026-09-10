@@ -1,6 +1,14 @@
 <!-- app/features/negociations/components/NegotiationCounterModal.vue -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import {
+  amountStep,
+  currencySymbol,
+  formatPerKg,
+  maxNegotiationPrice,
+  normalizeCurrency,
+  roundToCurrency,
+} from '@/lib/money'
 import { XCircle } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -8,6 +16,8 @@ const props = defineProps<{
   currentPriceEur: number
   weightKg: number
   isLoading: boolean
+  /** Devise du fil : la contre-offre s'y exprime et le plafond y est mis à l'échelle. */
+  currency?: string
 }>()
 
 const emit = defineEmits<{
@@ -23,8 +33,16 @@ function onOpen() {
   message.value = ''
 }
 
+const currency = computed(() => normalizeCurrency(props.currency))
+const priceCap = computed(() => maxNegotiationPrice(currency.value))
+const pricePerKg = computed(() =>
+  typeof price.value === 'number' && price.value > 0 && props.weightKg > 0
+    ? roundToCurrency(price.value / props.weightKg, currency.value)
+    : null,
+)
+
 const canSubmit = computed(() =>
-  typeof price.value === 'number' && price.value > 0 && price.value <= 500 && !props.isLoading,
+  typeof price.value === 'number' && price.value > 0 && price.value <= priceCap.value && !props.isLoading,
 )
 
 function submit() {
@@ -54,22 +72,22 @@ watch(() => props.open, (val) => {
         </div>
 
         <div class="space-y-1.5">
-          <label class="text-xs font-medium text-text-muted">Votre nouveau prix (€ total)</label>
+          <label class="text-xs font-medium text-text-muted">Votre nouveau prix ({{ currencySymbol(currency) }} total)</label>
           <div class="relative">
             <input
               v-model.number="price"
               type="number"
-              min="0.01"
-              max="500"
-              step="0.5"
-              placeholder="Ex: 48.00"
+              :min="amountStep(currency)"
+              :max="priceCap"
+              :step="amountStep(currency)"
+              placeholder="Ex: 48"
               data-test="counter-price-input"
               class="w-full h-11 px-4 pr-10 rounded-input bg-bg border border-border text-text text-sm font-mono tabular-nums focus:outline-none focus:border-primary transition-colors"
             />
-            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-muted">€</span>
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-muted" data-test="counter-price-currency">{{ currencySymbol(currency) }}</span>
           </div>
-          <p v-if="typeof price === 'number' && price > 0" class="text-xs text-text-muted">
-            soit <span class="font-mono tabular-nums">{{ (price / weightKg).toFixed(2) }}</span> €/kg
+          <p v-if="pricePerKg !== null" class="text-xs text-text-muted">
+            soit <span class="font-mono tabular-nums">{{ formatPerKg(pricePerKg, currency) }}</span>
           </p>
         </div>
 

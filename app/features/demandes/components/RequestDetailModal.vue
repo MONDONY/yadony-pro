@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { X, Package } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { MatchingRequest } from '@/features/demandes/types/index'
+import { formatPerKg } from '@/lib/money'
 
 /**
  * Modal de détail d'une demande de colis. S'affiche quand `request` est non
@@ -73,7 +74,7 @@ const scoreVariant = computed<BadgeVariants['variant']>(() => {
             </div>
             <div class="rounded-el bg-surface-el p-3 text-center">
               <p class="text-2xs text-text-muted">Budget</p>
-              <p class="mt-0.5 font-mono text-lg font-semibold tabular-nums text-text">{{ request.budgetPerKg }} €/kg</p>
+              <p class="mt-0.5 font-mono text-lg font-semibold tabular-nums text-text">{{ formatPerKg(request.budgetPerKg, request.currency) }}</p>
             </div>
           </div>
 

@@ -75,7 +75,6 @@ describe('bidsService', () => {
     senderName: 'abou',
     senderTotalShipments: 3,
     weightKg: 10,
-    declaredValueEur: 100,
     description: 'Vêtements',
     contentCategory: null,
     status: 'COMPLETED',
@@ -108,6 +107,24 @@ describe('bidsService', () => {
     expect(bid.paymentAmountEuros).toBe(80) // 8 €/kg × 10 kg
     expect(bid.earningsEuros).toBe(70.4) // 80 × 0,88 (commission 12 %)
     expect(bid.sender.name).toBe('abou')
+  })
+
+  it('préfère les montants calculés par le backend au produit local', async () => {
+    // Bid négocié : 80 € au barème, mais l'accord est à 60 € brut / 52,80 € net.
+    const bid = await mapFirst({ totalSenderAmountEur: 60, totalNetAmountEur: 52.8 })
+    expect(bid.paymentAmountEuros).toBe(60)
+    expect(bid.earningsEuros).toBe(52.8)
+    expect(bid.currency).toBe('EUR')
+  })
+
+  it('porte la devise du bid et arrondit le repli local à sa précision', async () => {
+    // 5 000 F CFA/kg × 3 kg = 15 000 ; 88 % = 13 200 ; jamais de centime en XOF.
+    const bid = await mapFirst({ currency: 'XOF', pricePerKg: 5000, weightKg: 3 })
+    expect(bid.currency).toBe('XOF')
+    expect(bid.paymentAmountEuros).toBe(15000)
+    expect(bid.earningsEuros).toBe(13200)
+    const odd = await mapFirst({ currency: 'XOF', pricePerKg: 5001, weightKg: 1 })
+    expect(odd.earningsEuros).toBe(4401) // 4 400,88 arrondi à l'unité
   })
 
   it('laisse poids et revenus à null quand le poids est absent (évite NaN)', async () => {

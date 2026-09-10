@@ -4,6 +4,7 @@ import { ref, computed, watch } from 'vue'
 import { X, CheckCircle, XCircle, UserCheck, UserX, Ban, PackageCheck, Undo2 } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { TripBid } from '@/features/trajets/types/index'
+import { formatMoney } from '@/lib/money'
 
 const props = defineProps<{
   bid: TripBid | null
@@ -147,11 +148,7 @@ function submitCounter() {
               <p class="text-2xs text-text-subtle">Poids</p>
             </div>
             <div class="bg-surface-el rounded-el px-2 py-2.5">
-              <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ bid.declaredValueEuros }} €</p>
-              <p class="text-2xs text-text-subtle">Valeur</p>
-            </div>
-            <div class="bg-surface-el rounded-el px-2 py-2.5">
-              <p class="font-mono text-sm font-semibold tabular-nums text-primary">{{ bid.earningsEuros.toFixed(2) }} €</p>
+              <p class="font-mono text-sm font-semibold tabular-nums text-primary">{{ formatMoney(bid.earningsEuros, bid.currency) }}</p>
               <p class="text-2xs text-text-subtle">Revenus nets</p>
             </div>
           </div>
@@ -166,7 +163,7 @@ function submitCounter() {
             <div class="flex items-center justify-between gap-3">
               <span class="text-text-muted">Proposition expéditeur</span>
               <span class="font-mono tabular-nums font-semibold text-text">
-                {{ negotiationAmount.toFixed(2) }} {{ bid.negotiationCurrency ?? 'EUR' }}
+                {{ formatMoney(negotiationAmount, bid.currency) }}
               </span>
             </div>
             <p class="mt-1 text-xs text-text-muted">

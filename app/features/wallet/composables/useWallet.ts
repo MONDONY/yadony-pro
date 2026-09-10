@@ -29,8 +29,12 @@ export function useWallet() {
   }
 
   /**
-   * Lance une recharge. Renvoie l'URL de redirection (Wave / Orange Money)
-   * ou null (Stripe : nécessite l'app mobile pour finaliser).
+   * Lance une recharge et renvoie l'URL de redirection éventuelle.
+   *
+   * Plus appelée par le portail : le backend refuse les rails Wave et Orange
+   * Money (422 « mobile-money-topup-retired ») et répond à la carte par un
+   * clientSecret de PaymentIntent que seul un SDK Stripe sait confirmer. La
+   * recharge se fait depuis l'app mobile tant que Stripe.js n'est pas intégré.
    */
   async function startTopup(amount: number, method: TopupMethod): Promise<string | null> {
     isToppingUp.value = true

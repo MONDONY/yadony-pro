@@ -240,7 +240,7 @@ describe('tripsService', () => {
     const fakeBid = {
       id: 'bid-1', announcementId: 'trip-42', senderId: 'sender-1',
       senderName: 'Alice Martin', senderTotalShipments: 5,
-      weightKg: 3, declaredValueEur: 50, description: 'Vêtements',
+      weightKg: 3, description: 'Vêtements',
       contentCategory: null, status: 'PAYMENT_ESCROWED',
       departureCity: 'Paris', arrivalCity: 'Dakar',
       departureDate: '2026-08-01', pricePerKg: 8, createdAt: '2026-06-01T10:00:00',
@@ -259,12 +259,48 @@ describe('tripsService', () => {
     expect(result[0].earningsEuros).toBe(21.12)
   })
 
+  it('getAnnouncementBids porte la devise du bid et préfère les montants du backend', async () => {
+    mockApiFn.mockResolvedValue([{
+      id: 'bid-xof', announcementId: 'trip-42', senderId: 'sender-1',
+      senderName: 'Moussa Traoré', senderTotalShipments: 1,
+      weightKg: 3, description: null, contentCategory: 'Vêtements', status: 'ACCEPTED',
+      departureCity: 'Bamako', arrivalCity: 'Abidjan',
+      departureDate: '2026-08-01', pricePerKg: 5000, createdAt: '2026-06-01T10:00:00',
+      paymentMethod: 'MOBILE_MONEY', currency: 'XOF',
+      totalSenderAmountEur: 15000, totalNetAmountEur: 13200,
+    }])
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncementBids('trip-42')
+    expect(result[0]).toMatchObject({
+      currency: 'XOF',
+      negotiationCurrency: 'XOF',
+      paymentAmountEuros: 15000,
+      earningsEuros: 13200,
+    })
+    expect(result[0]).not.toHaveProperty('declaredValueEuros')
+  })
+
+  it('getAnnouncementBids arrondit le repli local à la précision de la devise', async () => {
+    mockApiFn.mockResolvedValue([{
+      id: 'bid-xof-2', announcementId: 'trip-42', senderId: 'sender-1',
+      senderName: 'Moussa', senderTotalShipments: 1,
+      weightKg: 1, description: null, contentCategory: null, status: 'PENDING',
+      departureCity: 'Bamako', arrivalCity: 'Abidjan',
+      departureDate: '2026-08-01', pricePerKg: 5001, createdAt: '2026-06-01T10:00:00',
+      paymentMethod: null, currency: 'XOF',
+    }])
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncementBids('trip-42')
+    expect(result[0].paymentAmountEuros).toBe(5001)
+    expect(result[0].earningsEuros).toBe(4401) // 4 400,88 arrondi à l'unité
+  })
+
   it('getAnnouncementBids applique le taux de commission dynamique (pas de 0,88 en dur)', async () => {
     mockCommissionRate = 0.2
     const fakeBid = {
       id: 'bid-1', announcementId: 'trip-42', senderId: 'sender-1',
       senderName: 'Alice Martin', senderTotalShipments: 5,
-      weightKg: 10, declaredValueEur: 50, description: 'Vêtements',
+      weightKg: 10, description: 'Vêtements',
       contentCategory: null, status: 'PAYMENT_ESCROWED',
       departureCity: 'Paris', arrivalCity: 'Dakar',
       departureDate: '2026-08-01', pricePerKg: 8, createdAt: '2026-06-01T10:00:00',
@@ -280,7 +316,7 @@ describe('tripsService', () => {
     const fakeBid = {
       id: 'bid-neg-1', announcementId: 'trip-42', senderId: 'sender-1',
       senderName: 'Alice Martin', senderTotalShipments: 5,
-      weightKg: 4, declaredValueEur: 50, description: 'Articles divers',
+      weightKg: 4, description: 'Articles divers',
       contentCategory: null, status: 'NEGOTIATING',
       departureCity: 'Paris', arrivalCity: 'Dakar',
       departureDate: '2026-08-01', pricePerKg: 8, createdAt: '2026-06-01T10:00:00',

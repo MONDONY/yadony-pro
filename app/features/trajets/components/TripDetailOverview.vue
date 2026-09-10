@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { MapPin, Calendar, Clock, Package, CreditCard, FileText } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
 import type { Trip } from '@/features/trajets/types/index'
+import { formatPerKg } from '@/lib/money'
 
 const props = defineProps<{
   trip: Trip
@@ -130,7 +131,7 @@ const pricingModeLabel = computed(() => {
           <Package class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
           <div>
             <p class="text-xs text-text-muted">Prix</p>
-            <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ trip.pricePerKg }} €/kg</p>
+            <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ formatPerKg(trip.pricePerKg, trip.currency) }}</p>
             <p class="text-xs text-text-muted mt-0.5">{{ pricingModeLabel }}</p>
           </div>
         </div>

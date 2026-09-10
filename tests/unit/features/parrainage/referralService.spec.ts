@@ -12,7 +12,7 @@ async function importService() {
   return mod.referralService
 }
 
-const info = { code: 'YADONY-AB12', shareUrl: 'https://yadony.app/r/YADONY-AB12', totalInvited: 3, signedUp: 2, rewarded: 1, totalEarnedCents: 500 }
+const info = { code: 'YADONY-AB12', shareUrl: 'https://yadony.app/r/YADONY-AB12', totalInvited: 3, signedUp: 2, rewarded: 1, activeVoucherCount: 1 }
 
 describe('referralService', () => {
   beforeEach(() => {

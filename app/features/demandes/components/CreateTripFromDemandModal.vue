@@ -6,6 +6,17 @@ import { SectionLabel } from '@/components/ui/section-label'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { negotiationService } from '@/features/negociations/services/negotiationService'
 import type { MatchingRequest } from '@/features/demandes/types/index'
+import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
+import {
+  formatMoney,
+  formatPerKg,
+  maxNegotiationPrice,
+  minNegotiationPrice,
+  normalizeCurrency,
+  paymentMethodsFor,
+  priceStep,
+  roundToCurrency,
+} from '@/lib/money'
 
 const props = defineProps<{
   request: MatchingRequest | null
@@ -32,12 +43,32 @@ const errorMsg = ref<string | null>(null)
 const departureCity = computed(() => props.request?.tripCorridor.split(' → ')[0] ?? '')
 const arrivalCity = computed(() => props.request?.tripCorridor.split(' → ')[1] ?? '')
 
+// Devise de la demande : le trajet dédié est créé dedans et le prix proposé
+// s'y exprime. « EUR » en dur transformait un budget de 20 000 F CFA/kg en
+// 20 000 €/kg.
+const currency = computed(() => normalizeCurrency(props.request?.currency))
+const step = computed(() => priceStep(currency.value))
+const priceFloor = computed(() => minNegotiationPrice(currency.value))
+const priceCap = computed(() => maxNegotiationPrice(currency.value))
+
 const suggestedPrice = computed(() =>
   props.request ? Math.round(props.request.budgetPerKg * props.request.weightKg) : 0,
 )
 
+/** Plus haut prix proposable : le budget de l'expéditeur, sous le plafond de la plateforme. */
+const priceMax = computed(() => Math.min(suggestedPrice.value, priceCap.value))
+
+const pricePerKg = computed(() =>
+  props.request && props.request.weightKg > 0
+    ? roundToCurrency(proposedPrice.value / props.request.weightKg, currency.value)
+    : null,
+)
+
 const canSubmit = computed(() =>
-  !!departureDate.value && proposedPrice.value > 0 && proposedPrice.value <= 500 && !isLoading.value,
+  !!departureDate.value
+  && proposedPrice.value >= priceFloor.value
+  && proposedPrice.value <= priceCap.value
+  && !isLoading.value,
 )
 
 // ── Reset on new request ─────────────────────────────────────────────────────
@@ -45,7 +76,7 @@ watch(
   () => props.request,
   (req) => {
     if (req) {
-      proposedPrice.value = Math.round(req.budgetPerKg * req.weightKg)
+      proposedPrice.value = Math.min(Math.round(req.budgetPerKg * req.weightKg), priceCap.value)
       departureDate.value = ''
       errorMsg.value = null
     }
@@ -55,12 +86,22 @@ watch(
 
 // ── Price controls ───────────────────────────────────────────────────────────
 function decrement() {
-  if (proposedPrice.value > 1) proposedPrice.value--
+  if (proposedPrice.value > priceFloor.value) {
+    proposedPrice.value = Math.max(priceFloor.value, proposedPrice.value - step.value)
+  }
 }
 
 function increment() {
-  const maxAllowed = Math.min(suggestedPrice.value, 500)
-  if (proposedPrice.value < maxAllowed) proposedPrice.value++
+  if (proposedPrice.value < priceMax.value) {
+    proposedPrice.value = Math.min(priceMax.value, proposedPrice.value + step.value)
+  }
+}
+
+/** Message d'une erreur ProblemDetail lisible par l'utilisateur, sinon le message générique. */
+function friendlyError(e: unknown, fallback: string): string {
+  const problem = extractProblem(e)
+  if (problem.detail && !TECHNICAL_ERROR_PATTERN.test(problem.detail)) return problem.detail
+  return fallback
 }
 
 const priceBarWidth = computed(() => {
@@ -96,17 +137,17 @@ async function submit() {
       capacityUnit: 'KG_FREE',
       pricingMode: 'KG',
       negotiable: true,
-      currency: 'EUR',
+      currency: currency.value,
       pricePerKg: props.request.budgetPerKg,
       description: null,
       acceptedContentTypes: [props.request.contentType],
       refusedTypes: [],
-      acceptedPaymentMethods: ['STRIPE'],
+      acceptedPaymentMethods: paymentMethodsFor(currency.value),
       handoverDeadline: null,
     })
     announcementId = trip.id
-  } catch {
-    errorMsg.value = 'Impossible de créer le trajet. Réessayez.'
+  } catch (e) {
+    errorMsg.value = friendlyError(e, 'Impossible de créer le trajet. Réessayez.')
     isLoading.value = false
     return
   }
@@ -170,7 +211,7 @@ async function submit() {
           </div>
           <div>
             <span class="text-text-subtle">Budget exp.</span>
-            <p class="font-mono font-semibold text-success mt-0.5 tabular-nums">{{ request.budgetPerKg }} €/kg</p>
+            <p class="font-mono font-semibold text-success mt-0.5 tabular-nums">{{ formatPerKg(request.budgetPerKg, currency) }}</p>
           </div>
         </div>
       </div>
@@ -233,26 +274,26 @@ async function submit() {
         <div class="space-y-2">
           <SectionLabel as="p">Mon prix</SectionLabel>
           <p class="text-xs text-text-muted">
-            Suggéré : <span class="font-mono font-semibold text-text tabular-nums">{{ suggestedPrice }} €</span>
-            (<span class="font-mono tabular-nums">{{ request.budgetPerKg }}</span> €/kg × <span class="font-mono tabular-nums">{{ request.weightKg }}</span> kg)
+            Suggéré : <span class="font-mono font-semibold text-text tabular-nums">{{ formatMoney(suggestedPrice, currency) }}</span>
+            (<span class="font-mono tabular-nums">{{ formatPerKg(request.budgetPerKg, currency) }}</span> × <span class="font-mono tabular-nums">{{ request.weightKg }}</span> kg)
           </p>
           <div class="flex items-center gap-3">
             <button
               class="w-9 h-9 rounded-full border border-border-strong flex items-center justify-center text-text-muted hover:text-text hover:border-primary transition-colors"
               type="button"
-              :disabled="proposedPrice <= 1"
+              :disabled="proposedPrice <= priceFloor"
               @click="decrement"
             ><Minus class="h-4 w-4" aria-hidden="true" /></button>
             <div class="flex-1 text-center">
-              <p class="text-2xl font-mono font-semibold text-text tabular-nums" data-test="create-trip-price">{{ proposedPrice }} €</p>
+              <p class="text-2xl font-mono font-semibold text-text tabular-nums" data-test="create-trip-price">{{ formatMoney(proposedPrice, currency) }}</p>
               <p class="text-xs text-text-muted mt-0.5">
-                soit <span class="font-mono tabular-nums">{{ request.weightKg > 0 ? (proposedPrice / request.weightKg).toFixed(2) : '—' }}</span> €/kg
+                soit <span class="font-mono tabular-nums">{{ pricePerKg !== null ? formatPerKg(pricePerKg, currency) : '—' }}</span>
               </p>
             </div>
             <button
               class="w-9 h-9 rounded-full border border-border-strong flex items-center justify-center text-text-muted hover:text-text hover:border-primary transition-colors"
               type="button"
-              :disabled="proposedPrice >= suggestedPrice"
+              :disabled="proposedPrice >= priceMax"
               @click="increment"
             ><Plus class="h-4 w-4" aria-hidden="true" /></button>
           </div>
@@ -261,8 +302,8 @@ async function submit() {
             <div class="h-full bg-primary rounded-full transition-all" :style="{ width: priceBarWidth }" />
           </div>
           <div class="flex justify-between text-xs text-text-muted font-mono tabular-nums">
-            <span>1 €</span>
-            <span>Max {{ suggestedPrice }} €</span>
+            <span>{{ formatMoney(priceFloor, currency) }}</span>
+            <span>Max {{ formatMoney(priceMax, currency) }}</span>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { formatMoney, formatPerKg, isStripeCurrency } from '@/lib/money'
 import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
 import { extractProblem } from '@/lib/apiError'
@@ -31,7 +32,10 @@ const props = withDefaults(defineProps<{
   editTripId: undefined,
 })
 
-const { form, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
+const { form, currency, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
+// En zone CFA le backend ne garde que le mobile money et les espèces : le
+// choix « espèces » n'en est plus un, on l'affiche activé et verrouillé.
+const cardCurrency = computed(() => isStripeCurrency(currency.value))
 const { fetchTemplates } = useTrips()
 const {
   items: priceGridItems,
@@ -71,6 +75,9 @@ const submitErrorMessages: Record<string, string> = {
   'kyc-not-verified': 'Vérifiez votre identité dans les paramètres avant de publier un trajet.',
   'publishing-suspended': 'La publication est suspendue sur votre compte. Contactez le support.',
   'departure-date-passed': 'La date de départ est passée. Corrigez-la avant de publier.',
+  'stripe-onboarding-incomplete': 'Connectez votre compte bancaire dans les paramètres pour accepter la carte, ou publiez en espèces uniquement.',
+  'currency-unsupported': 'Cette devise n’est pas prise en charge. Vérifiez la devise de vos paramètres.',
+  'mobile-money-payment-retired': 'Ce moyen de paiement n’existe plus. Rechargez la page et réessayez.',
 }
 
 const today = new Date()
@@ -129,7 +136,7 @@ function onSelectMyTemplate(t: UserTripTemplate) {
 
 function formatArticlePrice(item: PriceGridItem): string {
   const value = item.unitPriceDisplay ?? item.unitPriceNet
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+  return formatMoney(value, currency.value)
 }
 
 async function onDeleteMyTemplate(t: UserTripTemplate) {
@@ -218,7 +225,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         >
           <button type="button" class="flex items-center gap-1" @click="onSelectMyTemplate(t)">
             <span v-if="t.emoji">{{ t.emoji }}</span>
-            {{ t.label }} · {{ t.pricePerKg }}€/kg
+            {{ t.label }} · {{ formatPerKg(t.pricePerKg, 'currency' in t ? t.currency : currency) }}
           </button>
           <button
             type="button"
@@ -279,7 +286,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
           ]"
           @click="onSelectQuickTemplate(t)"
         >
-          {{ t.emoji }} {{ t.label }} · {{ t.pricePerKg }}€/kg
+          {{ t.emoji }} {{ t.label }} · {{ formatPerKg(t.pricePerKg, 'currency' in t ? t.currency : currency) }}
         </button>
       </div>
       <p v-if="selectedQuickTemplateId" class="text-xs text-text-muted mt-2" data-test="quick-template-hint">
@@ -312,7 +319,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
           @click="onSelectTemplate(t)"
         >
           <span class="font-medium">{{ t.departureCity.label }} → {{ t.arrivalCity.label }}</span>
-          <span class="ml-2 text-xs">· <span class="font-mono tabular-nums">{{ t.pricePerKg }}€/kg</span> · <span class="font-mono tabular-nums">{{ t.availableWeightKg }} kg</span></span>
+          <span class="ml-2 text-xs">· <span class="font-mono tabular-nums">{{ formatPerKg(t.pricePerKg, 'currency' in t ? t.currency : currency) }}</span> · <span class="font-mono tabular-nums">{{ t.availableWeightKg }} kg</span></span>
         </button>
       </div>
     </div>
@@ -516,10 +523,10 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <label class="block text-sm font-medium text-text mb-3">
           Prix par kg <span class="text-danger">*</span>
         </label>
-        <PriceOptionCards v-model="form.pricePerKg" :commission-rate="commissionRate" />
+        <PriceOptionCards v-model="form.pricePerKg" :commission-rate="commissionRate" :currency="currency" />
         <p class="mt-2 text-xs text-text-muted">
           Commission yadony déduite · Vous recevez
-          <span class="font-mono tabular-nums text-text font-medium">{{ netPrice.toFixed(2) }}€/kg</span>
+          <span class="font-mono tabular-nums text-text font-medium" data-test="net-price-per-kg">{{ formatPerKg(netPrice, currency) }}</span>
         </p>
       </div>
 
@@ -590,19 +597,21 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
       >
         <div class="min-w-0 flex-1" data-test="cash-toggle-copy">
           <p class="text-sm font-medium text-text">Paiement en espèces</p>
-          <p class="text-xs text-text-muted mt-0.5">La carte bancaire Stripe est toujours activée</p>
+          <p v-if="cardCurrency" class="text-xs text-text-muted mt-0.5">La carte bancaire Stripe est toujours activée</p>
+          <p v-else class="text-xs text-text-muted mt-0.5">Mobile money activé, les espèces sont toujours proposées dans cette devise</p>
         </div>
         <button
           type="button"
           role="switch"
           aria-label="Autoriser le paiement en espèces"
-          :class="['relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary', form.cashAccepted ? 'bg-primary' : 'bg-border-strong']"
-          :aria-pressed="form.cashAccepted"
-          :aria-checked="form.cashAccepted"
+          :class="['relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-70', (form.cashAccepted || !cardCurrency) ? 'bg-primary' : 'bg-border-strong']"
+          :aria-pressed="form.cashAccepted || !cardCurrency"
+          :aria-checked="form.cashAccepted || !cardCurrency"
+          :disabled="!cardCurrency"
           data-test="cash-toggle"
           @click="form.cashAccepted = !form.cashAccepted"
         >
-          <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200', form.cashAccepted ? 'translate-x-6' : 'translate-x-1']" />
+          <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200', (form.cashAccepted || !cardCurrency) ? 'translate-x-6' : 'translate-x-1']" />
         </button>
       </div>
     </section>

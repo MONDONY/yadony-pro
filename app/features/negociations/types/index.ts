@@ -40,7 +40,10 @@ export interface NegotiationThread {
   travelerTravelDate: string
   travelerAvailableKg: number
   status: NegotiationStatus
+  /** Prix courant, dans la devise du fil (le nom historique du champ dit « Eur »). */
   currentPriceEur: number
+  /** Devise du fil (ISO 4217), servie par le backend ; EUR en repli. */
+  currency?: string
   roundsCount: number
   lastActivityAt: string
   createdAt: string

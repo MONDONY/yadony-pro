@@ -8,7 +8,10 @@ export default defineConfig({
   // compilation à froid du chunk Nuxt dev (dashboard + modal négociation),
   // qui peut dépasser les 30s par défaut sur un runner CI peu véloce.
   timeout: 45_000,
-  retries: 0,
+  // Un seul rejeu, en CI seulement : le tout premier test d'un run peut tomber
+  // sur la compilation à froid des chunks client, que le réchauffage HTTP du
+  // global setup ne couvre pas entièrement.
+  retries: process.env.CI ? 1 : 0,
   workers: 1,
   reporter: 'list',
   use: {

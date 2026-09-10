@@ -1,4 +1,5 @@
 import { useApi } from '@/composables/useApi'
+import { normalizeCurrency, roundToCurrency } from '@/lib/money'
 import { useCommissionRate } from '@/composables/useCommissionRate'
 import type {
   TrackingEvent,
@@ -72,7 +73,6 @@ interface BackendBidResponse {
   senderName: string | null
   senderTotalShipments: number | null
   weightKg: number
-  declaredValueEur: number
   description: string | null
   contentCategory: string | null
   status: string
@@ -88,6 +88,9 @@ interface BackendBidResponse {
   myTurn?: boolean | null
   canCounter?: boolean | null
   currency?: string | null
+  /** Brut expéditeur et net voyageur calculés par le backend (BidResponse). */
+  totalSenderAmountEur?: number | null
+  totalNetAmountEur?: number | null
 }
 
 interface BackendPage {
@@ -115,7 +118,7 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     capacityUnit: a.capacityUnit ?? 'SUITCASE_23KG',
     pricingMode: a.pricingMode ?? 'KG',
     negotiable: a.negotiable ?? false,
-    currency: a.currency ?? 'EUR',
+    currency: normalizeCurrency(a.currency),
     pricePerKg: a.pricePerKg,
     acceptedCategories: a.acceptedContentTypes,
     refusedCategories: a.refusedTypes,
@@ -129,14 +132,25 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
   }
 }
 
+function finiteOrNull(value: unknown): number | null {
+  const n = typeof value === 'number' ? value : Number(value)
+  return value !== null && value !== undefined && Number.isFinite(n) ? n : null
+}
+
 function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number): TripBid {
+  const currency = normalizeCurrency(b.currency)
   const weightKg = Number(b.weightKg) || 0
   const pricePerKg = Number(b.pricePerKg) || 0
   const proposedGrossEuros = typeof b.proposedGrossEur === 'number' ? b.proposedGrossEur : null
-  const paymentAmountEuros = proposedGrossEuros ?? Math.round(pricePerKg * weightKg * 100) / 100
+  // Proposition en cours, sinon montants du backend (accord, grille, taux figé),
+  // sinon produit local arrondi à la précision de la devise.
+  const paymentAmountEuros =
+    proposedGrossEuros
+    ?? finiteOrNull(b.totalSenderAmountEur)
+    ?? roundToCurrency(pricePerKg * weightKg, currency)
   const earningsEuros = typeof b.netEur === 'number'
     ? b.netEur
-    : Math.round(paymentAmountEuros * (1 - commissionRate) * 100) / 100
+    : (finiteOrNull(b.totalNetAmountEur) ?? roundToCurrency(paymentAmountEuros * (1 - commissionRate), currency))
   const senderName = b.senderName ?? 'Expéditeur'
   const senderInitials = senderName
     .split(' ')
@@ -151,16 +165,16 @@ function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number):
     senderInitials,
     senderTotalShipments: b.senderTotalShipments ?? 0,
     weightKg,
-    declaredValueEuros: Number(b.declaredValueEur),
     contentDescription: b.description ?? b.contentCategory ?? '',
     status: b.status,
+    currency,
     paymentAmountEuros,
     earningsEuros,
     paymentMethod: b.paymentMethod,
     negotiationRound: b.round ?? undefined,
     negotiationMyTurn: b.myTurn ?? undefined,
     negotiationCanCounter: b.canCounter ?? undefined,
-    negotiationCurrency: b.currency ?? undefined,
+    negotiationCurrency: currency,
     negotiationProposedGrossEuros: proposedGrossEuros ?? undefined,
     createdAt: b.createdAt,
   }

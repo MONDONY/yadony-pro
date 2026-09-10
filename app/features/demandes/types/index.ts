@@ -14,6 +14,8 @@ export interface MatchingRequest {
   weightKg: number
   contentType: string
   budgetPerKg: number
+  /** Devise du budget (ISO 4217), servie par le backend ; EUR en repli. */
+  currency?: string
   packagePhotoUrl: string | null
   packageDescription?: string
   messageExcerpt: string

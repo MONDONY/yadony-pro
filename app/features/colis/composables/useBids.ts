@@ -112,7 +112,7 @@ export function useBids() {
 
   function exportCsv(): string {
     const selected = bids.value.filter((b) => selectedIds.value.includes(b.id))
-    const header = 'id,n°suivi,expéditeur,corridor,date départ,poids (kg),statut,revenus (€)'
+    const header = 'id,n°suivi,expéditeur,corridor,date départ,poids (kg),statut,revenus,devise'
     const rows = selected.map((b) =>
       [
         b.id,
@@ -123,6 +123,7 @@ export function useBids() {
         b.weightKg,
         b.status,
         b.earningsEuros,
+        b.currency,
       ].join(','),
     )
     return [header, ...rows].join('\n')

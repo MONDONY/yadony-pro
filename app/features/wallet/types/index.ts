@@ -8,6 +8,8 @@ export interface WalletTransaction {
   balanceAfter: number
   paymentRef: string | null
   createdAt: string
+  /** Devise de la ligne : la liste mêle les portefeuilles d'un même voyageur ; absente sur un serveur antérieur. */
+  currency?: string
 }
 
 export interface WalletBalance {

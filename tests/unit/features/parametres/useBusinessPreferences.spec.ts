@@ -10,6 +10,11 @@ vi.mock('@/features/parametres/services/businessPrefsService', () => ({
   }),
 }))
 
+const mockSetCurrency = vi.fn()
+vi.mock('@/stores/preferences', () => ({
+  usePreferencesStore: () => ({ setCurrency: mockSetCurrency, currency: 'EUR', loaded: false, load: vi.fn() }),
+}))
+
 const prefs = {
   weightUnit: 'kg' as const,
   currencyCode: 'EUR' as const,
@@ -68,6 +73,17 @@ describe('useBusinessPreferences', () => {
     expect(ok).toBe(true)
     expect(preferences.value).toEqual(next)
     expect(savedAt.value).not.toBeNull()
+  })
+
+  it('propage la devise chargée puis enregistrée au store partagé', async () => {
+    mockFetch.mockResolvedValue({ ...prefs, currencyCode: 'XOF' })
+    mockSave.mockResolvedValue({ ...prefs, currencyCode: 'XAF' })
+    const useBusinessPreferences = await importComposable()
+    const { fetchPreferences, savePreferences } = useBusinessPreferences()
+    await fetchPreferences()
+    expect(mockSetCurrency).toHaveBeenLastCalledWith('XOF')
+    await savePreferences({ ...prefs, currencyCode: 'XAF' })
+    expect(mockSetCurrency).toHaveBeenLastCalledWith('XAF')
   })
 
   it('savePreferences returns false and sets an error on failure', async () => {

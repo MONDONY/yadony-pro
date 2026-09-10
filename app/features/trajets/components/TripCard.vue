@@ -4,6 +4,7 @@ import { Plane, Car, Bus, Footprints, Clock, ChevronRight } from 'lucide-vue-nex
 import { cn } from '@/lib/utils'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { Trip, TransportMode } from '@/features/trajets/types/index'
+import { formatMoney, formatPerKg } from '@/lib/money'
 
 const props = defineProps<Trip>()
 
@@ -76,7 +77,7 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
         <template v-if="departureTime"> · {{ departureTime }}</template>
       </span>
       <span class="font-medium text-text">
-        <span class="font-mono tabular-nums">{{ pricePerKg }}</span> €/kg
+        <span class="font-mono tabular-nums">{{ formatPerKg(pricePerKg, currency) }}</span>
       </span>
     </div>
 
@@ -112,7 +113,7 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
         <p class="mt-0.5 text-xs text-text-subtle">Colis en attente</p>
       </div>
       <div class="rounded-el bg-surface-el px-3 py-2 text-center">
-        <p class="font-mono text-base font-semibold tabular-nums text-primary">{{ reservedRevenueEuros }} €</p>
+        <p class="font-mono text-base font-semibold tabular-nums text-primary">{{ formatMoney(reservedRevenueEuros, currency) }}</p>
         <p class="mt-0.5 text-xs text-text-subtle">Revenus réservés</p>
       </div>
     </div>

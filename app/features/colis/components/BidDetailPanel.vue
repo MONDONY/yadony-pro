@@ -5,6 +5,7 @@ import { X, Star, CheckCircle, XCircle, Mail, Clock, Copy, Package, Truck, MapPi
 import { cn } from '@/lib/utils'
 import { SectionLabel } from '@/components/ui/section-label'
 import type { Bid, BidStatus } from '@/features/colis/types/index'
+import { formatMoney } from '@/lib/money'
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text).catch(() => {})
@@ -154,10 +155,6 @@ function formatHistoryDate(iso: string): string {
                 <span v-else class="text-text-muted">—</span>
               </dd>
             </div>
-            <div>
-              <dt class="text-xs text-text-muted">Valeur déclarée</dt>
-              <dd class="text-sm text-text font-medium mt-0.5"><span class="font-mono tabular-nums">{{ bid.declaredValueEuros }}</span> €</dd>
-            </div>
             <div class="col-span-2">
               <dt class="text-xs text-text-muted">Contenu</dt>
               <dd class="text-sm text-text mt-0.5">{{ bid.contentDescription }}</dd>
@@ -229,11 +226,11 @@ function formatHistoryDate(iso: string): string {
           <div class="flex items-center justify-between bg-bg rounded-el px-4 py-3 border border-border">
             <span class="text-sm text-text-muted">{{ paymentLabel[bid.paymentStatus] }}</span>
             <span class="text-sm font-mono font-bold tabular-nums text-primary">
-              {{ bid.paymentAmountEuros !== null ? `${bid.paymentAmountEuros.toFixed(2)} €` : '—' }}
+              {{ bid.paymentAmountEuros !== null ? formatMoney(bid.paymentAmountEuros, bid.currency) : '—' }}
             </span>
           </div>
           <p class="text-xs text-text-muted mt-2">
-            Vos revenus nets (après commission) : <span class="text-primary font-mono font-semibold tabular-nums">{{ bid.earningsEuros !== null ? `${bid.earningsEuros.toFixed(2)} €` : '—' }}</span>
+            Vos revenus nets (après commission) : <span class="text-primary font-mono font-semibold tabular-nums">{{ bid.earningsEuros !== null ? formatMoney(bid.earningsEuros, bid.currency) : '—' }}</span>
           </p>
         </section>
 

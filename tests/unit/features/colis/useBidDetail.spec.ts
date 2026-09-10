@@ -19,7 +19,7 @@ const fakeBid = {
   sender: { id: 'u1', name: 'Alice', avatarInitials: 'AL', rating: 4.5, totalSentParcels: 12 },
   weightKg: 5,
   contentDescription: 'Vêtements',
-  declaredValueEuros: 200,
+  currency: 'EUR',
   earningsEuros: 30.8,
   paymentStatus: 'ESCROWED' as const,
   paymentAmountEuros: 35,

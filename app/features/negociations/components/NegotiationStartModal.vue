@@ -5,6 +5,16 @@ import { XCircle, Plane } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
 import { negotiationService } from '@/features/negociations/services/negotiationService'
 import type { MatchingRequest } from '@/features/demandes/types/index'
+import {
+  amountStep,
+  currencySymbol,
+  formatMoney,
+  formatPerKg,
+  maxNegotiationPrice,
+  minNegotiationPrice,
+  normalizeCurrency,
+  roundToCurrency,
+} from '@/lib/money'
 
 const props = defineProps<{
   request: MatchingRequest | null
@@ -23,17 +33,29 @@ const message = ref('')
 const isLoading = ref(false)
 const errorMsg = ref<string | null>(null)
 
+// Devise de la demande : l'offre s'y exprime (le backend lit `proposedPriceEur`
+// dans la devise du fil) et les bornes de la plateforme y sont mises à l'échelle.
+const currency = computed(() => normalizeCurrency(props.request?.currency))
+const priceFloor = computed(() => minNegotiationPrice(currency.value))
+const priceCap = computed(() => maxNegotiationPrice(currency.value))
+
 const suggestedPrice = computed(() =>
   props.request ? Math.round(props.request.budgetPerKg * props.request.weightKg) : 0,
 )
 
 const maxPrice = computed(() =>
-  props.request ? Math.round(props.request.budgetPerKg * props.request.weightKg) : 500,
+  props.request ? Math.min(suggestedPrice.value, priceCap.value) : priceCap.value,
+)
+
+const pricePerKg = computed(() =>
+  props.request && props.request.weightKg > 0
+    ? roundToCurrency(proposedPrice.value / props.request.weightKg, currency.value)
+    : null,
 )
 
 watch(() => props.request, (req) => {
   if (req) {
-    proposedPrice.value = Math.round(req.budgetPerKg * req.weightKg)
+    proposedPrice.value = Math.min(Math.round(req.budgetPerKg * req.weightKg), priceCap.value)
     message.value = ''
     errorMsg.value = null
   }
@@ -51,7 +73,7 @@ const priceBarWidth = computed(() => {
 })
 
 const canSubmit = computed(() =>
-  proposedPrice.value > 0 && proposedPrice.value <= 500 && !isLoading.value,
+  proposedPrice.value >= priceFloor.value && proposedPrice.value <= priceCap.value && !isLoading.value,
 )
 
 function handleKeydown(e: KeyboardEvent) {
@@ -119,7 +141,7 @@ async function submit() {
             </div>
             <div>
               <span class="text-text-muted">Budget exp.</span>
-              <p class="font-mono font-semibold text-success mt-0.5 tabular-nums">{{ suggestedPrice }} €</p>
+              <p class="font-mono font-semibold text-success mt-0.5 tabular-nums">{{ formatMoney(suggestedPrice, currency) }}</p>
             </div>
           </div>
         </div>
@@ -141,32 +163,33 @@ async function submit() {
               <span class="text-xs text-text-muted">pour <span class="font-mono tabular-nums">{{ request.weightKg }}</span> kg</span>
             </div>
             <p class="text-xs text-text-muted">
-              Budget expéditeur : <span class="font-mono font-semibold text-success tabular-nums">{{ suggestedPrice }} €</span>
-              <span class="text-text-muted/70"> (<span class="font-mono tabular-nums">{{ request.budgetPerKg }}</span> €/kg × <span class="font-mono tabular-nums">{{ request.weightKg }}</span> kg)</span>
+              Budget expéditeur : <span class="font-mono font-semibold text-success tabular-nums">{{ formatMoney(suggestedPrice, currency) }}</span>
+              <span class="text-text-muted/70"> (<span class="font-mono tabular-nums">{{ formatPerKg(request.budgetPerKg, currency) }}</span> × <span class="font-mono tabular-nums">{{ request.weightKg }}</span> kg)</span>
             </p>
             <div class="flex items-center gap-2 bg-bg border border-border rounded-input px-4 py-3 focus-within:border-primary transition-colors">
               <input
                 :value="proposedPrice"
                 type="number"
-                min="1"
+                :min="priceFloor"
                 :max="maxPrice"
+                :step="amountStep(currency)"
                 inputmode="numeric"
                 data-test="proposed-price"
                 class="flex-1 text-center text-3xl font-mono font-semibold text-text bg-transparent outline-none tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 @input="onPriceInput"
               />
-              <span class="text-2xl font-semibold text-text-muted shrink-0">€</span>
+              <span class="text-2xl font-semibold text-text-muted shrink-0" data-test="proposed-price-currency">{{ currencySymbol(currency) }}</span>
             </div>
             <p class="text-xs text-text-muted text-center -mt-1">
-              soit <span class="font-mono tabular-nums">{{ request.weightKg > 0 ? (proposedPrice / request.weightKg).toFixed(2) : '—' }}</span> €/kg
+              soit <span class="font-mono tabular-nums">{{ pricePerKg !== null ? formatPerKg(pricePerKg, currency) : '—' }}</span>
             </p>
             <!-- Barre min → max -->
             <div class="h-1.5 bg-surface-el rounded-full overflow-hidden">
               <div class="h-full bg-primary rounded-full transition-all duration-150" :style="{ width: priceBarWidth }" />
             </div>
             <div class="flex justify-between text-xs text-text-muted font-mono tabular-nums">
-              <span>1 €</span>
-              <span>Max {{ maxPrice }} €</span>
+              <span>{{ formatMoney(priceFloor, currency) }}</span>
+              <span>Max {{ formatMoney(maxPrice, currency) }}</span>
             </div>
           </div>
 

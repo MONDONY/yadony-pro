@@ -57,6 +57,16 @@ vi.mock('@/composables/useCommissionRate', () => ({
   useCommissionRate: () => ({ getRate: async () => 0.12 }),
 }))
 
+let mockActiveCurrency = 'EUR'
+vi.mock('@/stores/preferences', () => ({
+  usePreferencesStore: () => ({
+    get currency() { return mockActiveCurrency },
+    loaded: true,
+    load: async () => mockActiveCurrency,
+    setCurrency: vi.fn(),
+  }),
+}))
+
 // Seul le câblage du catalogue de contenus (ContentTagChips) est sous test
 // ici : les autres champs du formulaire n'ont aucun rapport avec Task 3/4.
 // On remplace ces composants par de simples stand-ins (plutôt que des
@@ -91,6 +101,7 @@ async function mountForm(props: Record<string, unknown> = {}) {
 describe('NewAnnouncementForm — catalogue de contenus', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockActiveCurrency = 'EUR'
     setActivePinia(createPinia())
     mockFetchContentCategories.mockResolvedValue(catalogSample)
     mockFetchTemplates.mockResolvedValue([])
@@ -371,6 +382,38 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
     await wrapper.find('[data-test="save-template-submit"]').trigger('click')
     await flushPromises()
     expect(mockTplCreate).toHaveBeenCalled()
+    wrapper.unmount()
+  })
+})
+
+describe('NewAnnouncementForm — devise du trajet', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    setActivePinia(createPinia())
+    mockFetchContentCategories.mockResolvedValue(catalogSample)
+    mockFetchTemplates.mockResolvedValue([])
+    mockTplList.mockResolvedValue([])
+    mockPriceGridItems.value = []
+    mockFetchPriceGridItems.mockResolvedValue(undefined)
+  })
+
+  it('en euros, la carte est activée et les espèces restent un choix', async () => {
+    mockActiveCurrency = 'EUR'
+    const wrapper = await mountForm()
+    expect(wrapper.find('[data-test="cash-toggle-copy"]').text()).toContain('La carte bancaire Stripe est toujours activée')
+    expect((wrapper.find('[data-test="cash-toggle"]').element as HTMLButtonElement).disabled).toBe(false)
+    expect(wrapper.find('[data-test="net-price-per-kg"]').text().replace(/[\s  ]/g, '')).toBe('6,16€/kg')
+    wrapper.unmount()
+  })
+
+  it('en francs CFA, mobile money et espèces sont imposés et le net n’a pas de centime', async () => {
+    mockActiveCurrency = 'XOF'
+    const wrapper = await mountForm()
+    expect(wrapper.find('[data-test="cash-toggle-copy"]').text()).toContain('Mobile money activé')
+    const toggle = wrapper.find('[data-test="cash-toggle"]')
+    expect((toggle.element as HTMLButtonElement).disabled).toBe(true)
+    expect(toggle.attributes('aria-checked')).toBe('true')
+    expect(wrapper.find('[data-test="net-price-per-kg"]').text().replace(/[\s  ]/g, '')).toBe('4400FCFA/kg')
     wrapper.unmount()
   })
 })

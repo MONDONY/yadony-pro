@@ -226,9 +226,10 @@ export interface TripBid {
   senderInitials: string
   senderTotalShipments: number
   weightKg: number
-  declaredValueEuros: number
   contentDescription: string
   status: string
+  /** Devise du bid (celle du trajet) : tous les montants ci-dessous s'y expriment. */
+  currency: string
   paymentAmountEuros: number
   earningsEuros: number
   paymentMethod: string | null

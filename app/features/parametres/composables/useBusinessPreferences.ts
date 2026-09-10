@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { businessPrefsService } from '@/features/parametres/services/businessPrefsService'
 import { DEFAULT_BUSINESS_PREFERENCES, type BusinessPreferences } from '@/features/parametres/types/index'
+import { usePreferencesStore } from '@/stores/preferences'
 
 export function useBusinessPreferences() {
   const preferences = ref<BusinessPreferences>({ ...DEFAULT_BUSINESS_PREFERENCES })
@@ -10,12 +11,16 @@ export function useBusinessPreferences() {
   const savedAt = ref<number | null>(null)
 
   const svc = businessPrefsService()
+  // La devise active est partagée avec le formulaire de trajet et le
+  // portefeuille : une devise enregistrée ici doit s'y appliquer aussitôt.
+  const store = usePreferencesStore()
 
   async function fetchPreferences(): Promise<void> {
     isLoading.value = true
     error.value = null
     try {
       preferences.value = await svc.fetchPreferences()
+      store.setCurrency(preferences.value.currencyCode)
     } catch {
       error.value = 'Impossible de charger tes préférences. Veuillez réessayer.'
     } finally {
@@ -28,6 +33,7 @@ export function useBusinessPreferences() {
     error.value = null
     try {
       preferences.value = await svc.savePreferences(next)
+      store.setCurrency(preferences.value.currencyCode)
       savedAt.value = Date.now()
       return true
     } catch {

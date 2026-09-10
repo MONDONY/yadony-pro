@@ -381,7 +381,7 @@ describe('useTripDetail', () => {
     mockSvc.getAnnouncementBids.mockResolvedValue([
       {
         id: 'bid-1', senderName: 'Alice Martin', senderTotalShipments: 5,
-        weightKg: 3, declaredValueEuros: 50, status: 'PAYMENT_ESCROWED',
+        weightKg: 3, currency: 'EUR', status: 'PAYMENT_ESCROWED',
         earningsEuros: 21.12, createdAt: '2026-06-01T10:00:00',
         senderInitials: 'AM', senderId: 's1', contentDescription: 'Vêtements',
         paymentAmountEuros: 24, paymentMethod: 'STRIPE',
