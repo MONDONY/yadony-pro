@@ -14,7 +14,15 @@ const state = {
   error: ref<string | null>(null),
   fetchBalance: vi.fn(),
   startTopup: vi.fn(),
+  startCardTopup: vi.fn(),
 }
+
+const routeQuery: Record<string, string> = {}
+const routerReplace = vi.fn().mockResolvedValue(undefined)
+vi.mock('vue-router', () => ({
+  useRoute: () => ({ query: routeQuery }),
+  useRouter: () => ({ replace: routerReplace }),
+}))
 
 vi.mock('@/features/wallet/composables/useWallet', () => ({
   useWallet: () => state,
@@ -58,14 +66,60 @@ describe('WalletCard', () => {
     expect(wrapper.find('[data-test="wallet-tx-1"]').text().replace(/[\s  ]/g, '')).toBe('−6000FCFA')
   })
 
-  it('ne propose plus de recharge depuis le portail mais renvoie vers l’app mobile', async () => {
-    // Le backend refuse Wave et Orange Money (422) et la carte exige un SDK Stripe :
-    // le formulaire menait à une erreur muette.
+  it('recharge par carte : ouvre la session Checkout renvoyée par le serveur', async () => {
+    state.startCardTopup.mockResolvedValue({ status: 'redirect', url: 'https://checkout.stripe.com/c/pay/cs_test' })
+    const assignSpy = vi.fn()
+    const original = window.location
+    Object.defineProperty(window, 'location', { value: { ...original, assign: assignSpy }, writable: true })
     const wrapper = await mountCard()
-    expect(wrapper.find('[data-test="topup-submit"]').exists()).toBe(false)
-    expect(wrapper.find('[data-test="topup-method"]').exists()).toBe(false)
-    expect(wrapper.find('[data-test="topup-mobile-hint"]').text()).toContain('app mobile Yadony')
+    expect(wrapper.find('[data-test="topup-currency"]').text()).toBe('€')
+    await wrapper.find('[data-test="topup-amount"]').setValue('25')
+    await wrapper.find('[data-test="topup-submit"]').trigger('click')
+    await vi.waitFor(() => expect(state.startCardTopup).toHaveBeenCalledWith(25))
+    await vi.waitFor(() => expect(assignSpy).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test'))
     expect(state.startTopup).not.toHaveBeenCalled()
+    Object.defineProperty(window, 'location', { value: original, writable: true })
+  })
+
+  it('renvoie vers l’app mobile quand le serveur ne connaît pas encore la recharge web', async () => {
+    state.startCardTopup.mockResolvedValue({ status: 'unavailable' })
+    const wrapper = await mountCard()
+    await wrapper.find('[data-test="topup-amount"]').setValue('25')
+    await wrapper.find('[data-test="topup-submit"]').trigger('click')
+    await vi.waitFor(() => expect(wrapper.find('[data-test="topup-mobile-hint"]').exists()).toBe(true))
+    expect(wrapper.find('[data-test="topup-card-form"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="topup-mobile-hint"]').text()).toContain('app mobile Yadony')
+  })
+
+  it('affiche l’erreur de préparation de la recharge', async () => {
+    state.startCardTopup.mockResolvedValue({ status: 'error', message: 'Stripe est indisponible.' })
+    const wrapper = await mountCard()
+    await wrapper.find('[data-test="topup-amount"]').setValue('25')
+    await wrapper.find('[data-test="topup-submit"]').trigger('click')
+    await vi.waitFor(() => expect(wrapper.find('[data-test="topup-error"]').text()).toBe('Stripe est indisponible.'))
+  })
+
+  it('exige au moins 500 F CFA sur un portefeuille en francs CFA', async () => {
+    state.currency.value = 'XOF'
+    const wrapper = await mountCard()
+    expect(wrapper.find('[data-test="topup-currency"]').text()).toMatch(/F\s?CFA/)
+    await wrapper.find('[data-test="topup-amount"]').setValue('100')
+    expect(wrapper.find('[data-test="topup-submit"]').attributes('disabled')).toBeDefined()
+    await wrapper.find('[data-test="topup-amount"]').setValue('500')
+    expect(wrapper.find('[data-test="topup-submit"]').attributes('disabled')).toBeUndefined()
+    state.currency.value = 'EUR'
+  })
+
+  it('affiche le retour de Stripe Checkout et nettoie l’URL', async () => {
+    routeQuery.topup = 'success'
+    const wrapper = await mountCard()
+    expect(wrapper.find('[data-test="topup-return-success"]').text()).toContain('Paiement validé')
+    expect(routerReplace).toHaveBeenCalledWith({ query: { topup: undefined } })
+    delete routeQuery.topup
+    routeQuery.topup = 'canceled'
+    const wrapper2 = await mountCard()
+    expect(wrapper2.find('[data-test="topup-return-canceled"]').text()).toContain('annulée')
+    delete routeQuery.topup
   })
 
   it('affiche l’erreur de chargement', async () => {

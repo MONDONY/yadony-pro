@@ -1,11 +1,41 @@
 <!-- app/features/wallet/components/WalletCard.vue -->
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { Wallet, Smartphone } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Wallet, Smartphone, CreditCard } from 'lucide-vue-next'
 import { useWallet } from '@/features/wallet/composables/useWallet'
-import { formatMoney } from '@/lib/money'
+import { amountStep, currencySymbol, formatMoney, isZeroDecimal } from '@/lib/money'
 
-const { balance, currency, transactions, isLoading, error, fetchBalance } = useWallet()
+const { balance, currency, transactions, isLoading, isToppingUp, error, fetchBalance, startCardTopup } = useWallet()
+const route = useRoute()
+const router = useRouter()
+
+const amount = ref<string>('')
+/** Vrai quand le serveur ne propose pas encore la recharge web : renvoi vers l'app mobile. */
+const cardUnavailable = ref(false)
+const topupError = ref<string | null>(null)
+/** Message du retour de Stripe Checkout (?topup=success|canceled), lu une seule fois. */
+const returnNotice = ref<'success' | 'canceled' | null>(null)
+
+const minAmount = computed(() => (isZeroDecimal(currency.value) ? 500 : 1))
+
+const canTopup = computed(() => {
+  const n = Number(amount.value)
+  return Number.isFinite(n) && n >= minAmount.value && !isToppingUp.value
+})
+
+async function submitCardTopup() {
+  if (!canTopup.value) return
+  topupError.value = null
+  const outcome = await startCardTopup(Number(amount.value))
+  if (outcome.status === 'redirect') {
+    window.location.assign(outcome.url)
+  } else if (outcome.status === 'unavailable') {
+    cardUnavailable.value = true
+  } else {
+    topupError.value = outcome.message
+  }
+}
 
 const TX_LABELS: Record<string, string> = {
   TOPUP: 'Recharge',
@@ -28,6 +58,12 @@ function formatDate(iso: string): string {
 }
 
 onMounted(() => {
+  const topup = route.query.topup
+  if (topup === 'success' || topup === 'canceled') {
+    returnNotice.value = topup
+    // Le paramètre ne doit pas survivre à un rechargement : on l'efface de l'URL.
+    router.replace({ query: { ...route.query, topup: undefined } }).catch(() => {})
+  }
   fetchBalance()
 })
 </script>
@@ -51,11 +87,45 @@ onMounted(() => {
         {{ balance !== null ? formatMoney(balance, currency) : '—' }}
       </p>
 
-      <!-- Recharge : le portail ne sait pas encaisser une carte (pas de Stripe.js) et
-           le backend a retiré Wave et Orange Money ; le bouton menait à une erreur. -->
-      <div class="flex items-start gap-2 rounded-el border border-border bg-surface-el px-3 py-2.5 text-xs text-text-muted" data-test="topup-mobile-hint">
+      <p v-if="returnNotice === 'success'" class="rounded-el border border-success/30 bg-success/10 px-3 py-2 text-xs text-success" data-test="topup-return-success">
+        Paiement validé. Ton solde se met à jour dans quelques instants.
+      </p>
+      <p v-else-if="returnNotice === 'canceled'" class="rounded-el border border-border bg-surface-el px-3 py-2 text-xs text-text-muted" data-test="topup-return-canceled">
+        Recharge annulée, rien n'a été débité.
+      </p>
+
+      <!-- Recharge par carte : session Stripe Checkout hébergée, ouverte par le serveur.
+           Les anciens rails Wave et Orange Money ont été retirés par le backend. -->
+      <div v-if="!cardUnavailable" class="space-y-2" data-test="topup-card-form">
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="relative">
+            <input
+              v-model="amount"
+              type="number"
+              :min="minAmount"
+              :step="amountStep(currency)"
+              :placeholder="`Montant (${currencySymbol(currency)})`"
+              data-test="topup-amount"
+              class="h-9 w-40 pl-3 pr-12 rounded-input bg-surface-el border border-border-strong text-sm text-text placeholder:text-text-subtle focus:outline-none focus:border-primary transition-colors"
+            />
+            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-subtle" data-test="topup-currency">{{ currencySymbol(currency) }}</span>
+          </div>
+          <button
+            :disabled="!canTopup"
+            data-test="topup-submit"
+            class="inline-flex h-9 items-center gap-1.5 px-4 rounded-btn bg-primary text-on-primary text-xs font-semibold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="submitCardTopup"
+          >
+            <CreditCard class="h-3.5 w-3.5" aria-hidden="true" />
+            {{ isToppingUp ? 'Redirection…' : 'Recharger par carte' }}
+          </button>
+        </div>
+        <p class="text-2xs text-text-subtle">Paiement sécurisé par Stripe, minimum {{ formatMoney(minAmount, currency) }}.</p>
+        <p v-if="topupError" class="text-xs text-danger" data-test="topup-error">{{ topupError }}</p>
+      </div>
+      <div v-else class="flex items-start gap-2 rounded-el border border-border bg-surface-el px-3 py-2.5 text-xs text-text-muted" data-test="topup-mobile-hint">
         <Smartphone class="mt-0.5 h-3.5 w-3.5 shrink-0 text-text-subtle" aria-hidden="true" />
-        <span>Pour recharger ton portefeuille par carte bancaire, passe par l'app mobile Yadony (Portefeuille, puis Recharger).</span>
+        <span>La recharge par carte depuis le web n'est pas encore disponible sur ce serveur : passe par l'app mobile Yadony (Portefeuille, puis Recharger).</span>
       </div>
 
       <!-- Transactions -->

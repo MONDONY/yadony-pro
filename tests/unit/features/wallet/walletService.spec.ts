@@ -41,4 +41,15 @@ describe('walletService', () => {
     })
     expect(res.redirectUrl).toBe('https://wave.example/pay')
   })
+
+  it('createCardTopupSession POSTe le montant sur /wallet/topup/checkout-session', async () => {
+    mockApiFn.mockResolvedValue({ url: 'https://checkout.stripe.com/c/pay/cs_test' })
+    const svc = (await importService())()
+    const res = await svc.createCardTopupSession(25)
+    expect(mockApiFn).toHaveBeenCalledWith('/wallet/topup/checkout-session', {
+      method: 'POST',
+      body: { amount: 25 },
+    })
+    expect(res.url).toBe('https://checkout.stripe.com/c/pay/cs_test')
+  })
 })
