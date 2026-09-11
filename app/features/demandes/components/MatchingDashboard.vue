@@ -15,13 +15,18 @@ import CreateTripFromDemandModal from '@/features/demandes/components/CreateTrip
 import { useFavorites } from '@/features/favoris/composables/useFavorites'
 import type { MatchingRequest, FilterState } from '@/features/demandes/types/index'
 import { DEFAULT_FILTER_STATE } from '@/features/demandes/types/index'
+import { filterRequests } from '@/features/demandes/lib/filterRequests'
+import { usePreferencesStore } from '@/stores/preferences'
 
 const { requests, isLoading, error, fetchRequests, activeTrips, hasActiveTrips } = useMatchingRequests()
 const { loadIds, isFavoriteRequest, toggleRequest } = useFavorites()
+// Devise active du voyageur : le filtre « budget minimum au kilo » s'y exprime.
+const prefs = usePreferencesStore()
 
 onMounted(() => {
   fetchRequests()
   loadIds()
+  prefs.load()
 })
 
 // ── État local ──────────────────────────────────────────────────────────────
@@ -40,35 +45,12 @@ watch(activeTrips, (trips) => {
 
 // ── Computed : filtrage + tri ────────────────────────────────────────────────
 
-const filteredRequests = computed(() => {
-  let result = [...requests.value]
-
-  if (selectedTripId.value !== null) {
-    result = result.filter(r => r.tripId === selectedTripId.value)
-  }
-  if (filters.value.maxWeightKg !== null) {
-    result = result.filter(r => r.weightKg <= filters.value.maxWeightKg!)
-  }
-  if (filters.value.minBudgetPerKg !== null) {
-    result = result.filter(r => r.budgetPerKg >= filters.value.minBudgetPerKg!)
-  }
-  if (filters.value.contentType !== null) {
-    result = result.filter(r => r.contentType === filters.value.contentType)
-  }
-
-  switch (filters.value.sortBy) {
-    case 'date':
-      result.sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())
-      break
-    case 'price':
-      result.sort((a, b) => b.budgetPerKg - a.budgetPerKg)
-      break
-    default:
-      result.sort((a, b) => b.matchScore - a.matchScore)
-  }
-
-  return result
-})
+const filteredRequests = computed(() =>
+  filterRequests(requests.value, filters.value, {
+    selectedTripId: selectedTripId.value,
+    currency: prefs.currency,
+  }),
+)
 
 const availableContentTypes = computed(() =>
   [...new Set(requests.value
@@ -152,6 +134,7 @@ function openNegotiateModal(request: MatchingRequest) {
             v-model:view-mode="viewMode"
             :result-count="filteredRequests.length"
             :available-content-types="availableContentTypes"
+            :currency="prefs.currency"
           />
         </div>
 

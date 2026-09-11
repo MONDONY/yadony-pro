@@ -3,12 +3,15 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { LayoutGrid, List, Weight, Euro, Package, ArrowDownNarrowWide, Star, Clock, TrendingUp } from 'lucide-vue-next'
 import type { FilterState } from '@/features/demandes/types/index'
 import { DEFAULT_FILTER_STATE } from '@/features/demandes/types/index'
+import { budgetPerKgFilterOptions, currencySymbol, formatPerKg } from '@/lib/money'
 
 const props = defineProps<{
   filters: FilterState
   resultCount: number
   availableContentTypes: string[]
   viewMode: 'card' | 'list'
+  /** Devise active du voyageur, dans laquelle s'exprime le filtre budget. */
+  currency?: string
 }>()
 
 const emit = defineEmits<{
@@ -56,7 +59,8 @@ function patch(partial: Partial<FilterState>) {
 }
 
 const weightOptions = [5, 10, 15, 20]
-const budgetOptions = [5, 8, 10, 15]
+// Paliers dans la devise active du voyageur (prop `currency`, EUR en repli).
+const budgetOptions = computed(() => budgetPerKgFilterOptions(props.currency))
 const sortOptions: { value: FilterState['sortBy']; label: string; icon: typeof Star }[] = [
   { value: 'score', label: 'Score', icon: Star },
   { value: 'date', label: 'Récent', icon: Clock },
@@ -126,7 +130,7 @@ const currentSort = computed(() => sortOptions.find(s => s.value === props.filte
         @click="openPicker = openPicker === 'budget' ? null : 'budget'"
       >
         <Euro class="h-3.5 w-3.5" aria-hidden="true" />
-        <span :class="filters.minBudgetPerKg !== null ? 'font-mono tabular-nums' : ''">{{ filters.minBudgetPerKg !== null ? `> ${filters.minBudgetPerKg} €/kg` : '€/kg min' }}</span>
+        <span :class="filters.minBudgetPerKg !== null ? 'font-mono tabular-nums' : ''">{{ filters.minBudgetPerKg !== null ? `> ${formatPerKg(filters.minBudgetPerKg, props.currency)}` : `${currencySymbol(props.currency)}/kg min` }}</span>
       </button>
       <div v-if="openPicker === 'budget'" class="absolute top-full left-0 mt-1 bg-surface border border-border rounded-el shadow-pop z-20 py-1 min-w-28">
         <button
@@ -137,7 +141,7 @@ const currentSort = computed(() => sortOptions.find(s => s.value === props.filte
           type="button"
           @click="patch({ minBudgetPerKg: b })"
         >
-          &gt; {{ b }} €/kg
+          &gt; {{ formatPerKg(b, props.currency) }}
         </button>
         <button
           v-if="filters.minBudgetPerKg !== null"

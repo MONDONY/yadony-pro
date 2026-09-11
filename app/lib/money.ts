@@ -147,6 +147,11 @@ export function defaultPricePerKg(currency?: string | null): number {
   return pricePerKgOptions(currency)[2]!
 }
 
+/** Paliers du filtre « budget minimum au kilo » des demandes, dans la devise active. */
+export function budgetPerKgFilterOptions(currency?: string | null): number[] {
+  return isZeroDecimal(currency) ? [3000, 5000, 7000, 10000] : [5, 8, 10, 15]
+}
+
 /** Pas des boutons + / − d'un prix : 1 dans une devise à centimes, 500 en francs CFA. */
 export function priceStep(currency?: string | null): number {
   return isZeroDecimal(currency) ? 500 : 1

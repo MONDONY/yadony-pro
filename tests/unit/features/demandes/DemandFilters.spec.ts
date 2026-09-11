@@ -87,6 +87,21 @@ describe('DemandFilters', () => {
     expect((emitted![0][0] as FilterState).minBudgetPerKg).toBe(8)
   })
 
+  it('propose des paliers et des libellés dans la devise active', async () => {
+    const wrapper = mount(DemandFilters, {
+      props: { filters: defaultFilters, resultCount: 3, availableContentTypes: [], viewMode: 'card', currency: 'XOF' },
+    })
+    const compact = (t: string) => t.replace(/[\s  ]/g, '')
+    expect(compact(wrapper.find('[data-test="filter-budget"]').text())).toContain('FCFA/kgmin')
+    await wrapper.find('[data-test="filter-budget"]').trigger('click')
+    expect(wrapper.find('[data-test="budget-option-5000"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="budget-option-8"]').exists()).toBe(false)
+    await wrapper.find('[data-test="budget-option-5000"]').trigger('click')
+    expect((wrapper.emitted('update:filters')![0][0] as FilterState).minBudgetPerKg).toBe(5000)
+    await wrapper.setProps({ filters: { ...defaultFilters, minBudgetPerKg: 5000 } })
+    expect(compact(wrapper.find('[data-test="filter-budget"]').text())).toContain('>5000FCFA/kg')
+  })
+
   it('emits update:filters with contentType when a type option is selected', async () => {
     const wrapper = mount(DemandFilters, {
       props: { filters: defaultFilters, resultCount: 5, availableContentTypes: ['Vêtements'], viewMode: 'card' },
