@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   amountStep,
+  budgetPerKgFilterOptions,
   currencySymbol,
   formatMoney,
   formatPerKg,
@@ -111,5 +112,10 @@ describe('money', () => {
     expect(paymentMethodsFor('XOF')).toEqual(['MOBILE_MONEY', 'CASH'])
     expect(paymentMethodsFor('xaf', { cash: false })).toEqual(['MOBILE_MONEY', 'CASH'])
     expect(paymentMethodsFor(undefined)).toEqual(['STRIPE'])
+  })
+
+  it('donne des paliers de filtre budget lisibles dans la devise', () => {
+    expect(budgetPerKgFilterOptions('EUR')).toEqual([5, 8, 10, 15])
+    expect(budgetPerKgFilterOptions('XOF')).toEqual([3000, 5000, 7000, 10000])
   })
 })
