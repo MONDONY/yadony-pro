@@ -47,6 +47,8 @@ interface BackendAnnouncementResponse {
   status: Trip['status']
   pendingBidCount: number
   confirmedParcelCount: number
+  /** Net voyageur des colis confirmés, dans la devise de l'annonce ; absent sur un serveur antérieur. */
+  reservedNetAmount?: number | null
   senderNote: string | null
   acceptedContentTypes: string[]
   refusedTypes: string[]
@@ -127,7 +129,8 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     handoverDeadline: a.handoverDeadline ?? null,
     confirmedParcelCount: a.confirmedParcelCount,
     pendingBidCount: a.pendingBidCount,
-    reservedRevenueEuros: 0,
+    // Servi par le backend depuis dony-back #293 ; zéro tant qu'il ne l'est pas (et non un faux montant).
+    reservedRevenueEuros: Number.isFinite(Number(a.reservedNetAmount)) && a.reservedNetAmount !== null && a.reservedNetAmount !== undefined ? Number(a.reservedNetAmount) : 0,
     createdAt: a.createdAt,
   }
 }
