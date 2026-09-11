@@ -37,6 +37,20 @@ const payload = {
   acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'],
 }
 
+
+function fakeDetailBase() {
+  return {
+    id: 'trip-42', travelerId: 'user-1', departureCity: 'Paris', arrivalCity: 'Dakar',
+    departureDate: '2026-08-01', departureTime: null, arrivalTime: null,
+    pickupAddress: { label: 'Paris', lat: 48.85, lng: 2.35 },
+    deliveryAddress: { label: 'Dakar', lat: 14.69, lng: -17.44 },
+    availableKg: 15, totalKg: 20, pricePerKg: 8, transportMode: 'PLANE', status: 'ACTIVE',
+    pendingBidCount: 3, confirmedParcelCount: 1, senderNote: null,
+    acceptedContentTypes: [], refusedTypes: [], acceptedPaymentMethods: ['STRIPE'], cashAccepted: false,
+    createdAt: '2026-05-01T12:00:00', updatedAt: '2026-05-01T12:00:00', bidsCount: 4, traveler: null,
+  }
+}
+
 describe('tripsService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -158,6 +172,15 @@ describe('tripsService', () => {
     expect(result.id).toBe('trip-42')
     expect(result.availableWeightKg).toBe(15)
     expect(result.usedWeightKg).toBe(5)
+    // Serveur antérieur sans reservedNetAmount : zéro, pas un faux montant.
+    expect(result.reservedRevenueEuros).toBe(0)
+  })
+
+  it('getAnnouncement reprend le net réservé servi par le backend', async () => {
+    mockApiFn.mockResolvedValue({ ...fakeDetailBase(), reservedNetAmount: 79 })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncement('trip-42')
+    expect(result.reservedRevenueEuros).toBe(79)
   })
 
   it('getAnnouncement derives cashAccepted from acceptedPaymentMethods when the flag is absent (regression)', async () => {
