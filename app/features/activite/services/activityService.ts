@@ -1,5 +1,8 @@
 import { useApi } from '@/composables/useApi'
-import type { ActivityAnalytics, ActivityPeriod, FiscalExportFormat, FiscalExportType } from '@/features/activite/types/index'
+import type {
+  ActivityAnalytics, ActivityPeriod, FiscalExportFormat, FiscalExportType,
+  KgSoldDetails, RevenueDetails, SummaryPeriod, TripsSummary,
+} from '@/features/activite/types/index'
 
 export function activityService() {
   const api = useApi()
@@ -19,5 +22,17 @@ export function activityService() {
     })
   }
 
-  return { fetchAnalytics, downloadFiscalExport }
+  async function fetchSummary(period: SummaryPeriod): Promise<TripsSummary> {
+    return api<TripsSummary>('/travelers/me/trips-summary', { query: { period } })
+  }
+
+  async function fetchRevenueDetails(period: SummaryPeriod): Promise<RevenueDetails> {
+    return api<RevenueDetails>('/travelers/me/trips-summary/revenues', { query: { period } })
+  }
+
+  async function fetchKgSoldDetails(period: SummaryPeriod): Promise<KgSoldDetails> {
+    return api<KgSoldDetails>('/travelers/me/trips-summary/kg-sold', { query: { period } })
+  }
+
+  return { fetchAnalytics, downloadFiscalExport, fetchSummary, fetchRevenueDetails, fetchKgSoldDetails }
 }

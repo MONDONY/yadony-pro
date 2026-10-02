@@ -3,6 +3,7 @@
 import { onMounted } from 'vue'
 import { SectionLabel } from '@/components/ui/section-label'
 import { useActivity } from '@/features/activite/composables/useActivity'
+import ActivitySummary from '@/features/activite/components/ActivitySummary.vue'
 import ActivityKpiCard from '@/features/activite/components/ActivityKpiCard.vue'
 import TransactionTable from '@/features/activite/components/TransactionTable.vue'
 import FiscalExportPanel from '@/features/activite/components/FiscalExportPanel.vue'
@@ -28,6 +29,8 @@ function handleExport(format: FiscalExportFormat, type: FiscalExportType): void 
 
 <template>
   <div class="space-y-8">
+
+    <ActivitySummary />
 
     <!-- Period selector -->
     <div class="flex items-center gap-2 flex-wrap">
