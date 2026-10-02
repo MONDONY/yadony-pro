@@ -44,7 +44,7 @@ const paymentLabel: Record<Bid['paymentStatus'], string> = {
   REFUNDED: 'Remboursé',
 }
 
-const ratingStars = computed(() => (props.bid ? Math.round(props.bid.sender.rating) : 0))
+const ratingStars = computed(() => (props.bid?.sender.rating != null ? Math.round(props.bid.sender.rating) : 0))
 
 const sortedHistory = computed(() => {
   if (!props.bid) return []
@@ -121,13 +121,15 @@ function formatHistoryDate(iso: string): string {
             <div>
               <p class="font-semibold text-text">{{ bid.sender.name }}</p>
               <div class="flex items-center gap-0.5 mt-0.5">
-                <Star
-                  v-for="i in 5"
-                  :key="i"
-                  :class="cn('w-3.5 h-3.5', i <= ratingStars ? 'text-warning fill-warning' : 'text-border')"
-                />
-                <span class="text-xs text-text-muted ml-1.5">
-                  <span class="font-mono tabular-nums">{{ bid.sender.rating.toFixed(1) }}</span> · <span class="font-mono tabular-nums">{{ bid.sender.totalSentParcels }}</span> envois
+                <template v-if="bid.sender.rating !== null">
+                  <Star
+                    v-for="i in 5"
+                    :key="i"
+                    :class="cn('w-3.5 h-3.5', i <= ratingStars ? 'text-warning fill-warning' : 'text-border')"
+                  />
+                </template>
+                <span class="text-xs text-text-muted" :class="{ 'ml-1.5': bid.sender.rating !== null }">
+                  <template v-if="bid.sender.rating !== null"><span class="font-mono tabular-nums">{{ bid.sender.rating.toFixed(1) }}</span> · </template><span class="font-mono tabular-nums">{{ bid.sender.totalSentParcels }}</span> envois
                 </span>
               </div>
             </div>

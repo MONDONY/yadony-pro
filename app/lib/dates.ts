@@ -7,3 +7,9 @@ export function addDaysToDateInput(date: string, days: number): string {
   d.setUTCDate(d.getUTCDate() + days)
   return d.toISOString().split('T')[0]!
 }
+
+/** Nombre de jours entre deux dates `YYYY-MM-DD` (négatif si `to` précède `from`). */
+export function daysBetweenDateInputs(from: string, to: string): number {
+  const ms = new Date(`${to}T00:00:00Z`).getTime() - new Date(`${from}T00:00:00Z`).getTime()
+  return Math.round(ms / 86_400_000)
+}

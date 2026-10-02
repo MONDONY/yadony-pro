@@ -89,7 +89,8 @@ function mapBackendToBid(b: BackendBidResponse, commissionRate: number): Bid {
       id: b.senderId,
       name: senderName,
       avatarInitials: computeInitials(senderName),
-      rating: 0,
+      // Le backend ne sert pas la note de l'expéditeur sur un colis : null, pas un faux 0,0.
+      rating: null,
       totalSentParcels: b.senderTotalShipments ?? 0,
     },
     weightKg,

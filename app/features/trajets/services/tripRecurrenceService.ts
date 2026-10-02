@@ -30,6 +30,7 @@ interface BackendTripRecurrence {
   deliveryAddress: BackendAddress
   departureTime: string | null
   arrivalTime: string | null
+  arrivalDayOffset?: number | null
   cashAccepted: boolean
   handoverDeadline?: string | null
   weekdays: string
@@ -64,6 +65,7 @@ function mapToRecurrence(r: BackendTripRecurrence): UserTripRecurrence {
     deliveryAddress: toPlace(r.deliveryAddress),
     departureTime: time,
     arrivalTime: arrival,
+    arrivalDayOffset: r.arrivalDayOffset ?? 0,
     cashAccepted: r.cashAccepted ?? false,
     handoverDeadline: r.handoverDeadline ?? null,
     weekdays: r.weekdays,
@@ -117,6 +119,7 @@ export function recurrenceToPayload(r: UserTripRecurrence): SaveTripRecurrencePa
     deliveryAddress: { label: r.deliveryAddress.label, lat: r.deliveryAddress.lat, lng: r.deliveryAddress.lng },
     departureTime: r.departureTime,
     arrivalTime: r.arrivalTime,
+    arrivalDayOffset: r.arrivalDayOffset,
     cashAccepted: r.cashAccepted,
     handoverDeadline: null,
     weekdays: r.weekdays,

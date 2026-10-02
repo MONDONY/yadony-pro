@@ -1,8 +1,8 @@
-import { reactive, computed, ref } from 'vue'
+import { reactive, computed, ref, watch } from 'vue'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import { usePreferencesStore } from '@/stores/preferences'
-import { addDaysToDateInput, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE } from '@/lib/dates'
+import { addDaysToDateInput, daysBetweenDateInputs, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE } from '@/lib/dates'
 import { defaultPricePerKg, normalizeCurrency, paymentMethodsFor, roundToCurrency } from '@/lib/money'
 import type {
   AnnouncementFormData,
@@ -92,6 +92,24 @@ export function useAnnouncementForm() {
   )
 
   const svc = tripsService()
+
+  // Un modèle porte un décalage de jours (vol de nuit), pas une date : on l'applique
+  // à la date d'arrivée dès que le voyageur choisit sa date de départ.
+  let pendingArrivalOffset = 0
+  watch(() => form.departureDate, (date) => {
+    if (date && pendingArrivalOffset > 0 && !form.arrivalDate) {
+      form.arrivalDate = addDaysToDateInput(date, pendingArrivalOffset)
+    }
+  })
+
+  /** Décalage départ → arrivée en jours (0 à 3), repli sur celui du modèle appliqué. */
+  function currentArrivalDayOffset(): number {
+    if (form.departureDate && form.arrivalDate) {
+      const days = daysBetweenDateInputs(form.departureDate, form.arrivalDate)
+      return Math.min(Math.max(days, 0), MAX_ARRIVAL_DAYS_AFTER_DEPARTURE)
+    }
+    return pendingArrivalOffset
+  }
 
   function validate(): ValidationErrors {
     const errors: ValidationErrors = {}
@@ -185,7 +203,11 @@ export function useAnnouncementForm() {
     form.departureDate = ''
     form.departureTime = trip.departureTime ?? ''
     form.arrivalTime = trip.arrivalTime ?? ''
+    // La date de départ est ressaisie : on garde le décalage de l'arrivée pour la recaler.
     form.arrivalDate = ''
+    pendingArrivalOffset = trip.arrivalDate
+      ? Math.max(0, daysBetweenDateInputs(trip.departureDate, trip.arrivalDate))
+      : 0
     form.transportMode = trip.transportMode
     form.pickupPlace = trip.pickupPlace
     form.dropoffPlace = trip.dropoffPlace
@@ -226,6 +248,11 @@ export function useAnnouncementForm() {
     if ('handoverDeadline' in t) form.handoverDeadline = isoToDateInput(t.handoverDeadline)
     if ('cashAccepted' in t) form.cashAccepted = t.cashAccepted
     if ('arrivalTime' in t) form.arrivalTime = t.arrivalTime ?? ''
+    pendingArrivalOffset = 'arrivalDayOffset' in t ? (t.arrivalDayOffset ?? 0) : 0
+    form.arrivalDate = ''
+    if (pendingArrivalOffset > 0 && form.departureDate) {
+      form.arrivalDate = addDaysToDateInput(form.departureDate, pendingArrivalOffset)
+    }
   }
 
   /**
@@ -256,6 +283,7 @@ export function useAnnouncementForm() {
       cashAccepted: form.cashAccepted,
       handoverDeadline: form.handoverDeadline || null,
       arrivalTime: form.arrivalTime || null,
+      arrivalDayOffset: currentArrivalDayOffset(),
     }
   }
 

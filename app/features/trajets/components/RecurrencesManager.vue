@@ -81,6 +81,7 @@ async function onCreate() {
       deliveryAddress: { label: dropoffPlace.value!.label, lat: dropoffPlace.value!.lat, lng: dropoffPlace.value!.lng },
       departureTime: time.value || null,
       arrivalTime: tpl.arrivalTime,
+      arrivalDayOffset: tpl.arrivalDayOffset,
       cashAccepted: tpl.cashAccepted,
       handoverDeadline: null,
       weekdays: days.value.map((d) => (d ? '1' : '0')).join(''),
@@ -230,7 +231,7 @@ async function onDelete(rec: UserTripRecurrence) {
             {{ rec.departureCity }} → {{ rec.arrivalCity }} · {{ rec.pricePerKg }}€/kg
           </p>
           <p class="text-xs text-text-muted mt-0.5 truncate">
-            🔁 {{ weekdaysSummary(rec.weekdays) }}{{ rec.departureTime ? ' · ' + rec.departureTime : '' }}
+            🔁 {{ weekdaysSummary(rec.weekdays) }}{{ rec.departureTime ? ' · ' + rec.departureTime : '' }}{{ rec.arrivalDayOffset ? ` · arrivée J+${rec.arrivalDayOffset}` : '' }}
           </p>
         </div>
         <label class="flex items-center gap-2 cursor-pointer shrink-0">

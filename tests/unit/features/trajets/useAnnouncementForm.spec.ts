@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { nextTick } from 'vue'
 
 const mockCreate = vi.fn()
 const mockUpdate = vi.fn()
@@ -202,6 +203,38 @@ describe('useAnnouncementForm', () => {
       expect(validate().arrivalDate).toMatch(/heure d'arrivée/)
       form.arrivalDate = '2026-06-02'
       expect(validate().arrivalDate).toBeUndefined()
+    })
+  })
+
+  describe('décalage d\'arrivée des modèles', () => {
+    const tpl = {
+      id: 'tpl', label: 'Nuit', emoji: null, departureCity: validPlace, arrivalCity: validPlace2,
+      transportMode: 'PLANE' as const, capacityUnit: 'KG_FREE' as const, availableWeightKg: 10,
+      pricePerKg: 7, pricingMode: 'KG' as const, negotiable: false, currency: 'EUR',
+      acceptedCategories: [], refusedCategories: [], cashAccepted: false, handoverDeadline: null,
+      arrivalTime: '06:30', arrivalDayOffset: 1,
+    }
+
+    it('applique le décalage du modèle dès que la date de départ est choisie', async () => {
+      const useAnnouncementForm = await importUseAnnouncementForm()
+      const { form, applyQuickTemplate } = useAnnouncementForm()
+      applyQuickTemplate(tpl)
+      expect(form.arrivalDate).toBe('')
+      form.departureDate = '2026-06-01'
+      await nextTick()
+      expect(form.arrivalDate).toBe('2026-06-02')
+    })
+
+    it('enregistre le décalage calculé depuis les dates du formulaire', async () => {
+      const useAnnouncementForm = await importUseAnnouncementForm()
+      const { form, buildTemplatePayload } = useAnnouncementForm()
+      form.departureCity = validPlace
+      form.arrivalCity = validPlace2
+      form.departureDate = '2026-06-01'
+      form.arrivalDate = '2026-06-03'
+      expect(buildTemplatePayload('x').arrivalDayOffset).toBe(2)
+      form.arrivalDate = ''
+      expect(buildTemplatePayload('x').arrivalDayOffset).toBe(0)
     })
   })
 

@@ -50,6 +50,8 @@ export interface UserTripTemplate {
   cashAccepted: boolean
   handoverDeadline: string | null
   arrivalTime: string | null
+  /** Jours entre départ et arrivée (0 à 3). */
+  arrivalDayOffset: number
 }
 
 export interface SaveTripTemplatePayload {
@@ -73,6 +75,8 @@ export interface SaveTripTemplatePayload {
   cashAccepted: boolean
   handoverDeadline: string | null
   arrivalTime: string | null
+  /** Jours entre départ et arrivée (0 à 3) ; absent = 0. */
+  arrivalDayOffset?: number | null
 }
 
 export interface UserTripRecurrence {
@@ -93,6 +97,8 @@ export interface UserTripRecurrence {
   deliveryAddress: SelectedPlace
   departureTime: string | null
   arrivalTime: string | null
+  /** Jours entre départ et arrivée (0 à 3). */
+  arrivalDayOffset: number
   cashAccepted: boolean
   handoverDeadline: string | null
   weekdays: string
@@ -118,6 +124,8 @@ export interface SaveTripRecurrencePayload {
   deliveryAddress: { label: string; lat: number; lng: number }
   departureTime: string | null
   arrivalTime: string | null
+  /** Jours entre départ et arrivée (0 à 3) ; absent = 0. */
+  arrivalDayOffset?: number | null
   cashAccepted: boolean
   handoverDeadline: string | null
   weekdays: string

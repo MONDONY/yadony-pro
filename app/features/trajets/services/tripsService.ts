@@ -318,7 +318,8 @@ export function tripsService() {
   }
 
   async function postTrackingEvent(bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE'): Promise<void> {
-    await api<void>('/tracking/events', { method: 'POST', body: { bidId, eventType } })
+    // Depuis le portail le voyageur déclare l'étape à la main : le backend garde la provenance (dony-back #337).
+    await api<void>('/tracking/events', { method: 'POST', body: { bidId, eventType, scanMethod: 'MANUAL' } })
   }
 
   async function getTrackingEvents(bidId: string): Promise<TrackingEvent[]> {

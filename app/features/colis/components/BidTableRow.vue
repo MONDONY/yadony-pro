@@ -58,7 +58,7 @@ const formattedDate = computed(() => {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 })
 
-const ratingStars = computed(() => Math.round(props.bid.sender.rating))
+const ratingStars = computed(() => Math.round(props.bid.sender.rating ?? 0))
 </script>
 
 <template>
@@ -89,12 +89,15 @@ const ratingStars = computed(() => Math.round(props.bid.sender.rating))
         <div class="min-w-0">
           <p class="text-sm font-medium text-text truncate">{{ bid.sender.name }}</p>
           <div class="flex items-center gap-0.5">
-            <Star
-              v-for="i in 5"
-              :key="i"
-              :class="cn('w-3 h-3', i <= ratingStars ? 'text-warning fill-warning' : 'text-border')"
-            />
-            <span class="text-xs text-text-muted ml-1 font-mono tabular-nums">{{ bid.sender.rating.toFixed(1) }}</span>
+            <template v-if="bid.sender.rating !== null">
+              <Star
+                v-for="i in 5"
+                :key="i"
+                :class="cn('w-3 h-3', i <= ratingStars ? 'text-warning fill-warning' : 'text-border')"
+              />
+              <span class="text-xs text-text-muted ml-1 font-mono tabular-nums">{{ bid.sender.rating.toFixed(1) }}</span>
+            </template>
+            <span v-else class="text-xs text-text-muted">{{ bid.sender.totalSentParcels }} envois</span>
           </div>
         </div>
       </div>

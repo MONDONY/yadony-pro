@@ -5,6 +5,8 @@ import { Plane, Car, Train, Minus, Plus, X } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { negotiationService } from '@/features/negociations/services/negotiationService'
+import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
+import type { SelectedPlace } from '@/features/trajets/types/index'
 import type { MatchingRequest } from '@/features/demandes/types/index'
 import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
 import {
@@ -33,6 +35,9 @@ const negSvc = negotiationService()
 
 // ── Form state ───────────────────────────────────────────────────────────────
 const departureDate = ref('')
+// Lieux de remise et de récupération : coordonnées réelles (Google Places) exigées par le matching.
+const pickupPlace = ref<SelectedPlace | null>(null)
+const dropoffPlace = ref<SelectedPlace | null>(null)
 const transportMode = ref<'PLANE' | 'CAR' | 'TRAIN'>('PLANE')
 const availableKg = ref(10)
 const proposedPrice = ref(0)
@@ -66,6 +71,8 @@ const pricePerKg = computed(() =>
 
 const canSubmit = computed(() =>
   !!departureDate.value
+  && !!pickupPlace.value
+  && !!dropoffPlace.value
   && proposedPrice.value >= priceFloor.value
   && proposedPrice.value <= priceCap.value
   && !isLoading.value,
@@ -78,6 +85,8 @@ watch(
     if (req) {
       proposedPrice.value = Math.min(Math.round(req.budgetPerKg * req.weightKg), priceCap.value)
       departureDate.value = ''
+      pickupPlace.value = null
+      dropoffPlace.value = null
       errorMsg.value = null
     }
   },
@@ -131,8 +140,8 @@ async function submit() {
       departureTime: null,
       arrivalTime: null,
       transportMode: transportMode.value,
-      pickupAddress: { label: departureCity.value, lat: 0, lng: 0 },
-      deliveryAddress: { label: arrivalCity.value, lat: 0, lng: 0 },
+      pickupAddress: { label: pickupPlace.value!.label, lat: pickupPlace.value!.lat, lng: pickupPlace.value!.lng },
+      deliveryAddress: { label: dropoffPlace.value!.label, lat: dropoffPlace.value!.lat, lng: dropoffPlace.value!.lng },
       availableKg: availableKg.value,
       capacityUnit: 'KG_FREE',
       pricingMode: 'KG',
@@ -233,6 +242,16 @@ async function submit() {
             data-test="create-trip-date"
             class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-text text-sm font-mono tabular-nums focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/25 transition-[border-color,box-shadow]"
           />
+        </div>
+
+        <!-- Lieux de remise et de récupération -->
+        <div class="space-y-1.5">
+          <SectionLabel as="p">Lieu de remise</SectionLabel>
+          <GooglePlacesInput v-model="pickupPlace" :placeholder="`Adresse de remise à ${departureCity}`" data-test="create-trip-pickup" />
+        </div>
+        <div class="space-y-1.5">
+          <SectionLabel as="p">Lieu de récupération</SectionLabel>
+          <GooglePlacesInput v-model="dropoffPlace" :placeholder="`Adresse de récupération à ${arrivalCity}`" data-test="create-trip-dropoff" />
         </div>
 
         <!-- Mode de transport -->

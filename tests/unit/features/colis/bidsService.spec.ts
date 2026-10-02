@@ -52,6 +52,20 @@ describe('bidsService', () => {
     })
   })
 
+  it('listBids ne fabrique pas de note d\'expéditeur : rating null', async () => {
+    mockApiFn.mockResolvedValue({
+      content: [{
+        id: 'b1', announcementId: 't1', senderId: 's1', senderName: 'Fatou', status: 'PENDING',
+        departureCity: 'Paris', arrivalCity: 'Dakar', departureDate: '2026-08-01', createdAt: '2026-07-01T10:00:00',
+        weightKg: 5, pricePerKg: 8, currency: 'EUR',
+      }],
+      totalElements: 1, totalPages: 1, number: 0, size: 50,
+    })
+    const { bidsService } = await import('@/features/colis/services/bidsService')
+    const result = await bidsService().listBids()
+    expect(result.content[0]!.sender.rating).toBeNull()
+  })
+
   it('acceptBid calls PUT /bids/:id/accept', async () => {
     mockApiFn.mockResolvedValue({ id: 'bid-1', status: 'ACCEPTED' })
     const { bidsService } = await import('@/features/colis/services/bidsService')

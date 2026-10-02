@@ -476,7 +476,7 @@ describe('tripsService', () => {
     await svc.postTrackingEvent('bid-99', 'DEPART')
     expect(mockApiFn).toHaveBeenCalledWith('/tracking/events', {
       method: 'POST',
-      body: { bidId: 'bid-99', eventType: 'DEPART' },
+      body: { bidId: 'bid-99', eventType: 'DEPART', scanMethod: 'MANUAL' },
     })
   })
 })
