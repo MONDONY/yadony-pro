@@ -160,6 +160,51 @@ describe('useAnnouncementForm', () => {
     expect(Object.keys(errors)).toHaveLength(0)
   })
 
+  describe('date d\'arrivée', () => {
+    async function validForm() {
+      const useAnnouncementForm = await importUseAnnouncementForm()
+      const api = useAnnouncementForm()
+      api.form.departureCity = validPlace
+      api.form.arrivalCity = validPlace2
+      api.form.departureDate = '2026-06-01'
+      api.form.transportMode = 'AVION'
+      api.form.pickupPlace = validPlace
+      api.form.dropoffPlace = validPlace2
+      api.form.handoverDeadline = '2026-06-01'
+      return api
+    }
+
+    it('accepte une arrivée le lendemain', async () => {
+      const { form, validate } = await validForm()
+      form.arrivalDate = '2026-06-02'
+      expect(validate().arrivalDate).toBeUndefined()
+    })
+
+    it('refuse une arrivée avant le départ', async () => {
+      const { form, validate } = await validForm()
+      form.arrivalDate = '2026-05-31'
+      expect(validate().arrivalDate).toMatch(/précéder/)
+    })
+
+    it('refuse une arrivée plus de 3 jours après le départ, accepte le 3e jour', async () => {
+      const { form, validate } = await validForm()
+      form.arrivalDate = '2026-06-04'
+      expect(validate().arrivalDate).toBeUndefined()
+      form.arrivalDate = '2026-06-05'
+      expect(validate().arrivalDate).toMatch(/3 jours/)
+    })
+
+    it('exige une heure d\'arrivée postérieure le jour même', async () => {
+      const { form, validate } = await validForm()
+      form.departureTime = '22:00'
+      form.arrivalTime = '06:30'
+      form.arrivalDate = '2026-06-01'
+      expect(validate().arrivalDate).toMatch(/heure d'arrivée/)
+      form.arrivalDate = '2026-06-02'
+      expect(validate().arrivalDate).toBeUndefined()
+    })
+  })
+
   it('validate rejects a deadline after the departure date', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, validate } = useAnnouncementForm()

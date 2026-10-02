@@ -99,15 +99,15 @@ describe('CreateTripFromDemandModal', () => {
     expect(mockStartNegotiation).toHaveBeenCalledWith(expect.objectContaining({ proposedPriceEur: 100000 }))
   })
 
-  it('plafonne le prix proposé à 500 € mis à l’échelle de la devise', async () => {
+  it('ne plafonne plus le prix proposé à 500 € : seul le budget de l’expéditeur borne', async () => {
     const Modal = await importModal()
     const { mount } = await import('@vue/test-utils')
-    // 20 000 F CFA/kg × 20 kg = 400 000 F CFA, au-dessus du plafond de 327 979 F CFA.
+    // 20 000 F CFA/kg × 20 kg = 400 000 F CFA, plus de plafond métier (dony-back #315).
     const wrapper = mount(Modal, {
       props: { request: { ...fakeRequest, currency: 'XOF', budgetPerKg: 20000, weightKg: 20 } },
     })
-    expect(wrapper.find('[data-test="create-trip-price"]').text().replace(/[\s  ]/g, '')).toBe('327979FCFA')
-    expect(wrapper.text().replace(/[\s  ]/g, '')).toContain('Max327979FCFA')
+    expect(wrapper.find('[data-test="create-trip-price"]').text().replace(/[\s  ]/g, '')).toBe('400000FCFA')
+    expect(wrapper.text().replace(/[\s  ]/g, '')).toContain('Max400000FCFA')
   })
 
   it('affiche le message du serveur quand la création du trajet est refusée', async () => {

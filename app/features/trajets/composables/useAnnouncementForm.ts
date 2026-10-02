@@ -2,6 +2,7 @@ import { reactive, computed, ref } from 'vue'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import { usePreferencesStore } from '@/stores/preferences'
+import { addDaysToDateInput, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE } from '@/lib/dates'
 import { defaultPricePerKg, normalizeCurrency, paymentMethodsFor, roundToCurrency } from '@/lib/money'
 import type {
   AnnouncementFormData,
@@ -49,6 +50,7 @@ export function useAnnouncementForm() {
     departureTime: '',
     arrivalCity: null,
     arrivalTime: '',
+    arrivalDate: '',
     departureDate: '',
     transportMode: null,
     pickupPlace: null,
@@ -96,6 +98,19 @@ export function useAnnouncementForm() {
     if (!form.departureCity) errors.departureCity = 'Ville de départ requise'
     if (!form.arrivalCity) errors.arrivalCity = "Ville d'arrivée requise"
     if (!form.departureDate) errors.departureDate = 'Date de départ requise'
+    if (form.departureDate && form.arrivalDate) {
+      if (form.arrivalDate < form.departureDate) {
+        errors.arrivalDate = 'La date d\'arrivée ne peut pas précéder le départ'
+      } else if (form.arrivalDate > addDaysToDateInput(form.departureDate, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE)) {
+        errors.arrivalDate = `L'arrivée doit avoir lieu au plus ${MAX_ARRIVAL_DAYS_AFTER_DEPARTURE} jours après le départ`
+      } else if (
+        form.arrivalDate === form.departureDate
+        && form.departureTime && form.arrivalTime
+        && form.arrivalTime <= form.departureTime
+      ) {
+        errors.arrivalDate = "Le même jour, l'heure d'arrivée doit suivre l'heure de départ"
+      }
+    }
     if (!form.transportMode) errors.transportMode = 'Mode de transport requis'
     if (!form.pickupPlace) errors.pickupPlace = 'Lieu de remise requis'
     if (!form.dropoffPlace) errors.dropoffPlace = 'Lieu de récupération requis'
@@ -122,6 +137,7 @@ export function useAnnouncementForm() {
       departureDate: form.departureDate,
       departureTime: form.departureTime || null,
       arrivalTime: form.arrivalTime || null,
+      arrivalDate: form.arrivalDate || null,
       transportMode: form.transportMode!,
       pickupAddress: { label: pickup.label, lat: pickup.lat, lng: pickup.lng },
       deliveryAddress: { label: dropoff.label, lat: dropoff.lat, lng: dropoff.lng },
@@ -169,6 +185,7 @@ export function useAnnouncementForm() {
     form.departureDate = ''
     form.departureTime = trip.departureTime ?? ''
     form.arrivalTime = trip.arrivalTime ?? ''
+    form.arrivalDate = ''
     form.transportMode = trip.transportMode
     form.pickupPlace = trip.pickupPlace
     form.dropoffPlace = trip.dropoffPlace

@@ -29,8 +29,12 @@ const STRIPE_CURRENCIES: ReadonlySet<string> = new Set(['EUR', 'USD', 'CAD', 'GB
 /** Devises servies par le rail mobile money (pawaPay). */
 const MOBILE_MONEY_CURRENCIES: ReadonlySet<string> = new Set(['XOF', 'XAF'])
 
-/** Plafond d'une offre ou d'une contre-offre, en euros, avant mise à l'échelle. */
-const MAX_NEGOTIATION_PRICE_EUR = 500
+/**
+ * Garde-fou technique d'une offre ou d'une contre-offre, identique dans toutes les
+ * devises. Le backend a retiré le plafond métier de 500 € (dony-back #315) : seul
+ * ce borne de colonne (1 000 000) subsiste.
+ */
+const MAX_NEGOTIATION_PRICE = 1_000_000
 
 /** Code ISO en majuscules, EUR quand le backend n'a pas encore envoyé la devise. */
 export function normalizeCurrency(code?: string | null): string {
@@ -120,9 +124,9 @@ export function scaleFromEur(amountEur: number, currency?: string | null): numbe
   return roundToCurrency(amountEur * units, code)
 }
 
-/** Plafond d'une offre ou d'une contre-offre dans la devise du fil (500 € à l'échelle). */
-export function maxNegotiationPrice(currency?: string | null): number {
-  return scaleFromEur(MAX_NEGOTIATION_PRICE_EUR, currency)
+/** Plafond technique d'une offre ou d'une contre-offre, le même quelle que soit la devise du fil. */
+export function maxNegotiationPrice(_currency?: string | null): number {
+  return MAX_NEGOTIATION_PRICE
 }
 
 /** Plancher d'une offre dans la devise du fil (1 € à l'échelle). */

@@ -85,9 +85,9 @@ describe('money', () => {
     expect(scaleFromEur(10, 'ZZZ')).toBe(10)
   })
 
-  it('borne les offres dans la devise du fil', () => {
-    expect(maxNegotiationPrice('EUR')).toBe(500)
-    expect(maxNegotiationPrice('XOF')).toBe(327979)
+  it('borne les offres : plancher par devise, plafond technique commun', () => {
+    expect(maxNegotiationPrice('EUR')).toBe(1_000_000)
+    expect(maxNegotiationPrice('XOF')).toBe(1_000_000)
     expect(minNegotiationPrice('EUR')).toBe(1)
     expect(minNegotiationPrice('XAF')).toBe(656)
   })

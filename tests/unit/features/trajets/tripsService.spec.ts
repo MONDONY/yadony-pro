@@ -183,6 +183,14 @@ describe('tripsService', () => {
     expect(result.reservedRevenueEuros).toBe(79)
   })
 
+  it('getAnnouncement reprend la date d\'arrivée du backend, null quand elle est absente', async () => {
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    mockApiFn.mockResolvedValue({ ...fakeDetailBase(), arrivalDate: '2026-08-02' })
+    expect((await tripsService().getAnnouncement('trip-42')).arrivalDate).toBe('2026-08-02')
+    mockApiFn.mockResolvedValue(fakeDetailBase())
+    expect((await tripsService().getAnnouncement('trip-42')).arrivalDate).toBeNull()
+  })
+
   it('getAnnouncement derives cashAccepted from acceptedPaymentMethods when the flag is absent (regression)', async () => {
     const fakeDetail = {
       id: 'trip-cash', travelerId: 'user-1', departureCity: 'Lyon', arrivalCity: 'Bamako',

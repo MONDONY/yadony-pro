@@ -16,6 +16,14 @@ const formattedDate = computed(() =>
   })
 )
 
+const formattedArrivalDate = computed(() =>
+  props.trip.arrivalDate && props.trip.arrivalDate !== props.trip.departureDate
+    ? new Date(props.trip.arrivalDate).toLocaleDateString('fr-FR', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      })
+    : null,
+)
+
 const fillPct = computed(() =>
   props.trip.availableWeightKg > 0
     ? Math.round((props.trip.usedWeightKg / props.trip.availableWeightKg) * 100)
@@ -65,6 +73,14 @@ const pricingModeLabel = computed(() => {
           <div>
             <p class="text-xs text-text-muted">Date de départ</p>
             <p class="text-sm text-text font-medium capitalize">{{ formattedDate }}</p>
+          </div>
+        </div>
+
+        <div v-if="formattedArrivalDate" class="flex items-start gap-3">
+          <Calendar class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p class="text-xs text-text-muted">Date d'arrivée</p>
+            <p class="text-sm text-text font-medium capitalize">{{ formattedArrivalDate }}</p>
           </div>
         </div>
 

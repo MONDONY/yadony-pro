@@ -133,6 +133,7 @@ export interface Trip {
   departureDate: string          // ISO date: "2026-06-01"
   departureTime: string | null   // "14:30" or null
   arrivalTime: string | null
+  arrivalDate: string | null
   transportMode: TransportMode
   pickupPlace: SelectedPlace
   dropoffPlace: SelectedPlace
@@ -167,6 +168,7 @@ export interface AnnouncementFormData {
   departureTime: string
   arrivalCity: SelectedPlace | null
   arrivalTime: string
+  arrivalDate: string
   departureDate: string
   transportMode: TransportMode | null
   pickupPlace: SelectedPlace | null
@@ -190,6 +192,7 @@ export interface CreateAnnouncementPayload {
   departureDate: string
   departureTime: string | null
   arrivalTime: string | null
+  arrivalDate?: string | null
   transportMode: TransportMode
   pickupAddress: { label: string; lat: number; lng: number }
   deliveryAddress: { label: string; lat: number; lng: number }
@@ -210,6 +213,7 @@ export interface ValidationErrors {
   departureCity?: string
   arrivalCity?: string
   departureDate?: string
+  arrivalDate?: string
   transportMode?: string
   pickupPlace?: string
   dropoffPlace?: string

@@ -38,6 +38,8 @@ interface BackendAnnouncementResponse {
   departureDate: string
   departureTime: string | null
   arrivalTime: string | null
+  /** Jour d'arrivée quand il diffère du départ (vol de nuit) ; absent = même jour. */
+  arrivalDate?: string | null
   pickupAddress: BackendAddress
   deliveryAddress: BackendAddress
   availableKg: number
@@ -112,6 +114,7 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     departureDate: a.departureDate,
     departureTime: a.departureTime,
     arrivalTime: a.arrivalTime,
+    arrivalDate: a.arrivalDate ?? null,
     transportMode: a.transportMode,
     pickupPlace: { placeId: '', label: a.pickupAddress.label, lat: a.pickupAddress.lat, lng: a.pickupAddress.lng },
     dropoffPlace: { placeId: '', label: a.deliveryAddress.label, lat: a.deliveryAddress.lat, lng: a.deliveryAddress.lng },
