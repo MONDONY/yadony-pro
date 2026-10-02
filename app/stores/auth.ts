@@ -9,6 +9,8 @@ export interface AuthUser {
   isProAccount: boolean
   roles: string[]
   avatarUrl: string | null
+  /** Langue des notifications, e-mails et messages du serveur ; absente d'un serveur antérieur. */
+  preferredLanguage?: 'fr' | 'en' | null
 }
 
 interface AuthState {
