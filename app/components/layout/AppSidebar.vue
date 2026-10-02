@@ -20,6 +20,7 @@ import {
   Plus,
   Repeat,
   X,
+  LifeBuoy,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -132,6 +133,9 @@ const initials = computed(() =>
       </NavItem>
       <NavItem to="/litiges" label="Litiges">
         <template #icon><ShieldAlert class="w-4 h-4" /></template>
+      </NavItem>
+      <NavItem to="/support" label="Support">
+        <template #icon><LifeBuoy class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/parrainage" label="Parrainage">
         <template #icon><Gift class="w-4 h-4" /></template>
