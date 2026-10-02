@@ -133,6 +133,27 @@ export interface SaveTripRecurrencePayload {
   active: boolean
 }
 
+export type RescheduleReason = 'FLIGHT_CANCELLED' | 'POSTPONED' | 'OTHER'
+
+export interface RescheduleTripPayload {
+  departureDate: string
+  departureTime: string
+  arrivalDate: string | null
+  arrivalTime: string | null
+  handoverDeadline: string
+  reason: RescheduleReason
+  note: string | null
+}
+
+export interface RescheduleTripResult {
+  rescheduleCount: number
+  remainingReschedules: number
+  /** Colis acceptés ou remis dont l'expéditeur doit garder ou quitter le trajet reporté. */
+  parcelsAwaitingDecision: number
+  /** Demandes seulement prévenues du nouveau calendrier. */
+  requestsInformed: number
+}
+
 export interface Trip {
   id: string
   status: TripStatus
@@ -142,6 +163,8 @@ export interface Trip {
   departureTime: string | null   // "14:30" or null
   arrivalTime: string | null
   arrivalDate: string | null
+  /** Reports encore possibles (sur 2) ; absent ou null si le backend ne le sert pas. */
+  remainingReschedules?: number | null
   transportMode: TransportMode
   pickupPlace: SelectedPlace
   dropoffPlace: SelectedPlace

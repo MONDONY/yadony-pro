@@ -10,6 +10,8 @@ import type {
   TripFilter,
   CorridorOption,
   CreateAnnouncementPayload,
+  RescheduleTripPayload,
+  RescheduleTripResult,
 } from '@/features/trajets/types/index'
 
 export interface ListTripsParams {
@@ -40,6 +42,7 @@ interface BackendAnnouncementResponse {
   arrivalTime: string | null
   /** Jour d'arrivée quand il diffère du départ (vol de nuit) ; absent = même jour. */
   arrivalDate?: string | null
+  remainingReschedules?: number | null
   pickupAddress: BackendAddress
   deliveryAddress: BackendAddress
   availableKg: number
@@ -115,6 +118,7 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     departureTime: a.departureTime,
     arrivalTime: a.arrivalTime,
     arrivalDate: a.arrivalDate ?? null,
+    remainingReschedules: a.remainingReschedules ?? null,
     transportMode: a.transportMode,
     pickupPlace: { placeId: '', label: a.pickupAddress.label, lat: a.pickupAddress.lat, lng: a.pickupAddress.lng },
     dropoffPlace: { placeId: '', label: a.deliveryAddress.label, lat: a.deliveryAddress.lat, lng: a.deliveryAddress.lng },
@@ -248,6 +252,10 @@ export function tripsService() {
     return mapBackendToTrip(result)
   }
 
+  async function rescheduleAnnouncement(id: string, payload: RescheduleTripPayload): Promise<RescheduleTripResult> {
+    return api<RescheduleTripResult>(`/announcements/${id}/reschedule`, { method: 'POST', body: payload })
+  }
+
   async function deleteAnnouncement(id: string): Promise<void> {
     await api<void>(`/announcements/${id}`, { method: 'DELETE' })
   }
@@ -332,7 +340,7 @@ export function tripsService() {
 
   return {
     listTrips, getCorridors, createAnnouncement, publishAnnouncement, getTemplates, getAnnouncement,
-    updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
+    updateAnnouncement, rescheduleAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
     counterBidNegotiation, acceptBidNegotiation, rejectBidNegotiation,
     confirmDelivery, confirmPresence, refuseParcel, uploadRefusalPhoto, cancelBid,
     postTrackingEvent, getTrackingEvents, getQrCode,

@@ -8,6 +8,8 @@ import TripDetailOverview from '@/features/trajets/components/TripDetailOverview
 import TripDetailBids from '@/features/trajets/components/TripDetailBids.vue'
 import TripDetailRevenue from '@/features/trajets/components/TripDetailRevenue.vue'
 import DeleteTripModal from '@/features/trajets/components/DeleteTripModal.vue'
+import RescheduleTripModal from '@/features/trajets/components/RescheduleTripModal.vue'
+import type { RescheduleTripPayload, RescheduleTripResult } from '@/features/trajets/types/index'
 
 definePageMeta({
   middleware: ['pro-only'],
@@ -26,12 +28,14 @@ const route = useRoute()
 const tripId = route.params.id as string
 const activeTab = ref<Tab>((route.query.tab as Tab) || 'overview')
 const showDeleteModal = ref(false)
+const showRescheduleModal = ref(false)
+const rescheduleResult = ref<RescheduleTripResult | null>(null)
 const loadingBidId = ref<string | null>(null)
 
 const {
   trip, bids, isLoading, bidsLoading, error,
-  deleteLoading, publishLoading, publishError, publishErrorCode, kpis,
-  fetchTrip, fetchBids, deleteTrip, publishTrip, acceptBid, rejectBid, confirmDelivery,
+  deleteLoading, rescheduleLoading, rescheduleError, publishLoading, publishError, publishErrorCode, kpis,
+  fetchTrip, fetchBids, deleteTrip, publishTrip, rescheduleTrip, acceptBid, rejectBid, confirmDelivery,
   acceptBidNegotiation, rejectBidNegotiation, counterBidNegotiation,
   confirmPresence, refuseParcel, cancelBid, markTrackingEvent,
   reportNoShow, cancelAfterHandover, confirmReturn, exportBidsCsv,
@@ -53,6 +57,14 @@ onMounted(async () => {
 
 async function onDeleteConfirm() {
   await deleteTrip()
+}
+
+async function onRescheduleSubmit(payload: RescheduleTripPayload) {
+  const result = await rescheduleTrip(payload)
+  if (result) {
+    rescheduleResult.value = result
+    showRescheduleModal.value = false
+  }
 }
 
 async function onAcceptBid(bidId: string) {
@@ -163,7 +175,25 @@ function onExportCsv() {
       <TripDetailHeader
         :trip="trip"
         @delete="showDeleteModal = true"
+        @reschedule="rescheduleError = null; showRescheduleModal = true"
       />
+
+      <!-- Bilan du report -->
+      <div
+        v-if="rescheduleResult"
+        data-test="reschedule-result"
+        class="rounded-card border border-success/40 bg-success/10 p-4 flex items-start justify-between gap-4"
+      >
+        <p class="text-sm text-text">
+          <span class="font-medium">Trajet reporté.</span>
+          <span class="text-text-muted">
+            {{ rescheduleResult.parcelsAwaitingDecision }} expéditeur(s) doivent choisir de garder ou
+            quitter le trajet, {{ rescheduleResult.requestsInformed }} demande(s) prévenue(s).
+            Reports restants : {{ rescheduleResult.remainingReschedules }}.
+          </span>
+        </p>
+        <button class="text-xs text-text-muted hover:text-text" @click="rescheduleResult = null">Fermer</button>
+      </div>
 
       <!-- Bannière brouillon -->
       <div
@@ -247,6 +277,15 @@ function onExportCsv() {
         :kpis="kpis"
       />
     </template>
+
+    <RescheduleTripModal
+      v-if="showRescheduleModal && trip"
+      :trip="trip"
+      :is-loading="rescheduleLoading"
+      :error="rescheduleError"
+      @submit="onRescheduleSubmit"
+      @cancel="showRescheduleModal = false"
+    />
 
     <!-- Delete modal -->
     <DeleteTripModal

@@ -479,4 +479,24 @@ describe('tripsService', () => {
       body: { bidId: 'bid-99', eventType: 'DEPART', scanMethod: 'MANUAL' },
     })
   })
+
+  it('rescheduleAnnouncement POSTe sur /announcements/{id}/reschedule', async () => {
+    const result = { rescheduleCount: 1, remainingReschedules: 1, parcelsAwaitingDecision: 0, requestsInformed: 0 }
+    mockApiFn.mockResolvedValue(result)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const body = {
+      departureDate: '2026-12-10', departureTime: '22:00', arrivalDate: null, arrivalTime: null,
+      handoverDeadline: '2026-12-09T23:59:00.000Z', reason: 'POSTPONED' as const, note: 'Vol décalé',
+    }
+    await expect(tripsService().rescheduleAnnouncement('trip-7', body)).resolves.toEqual(result)
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/trip-7/reschedule', { method: 'POST', body })
+  })
+
+  it('getAnnouncement reprend les reports restants servis au voyageur', async () => {
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    mockApiFn.mockResolvedValue({ ...fakeDetailBase(), remainingReschedules: 1 })
+    expect((await tripsService().getAnnouncement('trip-42')).remainingReschedules).toBe(1)
+    mockApiFn.mockResolvedValue(fakeDetailBase())
+    expect((await tripsService().getAnnouncement('trip-42')).remainingReschedules).toBeNull()
+  })
 })

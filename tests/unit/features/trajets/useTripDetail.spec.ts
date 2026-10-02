@@ -21,6 +21,7 @@ const mockSvc = {
   getTemplates: vi.fn(),
   updateAnnouncement: vi.fn(),
   publishAnnouncement: vi.fn(),
+  rescheduleAnnouncement: vi.fn(),
 }
 
 vi.mock('@/features/trajets/services/tripsService', () => ({
@@ -395,5 +396,44 @@ describe('useTripDetail', () => {
     expect(csv).toContain('PAYMENT_ESCROWED')
     const lines = csv.split('\n')
     expect(lines).toHaveLength(2)
+  })
+
+  describe('rescheduleTrip', () => {
+    const payload = {
+      departureDate: '2026-12-10', departureTime: '22:00', arrivalDate: '2026-12-11',
+      arrivalTime: '06:30', handoverDeadline: '2026-12-09T23:59:00.000Z',
+      reason: 'FLIGHT_CANCELLED' as const, note: null,
+    }
+
+    it('reporte le trajet puis recharge le trajet et ses colis', async () => {
+      const result = { rescheduleCount: 1, remainingReschedules: 1, parcelsAwaitingDecision: 2, requestsInformed: 1 }
+      mockSvc.rescheduleAnnouncement.mockResolvedValue(result)
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'ACTIVE' })
+      mockSvc.getAnnouncementBids.mockResolvedValue([])
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
+      await expect(rescheduleTrip(payload)).resolves.toEqual(result)
+      expect(mockSvc.rescheduleAnnouncement).toHaveBeenCalledWith('trip-1', payload)
+      expect(mockSvc.getAnnouncement).toHaveBeenCalled()
+      expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
+      expect(rescheduleError.value).toBeNull()
+    })
+
+    it('traduit le code d\'erreur du backend', async () => {
+      mockSvc.rescheduleAnnouncement.mockRejectedValue({ data: { code: 'reschedule-limit-reached', detail: 'raw' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { rescheduleTrip, rescheduleError, rescheduleLoading } = useTripDetail('trip-1')
+      await expect(rescheduleTrip(payload)).resolves.toBeNull()
+      expect(rescheduleError.value).toMatch(/déjà été reporté deux fois/)
+      expect(rescheduleLoading.value).toBe(false)
+    })
+
+    it('retombe sur le détail du serveur pour un code inconnu', async () => {
+      mockSvc.rescheduleAnnouncement.mockRejectedValue({ data: { code: 'autre', detail: 'Message serveur' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
+      await rescheduleTrip(payload)
+      expect(rescheduleError.value).toBe('Message serveur')
+    })
   })
 })
