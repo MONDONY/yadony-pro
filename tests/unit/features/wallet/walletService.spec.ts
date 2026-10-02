@@ -53,3 +53,43 @@ describe('walletService', () => {
     expect(res.url).toBe('https://checkout.stripe.com/c/pay/cs_test')
   })
 })
+
+describe('walletService — mobile money et remboursement', () => {
+  async function svc() {
+    vi.resetModules()
+    const { walletService } = await import('@/features/wallet/services/walletService')
+    return walletService()
+  }
+
+  it('cherche les réseaux par POST, le numéro dans le corps', async () => {
+    mockApiFn.mockResolvedValue({ providers: [] })
+    await (await svc()).getMobileMoneyProviders('+221771234567')
+    expect(mockApiFn).toHaveBeenCalledWith('/wallet/topup/providers', { method: 'POST', body: { phoneNumber: '+221771234567' } })
+  })
+
+  it('lance une recharge MOBILE_MONEY avec numéro et réseau', async () => {
+    mockApiFn.mockResolvedValue({ topupId: 't' })
+    await (await svc()).startMobileMoneyTopup({ amount: 5000, phoneNumber: '+221771234567', provider: 'WAVE_SEN' })
+    expect(mockApiFn).toHaveBeenCalledWith('/wallet/topup', {
+      method: 'POST',
+      body: { amount: 5000, paymentMethod: 'MOBILE_MONEY', phoneNumber: '+221771234567', provider: 'WAVE_SEN' },
+    })
+  })
+
+  it('relit le statut, liste les recharges remboursables et les demandes', async () => {
+    mockApiFn.mockResolvedValue([])
+    const s = await svc()
+    await s.getTopupStatus('t1')
+    await s.listEligibleTopups('XOF')
+    await s.listRefundRequests()
+    expect(mockApiFn).toHaveBeenCalledWith('/wallet/topup/t1/status', {})
+    expect(mockApiFn).toHaveBeenCalledWith('/wallet/XOF/refund-eligible-topups', {})
+    expect(mockApiFn).toHaveBeenCalledWith('/wallet/refund-requests', {})
+  })
+
+  it('demande un remboursement pour les recharges choisies', async () => {
+    mockApiFn.mockResolvedValue({ id: 'r' })
+    await (await svc()).requestRefund('EUR', ['a', 'b'])
+    expect(mockApiFn).toHaveBeenCalledWith('/wallet/EUR/refund-request', { method: 'POST', body: { transactionIds: ['a', 'b'] } })
+  })
+})

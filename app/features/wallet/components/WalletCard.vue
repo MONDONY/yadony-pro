@@ -4,9 +4,11 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Wallet, Smartphone, CreditCard } from 'lucide-vue-next'
 import { useWallet } from '@/features/wallet/composables/useWallet'
-import { amountStep, currencySymbol, formatMoney, isZeroDecimal } from '@/lib/money'
+import { amountStep, currencySymbol, formatMoney, isMobileMoneyCurrency, isZeroDecimal } from '@/lib/money'
+import MobileMoneyTopupForm from '@/features/wallet/components/MobileMoneyTopupForm.vue'
+import WalletRefundPanel from '@/features/wallet/components/WalletRefundPanel.vue'
 
-const { balance, currency, transactions, isLoading, isToppingUp, error, fetchBalance, startCardTopup } = useWallet()
+const { balance, currency, transactions, balances, estimatedTotal, estimateComplete, isLoading, isToppingUp, error, fetchBalance, startCardTopup } = useWallet()
 const route = useRoute()
 const router = useRouter()
 
@@ -16,6 +18,12 @@ const cardUnavailable = ref(false)
 const topupError = ref<string | null>(null)
 /** Message du retour de Stripe Checkout (?topup=success|canceled), lu une seule fois. */
 const returnNotice = ref<'success' | 'canceled' | null>(null)
+
+/** Autres portefeuilles du voyageur (une devise chacun) à lister sous le solde actif. */
+const walletList = computed(() => balances?.value ?? [])
+const showBalances = computed(() => walletList.value.length > 1)
+/** Les devises sans carte (franc CFA) se rechargent par mobile money. */
+const useMobileMoney = computed(() => isMobileMoneyCurrency(currency.value))
 
 const minAmount = computed(() => (isZeroDecimal(currency.value) ? 500 : 1))
 
@@ -87,6 +95,20 @@ onMounted(() => {
         {{ balance !== null ? formatMoney(balance, currency) : '—' }}
       </p>
 
+      <!-- Un portefeuille par devise, avec un total estimé quand il y en a plusieurs -->
+      <div v-if="showBalances" class="space-y-1" data-test="wallet-balances">
+        <ul class="divide-y divide-border">
+          <li v-for="b in walletList" :key="b.currency" class="flex items-center gap-2 py-1.5 text-sm" :data-test="`wallet-balance-${b.currency}`">
+            <span class="text-text">{{ b.currency }}</span>
+            <span v-if="b.active" class="text-2xs text-text-subtle">actif</span>
+            <span class="ml-auto font-mono tabular-nums text-text">{{ formatMoney(b.balance, b.currency) }}</span>
+          </li>
+        </ul>
+        <p v-if="estimatedTotal !== null && estimatedTotal !== undefined" class="text-xs text-text-muted" data-test="wallet-estimated-total">
+          Total estimé {{ formatMoney(estimatedTotal, currency) }}<template v-if="estimateComplete === false"> (partiel : une devise n'a pas pu être convertie)</template>
+        </p>
+      </div>
+
       <p v-if="returnNotice === 'success'" class="rounded-el border border-success/30 bg-success/10 px-3 py-2 text-xs text-success" data-test="topup-return-success">
         Paiement validé. Ton solde se met à jour dans quelques instants.
       </p>
@@ -96,7 +118,8 @@ onMounted(() => {
 
       <!-- Recharge par carte : session Stripe Checkout hébergée, ouverte par le serveur.
            Les anciens rails Wave et Orange Money ont été retirés par le backend. -->
-      <div v-if="!cardUnavailable" class="space-y-2" data-test="topup-card-form">
+      <MobileMoneyTopupForm v-if="useMobileMoney" @confirmed="fetchBalance" />
+      <div v-else-if="!cardUnavailable" class="space-y-2" data-test="topup-card-form">
         <div class="flex flex-wrap items-center gap-2">
           <div class="relative">
             <input
@@ -127,6 +150,8 @@ onMounted(() => {
         <Smartphone class="mt-0.5 h-3.5 w-3.5 shrink-0 text-text-subtle" aria-hidden="true" />
         <span>La recharge par carte depuis le web n'est pas encore disponible sur ce serveur : passe par l'app mobile Yadony (Portefeuille, puis Recharger).</span>
       </div>
+
+      <WalletRefundPanel :balances="walletList" @requested="fetchBalance" />
 
       <!-- Transactions -->
       <div v-if="transactions.length > 0">
