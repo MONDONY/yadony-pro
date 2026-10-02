@@ -57,3 +57,13 @@ describe('conversationsService', () => {
     })
   })
 })
+
+describe('conversationsService — destinataire', () => {
+  it('ouvre la conversation voyageur ↔ destinataire d\'un colis', async () => {
+    vi.resetModules()
+    mockApiFn.mockResolvedValue({ id: 'conv-1' })
+    const conversationsService = await importService()
+    await expect(conversationsService().getRecipientConversation('bid-5')).resolves.toEqual({ id: 'conv-1' })
+    expect(mockApiFn).toHaveBeenCalledWith('/conversations/bid/bid-5/recipient')
+  })
+})

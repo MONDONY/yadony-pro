@@ -9,6 +9,9 @@ const state = {
   transactions: ref([
     { type: 'TOPUP', amount: 20, balanceAfter: 42.5, paymentRef: 'pi_1', createdAt: '2026-07-01T10:00:00Z' },
   ]),
+  balances: ref<unknown[]>([]),
+  estimatedTotal: ref<number | null>(null),
+  estimateComplete: ref(true),
   isLoading: ref(false),
   isToppingUp: ref(false),
   error: ref<string | null>(null),
@@ -22,6 +25,16 @@ const routerReplace = vi.fn().mockResolvedValue(undefined)
 vi.mock('vue-router', () => ({
   useRoute: () => ({ query: routeQuery }),
   useRouter: () => ({ replace: routerReplace }),
+}))
+
+vi.mock('@/features/wallet/services/walletService', () => ({
+  walletService: () => ({
+    listRefundRequests: vi.fn().mockResolvedValue([]),
+    listEligibleTopups: vi.fn().mockResolvedValue([]),
+    getMobileMoneyProviders: vi.fn(),
+    startMobileMoneyTopup: vi.fn(),
+    getTopupStatus: vi.fn(),
+  }),
 }))
 
 vi.mock('@/features/wallet/composables/useWallet', () => ({
@@ -99,15 +112,34 @@ describe('WalletCard', () => {
     await vi.waitFor(() => expect(wrapper.find('[data-test="topup-error"]').text()).toBe('Stripe est indisponible.'))
   })
 
-  it('exige au moins 500 F CFA sur un portefeuille en francs CFA', async () => {
+  it('propose le mobile money, pas la carte, sur un portefeuille en francs CFA', async () => {
     state.currency.value = 'XOF'
     const wrapper = await mountCard()
-    expect(wrapper.find('[data-test="topup-currency"]').text()).toMatch(/F\s?CFA/)
-    await wrapper.find('[data-test="topup-amount"]').setValue('100')
-    expect(wrapper.find('[data-test="topup-submit"]').attributes('disabled')).toBeDefined()
-    await wrapper.find('[data-test="topup-amount"]').setValue('500')
-    expect(wrapper.find('[data-test="topup-submit"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-test="topup-mm"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="topup-card-form"]').exists()).toBe(false)
     state.currency.value = 'EUR'
+  })
+
+  it('liste les portefeuilles par devise avec le total estimé quand il y en a plusieurs', async () => {
+    state.balances.value = [
+      { currency: 'EUR', balance: 42.5, active: true, refundEligible: false, refundableAmount: 0, nonRefundableAmount: 0, refundFeeAmount: 0, refundNetAmount: 0, estimatedInActive: null },
+      { currency: 'XOF', balance: 15000, active: false, refundEligible: false, refundableAmount: 0, nonRefundableAmount: 0, refundFeeAmount: 0, refundNetAmount: 0, estimatedInActive: 22.9 },
+    ]
+    state.estimatedTotal.value = 65.4
+    state.estimateComplete.value = false
+    const wrapper = await mountCard()
+    expect(wrapper.find('[data-test="wallet-balance-XOF"]').text().replace(/[\s  ]/g, '')).toContain('15000FCFA')
+    const total = wrapper.find('[data-test="wallet-estimated-total"]').text()
+    expect(total.replace(/[\s  ]/g, '')).toContain('65,40€')
+    expect(total).toContain('partiel')
+    state.balances.value = []
+    state.estimatedTotal.value = null
+    state.estimateComplete.value = true
+  })
+
+  it('masque la liste des portefeuilles quand il n\'y en a qu\'un', async () => {
+    const wrapper = await mountCard()
+    expect(wrapper.find('[data-test="wallet-balances"]').exists()).toBe(false)
   })
 
   it('affiche le retour de Stripe Checkout et nettoie l’URL', async () => {

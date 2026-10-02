@@ -171,4 +171,22 @@ describe('TripBidDetailPanel', () => {
     await wrapper.find('[data-test="detail-close"]').trigger('click')
     expect(wrapper.emitted('close')).toBeTruthy()
   })
+
+  it('destinataire confirmé : affiche son nom et ouvre la conversation', async () => {
+    const wrapper = mountPanel(bid({ recipientName: 'Moussa', recipientAppStatus: 'CONFIRMED' }))
+    expect(wrapper.find('[data-test="detail-recipient"]').text()).toContain('Moussa')
+    await wrapper.find('[data-test="detail-recipient-chat"]').trigger('click')
+    expect(wrapper.emitted('open-recipient-chat')?.[0]).toEqual(['b1'])
+  })
+
+  it('sans destinataire confirmé : pas de bouton d\'écriture', () => {
+    expect(mountPanel(bid()).find('[data-test="detail-recipient"]').exists()).toBe(false)
+    expect(mountPanel(bid({ recipientAppStatus: 'PENDING' })).find('[data-test="detail-recipient"]').exists()).toBe(false)
+  })
+
+  it('prévient quand l\'expéditeur n\'a pas encore tranché après un report', () => {
+    const wrapper = mountPanel(bid({ rescheduleDecisionPending: true }))
+    expect(wrapper.find('[data-test="detail-reschedule-pending"]').text()).toContain('garder ce colis')
+    expect(mountPanel(bid()).find('[data-test="detail-reschedule-pending"]').exists()).toBe(false)
+  })
 })

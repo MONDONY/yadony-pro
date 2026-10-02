@@ -82,23 +82,23 @@ describe('NegotiationMessageBubble', () => {
 })
 
 describe('NegotiationCounterModal', () => {
-  it('borne la contre-offre au plafond mis à l’échelle et affiche le symbole de la devise', async () => {
+  it('borne la contre-offre au garde-fou technique et affiche le symbole de la devise', async () => {
     const wrapper = mount(NegotiationCounterModal, {
       props: { open: true, currentPriceEur: 30000, weightKg: 5, isLoading: false, currency: 'XOF' },
       global: { stubs: { Teleport: true } },
     })
     expect(wrapper.find('[data-test="counter-price-currency"]').text()).toMatch(/F\s?CFA/)
     const input = wrapper.find('[data-test="counter-price-input"]')
-    expect(input.attributes('max')).toBe('327979')
+    expect(input.attributes('max')).toBe('1000000')
     expect(input.attributes('step')).toBe('1')
     expect(compact(wrapper.text())).toContain('6000FCFA/kg')
 
-    await input.setValue(400000)
+    await input.setValue(1_000_001)
     expect((wrapper.find('[data-test="counter-submit-btn"]').element as HTMLButtonElement).disabled).toBe(true)
-    await input.setValue(300000)
+    await input.setValue(400000)
     expect((wrapper.find('[data-test="counter-submit-btn"]').element as HTMLButtonElement).disabled).toBe(false)
     await wrapper.find('[data-test="counter-submit-btn"]').trigger('click')
-    expect(wrapper.emitted('submit')?.[0]).toEqual([300000, undefined])
+    expect(wrapper.emitted('submit')?.[0]).toEqual([400000, undefined])
   })
 
   it('accepte une contre-offre en euros au centime', async () => {
@@ -107,7 +107,7 @@ describe('NegotiationCounterModal', () => {
       global: { stubs: { Teleport: true } },
     })
     const input = wrapper.find('[data-test="counter-price-input"]')
-    expect(input.attributes('max')).toBe('500')
+    expect(input.attributes('max')).toBe('1000000')
     expect(input.attributes('step')).toBe('0.01')
     expect(wrapper.find('[data-test="counter-price-currency"]').text()).toBe('€')
     expect(compact(wrapper.text())).toContain('9,00€/kg')

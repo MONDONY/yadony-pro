@@ -28,6 +28,7 @@ const emit = defineEmits<{
   'cancel': [bidId: string]
   'report-noshow': [bidId: string]
   'cancel-after-handover': [bidId: string]
+  'open-recipient-chat': [bidId: string]
   'confirm-return': [bidId: string, returnCode: string]
   'tracking-event': [bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE']
   'export-csv': []
@@ -476,6 +477,7 @@ const negotiationCount = computed(() => props.bids.filter((b) => b.status === 'N
     @cancel-after-handover="(id) => forwardAndClose(() => emit('cancel-after-handover', id))"
     @confirm-return="(id, code) => forwardAndClose(() => emit('confirm-return', id, code))"
     @request-delivery="onPanelRequestDelivery"
+    @open-recipient-chat="(id) => emit('open-recipient-chat', id)"
   />
 
   <!-- Modale confirmation de livraison -->

@@ -2,10 +2,11 @@ import { ref, computed } from 'vue'
 import { roundToCurrency } from '@/lib/money'
 import { useRouter } from 'vue-router'
 import { tripsService } from '@/features/trajets/services/tripsService'
+import { conversationsService } from '@/features/messagerie/services/conversationsService'
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
 import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import { extractProblem } from '@/lib/apiError'
-import type { Trip, TripBid, TripKpis } from '@/features/trajets/types/index'
+import type { RescheduleTripPayload, RescheduleTripResult, Trip, TripBid, TripInsights, TripKpis } from '@/features/trajets/types/index'
 
 const publishErrorMessages: Record<string, string> = {
   'kyc-not-verified': 'Vérifiez votre identité avant de publier ce trajet.',
@@ -13,6 +14,18 @@ const publishErrorMessages: Record<string, string> = {
   'pro-limit-reached': 'Limite mensuelle d’annonces atteinte. Passez en PRO pour publier davantage.',
   'publishing-suspended': 'La publication est suspendue sur votre compte. Contactez le support.',
   'not-a-draft': 'Ce trajet n’est pas un brouillon.',
+}
+
+const rescheduleErrorMessages: Record<string, string> = {
+  'reschedule-invalid-status': 'Seul un trajet publié et pas encore terminé peut être reporté.',
+  'reschedule-in-transit': 'Un colis est déjà en route : le trajet ne peut plus être reporté.',
+  'reschedule-limit-reached': 'Ce trajet a déjà été reporté deux fois. Annulez-le et publiez un nouveau trajet.',
+  'reschedule-same-date': 'Choisissez une date ou une heure de départ différente de l’actuelle.',
+  'invalid-departure-date': 'La nouvelle date de départ doit être dans le futur.',
+  'handover-deadline-past': 'La date limite de remise doit être dans le futur.',
+  'arrival-before-departure': 'La date d’arrivée ne peut pas précéder le départ.',
+  'arrival-too-far': 'L’arrivée doit avoir lieu au plus 3 jours après le départ.',
+  'arrival-time-before-departure': 'Le même jour, l’heure d’arrivée doit suivre l’heure de départ.',
 }
 
 export function useTripDetail(tripId: string) {
@@ -26,9 +39,14 @@ export function useTripDetail(tripId: string) {
   const publishError = ref<string | null>(null)
   const publishErrorCode = ref<string | null>(null)
   const commissionRate = ref(FALLBACK_COMMISSION_RATE)
+  const insights = ref<TripInsights | null>(null)
+  const recipientChatError = ref<string | null>(null)
+  const rescheduleLoading = ref(false)
+  const rescheduleError = ref<string | null>(null)
 
   const svc = tripsService()
   const cancellationSvc = cancellationService()
+  const conversationsSvc = conversationsService()
   const router = useRouter()
   const { getRate } = useCommissionRate()
 
@@ -43,6 +61,19 @@ export function useTripDetail(tripId: string) {
       error.value = 'Impossible de charger ce trajet.'
     } finally {
       isLoading.value = false
+    }
+  }
+
+  /** Audience du trajet : accessoire, un échec n'affiche simplement pas le bloc. */
+  async function fetchInsights(): Promise<void> {
+    if (trip.value?.status === 'DRAFT') {
+      insights.value = null
+      return
+    }
+    try {
+      insights.value = await svc.getAnnouncementInsights(tripId)
+    } catch {
+      insights.value = null
     }
   }
 
@@ -83,6 +114,37 @@ export function useTripDetail(tripId: string) {
         (code && publishErrorMessages[code]) || detail || 'Impossible de publier ce trajet.'
     } finally {
       publishLoading.value = false
+    }
+  }
+
+  /** Reporte le trajet ; retourne le bilan (colis en attente de décision) ou null en cas d'échec. */
+  async function rescheduleTrip(payload: RescheduleTripPayload): Promise<RescheduleTripResult | null> {
+    rescheduleLoading.value = true
+    rescheduleError.value = null
+    try {
+      const result = await svc.rescheduleAnnouncement(tripId, payload)
+      await Promise.all([fetchTrip(), fetchBids()])
+      return result
+    } catch (e) {
+      const { code, detail } = extractProblem(e)
+      rescheduleError.value =
+        (code && rescheduleErrorMessages[code]) || detail || 'Impossible de reporter ce trajet.'
+      return null
+    } finally {
+      rescheduleLoading.value = false
+    }
+  }
+
+  /** Ouvre la conversation avec le destinataire du colis ; false si elle n'est pas disponible. */
+  async function openRecipientChat(bidId: string): Promise<boolean> {
+    recipientChatError.value = null
+    try {
+      const conversation = await conversationsSvc.getRecipientConversation(bidId)
+      await router.push(`/messages/${conversation.id}`)
+      return true
+    } catch {
+      recipientChatError.value = "Impossible d'ouvrir la conversation avec le destinataire."
+      return false
     }
   }
 
@@ -222,6 +284,7 @@ export function useTripDetail(tripId: string) {
   return {
     trip,
     bids,
+    insights,
     isLoading,
     bidsLoading,
     error,
@@ -229,11 +292,17 @@ export function useTripDetail(tripId: string) {
     publishLoading,
     publishError,
     publishErrorCode,
+    rescheduleLoading,
+    rescheduleError,
+    recipientChatError,
     kpis,
     fetchTrip,
     fetchBids,
+    fetchInsights,
     deleteTrip,
     publishTrip,
+    rescheduleTrip,
+    openRecipientChat,
     acceptBid,
     rejectBid,
     acceptBidNegotiation,

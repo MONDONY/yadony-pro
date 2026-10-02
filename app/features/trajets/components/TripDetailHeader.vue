@@ -1,6 +1,7 @@
 <!-- app/features/trajets/components/TripDetailHeader.vue -->
 <script setup lang="ts">
-import { Plane, Car, Bus, Footprints, ArrowLeft, Pencil, Trash2 } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { Plane, Car, Bus, Footprints, ArrowLeft, Pencil, Trash2, CalendarClock } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { Trip, TransportMode } from '@/features/trajets/types/index'
 
@@ -10,7 +11,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'delete': []
+  'reschedule': []
 }>()
+
+// Un trajet publié et pas terminé se reporte, tant qu'il reste des reports (2 au plus).
+const canReschedule = computed(
+  () =>
+    ['ACTIVE', 'FULL', 'IN_PROGRESS'].includes(props.trip.status)
+    && props.trip.remainingReschedules !== 0,
+)
 
 const transportIcon: Record<TransportMode, typeof Plane> = {
   PLANE: Plane, CAR: Car, TRAIN: Plane, BUS: Bus, BOAT: Footprints, OTHER: Footprints,
@@ -61,6 +70,15 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
         <Pencil class="w-3.5 h-3.5" />
         Modifier
       </NuxtLink>
+      <button
+        v-if="canReschedule"
+        data-test="btn-reschedule-trip"
+        class="flex items-center gap-1.5 h-9 px-3 rounded-btn border border-border-strong text-sm text-text-muted hover:text-text hover:bg-surface-el transition-colors"
+        @click="emit('reschedule')"
+      >
+        <CalendarClock class="w-3.5 h-3.5" />
+        Reporter
+      </button>
       <button
         data-test="btn-delete-trip"
         class="flex items-center gap-1.5 h-9 px-3 rounded-btn border border-danger/50 text-sm text-danger hover:bg-danger/10 transition-colors"

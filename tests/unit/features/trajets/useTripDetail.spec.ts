@@ -21,6 +21,8 @@ const mockSvc = {
   getTemplates: vi.fn(),
   updateAnnouncement: vi.fn(),
   publishAnnouncement: vi.fn(),
+  rescheduleAnnouncement: vi.fn(),
+  getAnnouncementInsights: vi.fn(),
 }
 
 vi.mock('@/features/trajets/services/tripsService', () => ({
@@ -32,6 +34,11 @@ const mockCancellationSvc = {
   cancelAfterHandover: vi.fn(),
   confirmReturn: vi.fn(),
 }
+
+const mockConversations = { getRecipientConversation: vi.fn() }
+vi.mock('@/features/messagerie/services/conversationsService', () => ({
+  conversationsService: () => mockConversations,
+}))
 
 vi.mock('@/features/cancellation/services/cancellationService', () => ({
   cancellationService: () => mockCancellationSvc,
@@ -395,5 +402,100 @@ describe('useTripDetail', () => {
     expect(csv).toContain('PAYMENT_ESCROWED')
     const lines = csv.split('\n')
     expect(lines).toHaveLength(2)
+  })
+
+  describe('rescheduleTrip', () => {
+    const payload = {
+      departureDate: '2026-12-10', departureTime: '22:00', arrivalDate: '2026-12-11',
+      arrivalTime: '06:30', handoverDeadline: '2026-12-09T23:59:00.000Z',
+      reason: 'FLIGHT_CANCELLED' as const, note: null,
+    }
+
+    it('reporte le trajet puis recharge le trajet et ses colis', async () => {
+      const result = { rescheduleCount: 1, remainingReschedules: 1, parcelsAwaitingDecision: 2, requestsInformed: 1 }
+      mockSvc.rescheduleAnnouncement.mockResolvedValue(result)
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'ACTIVE' })
+      mockSvc.getAnnouncementBids.mockResolvedValue([])
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
+      await expect(rescheduleTrip(payload)).resolves.toEqual(result)
+      expect(mockSvc.rescheduleAnnouncement).toHaveBeenCalledWith('trip-1', payload)
+      expect(mockSvc.getAnnouncement).toHaveBeenCalled()
+      expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
+      expect(rescheduleError.value).toBeNull()
+    })
+
+    it('traduit le code d\'erreur du backend', async () => {
+      mockSvc.rescheduleAnnouncement.mockRejectedValue({ data: { code: 'reschedule-limit-reached', detail: 'raw' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { rescheduleTrip, rescheduleError, rescheduleLoading } = useTripDetail('trip-1')
+      await expect(rescheduleTrip(payload)).resolves.toBeNull()
+      expect(rescheduleError.value).toMatch(/déjà été reporté deux fois/)
+      expect(rescheduleLoading.value).toBe(false)
+    })
+
+    it('retombe sur le détail du serveur pour un code inconnu', async () => {
+      mockSvc.rescheduleAnnouncement.mockRejectedValue({ data: { code: 'autre', detail: 'Message serveur' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
+      await rescheduleTrip(payload)
+      expect(rescheduleError.value).toBe('Message serveur')
+    })
+  })
+
+  describe('fetchInsights', () => {
+    it('charge l\'audience d\'un trajet publié', async () => {
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'ACTIVE' })
+      mockSvc.getAnnouncementInsights.mockResolvedValue({ uniqueViewerCount: 12, shareViewCount: 3 })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { fetchTrip, fetchInsights, insights } = useTripDetail('trip-1')
+      await fetchTrip()
+      await fetchInsights()
+      expect(mockSvc.getAnnouncementInsights).toHaveBeenCalledWith('trip-1')
+      expect(insights.value).toEqual({ uniqueViewerCount: 12, shareViewCount: 3 })
+    })
+
+    it('ne demande rien pour un brouillon', async () => {
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'DRAFT' })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { fetchTrip, fetchInsights, insights } = useTripDetail('trip-1')
+      await fetchTrip()
+      await fetchInsights()
+      expect(mockSvc.getAnnouncementInsights).not.toHaveBeenCalled()
+      expect(insights.value).toBeNull()
+    })
+
+    it('reste silencieux quand l\'appel échoue', async () => {
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'ACTIVE' })
+      mockSvc.getAnnouncementInsights.mockRejectedValue(new Error('500'))
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { fetchTrip, fetchInsights, insights, error } = useTripDetail('trip-1')
+      await fetchTrip()
+      await fetchInsights()
+      expect(insights.value).toBeNull()
+      expect(error.value).toBeNull()
+    })
+  })
+
+  describe('openRecipientChat', () => {
+    it('ouvre la conversation avec le destinataire du colis', async () => {
+      mockConversations.getRecipientConversation.mockResolvedValue({ id: 'conv-9' })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { openRecipientChat, recipientChatError } = useTripDetail('trip-1')
+      await expect(openRecipientChat('bid-1')).resolves.toBe(true)
+      expect(mockConversations.getRecipientConversation).toHaveBeenCalledWith('bid-1')
+      expect(pushMock).toHaveBeenCalledWith('/messages/conv-9')
+      expect(recipientChatError.value).toBeNull()
+    })
+
+    it('signale l\'échec sans casser la page du trajet', async () => {
+      mockConversations.getRecipientConversation.mockRejectedValue({ status: 403 })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { openRecipientChat, recipientChatError, error } = useTripDetail('trip-1')
+      await expect(openRecipientChat('bid-1')).resolves.toBe(false)
+      expect(pushMock).not.toHaveBeenCalled()
+      expect(recipientChatError.value).toMatch(/Impossible d'ouvrir/)
+      expect(error.value).toBeNull()
+    })
   })
 })

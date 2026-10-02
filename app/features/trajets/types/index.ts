@@ -50,6 +50,8 @@ export interface UserTripTemplate {
   cashAccepted: boolean
   handoverDeadline: string | null
   arrivalTime: string | null
+  /** Jours entre départ et arrivée (0 à 3). */
+  arrivalDayOffset: number
 }
 
 export interface SaveTripTemplatePayload {
@@ -73,6 +75,8 @@ export interface SaveTripTemplatePayload {
   cashAccepted: boolean
   handoverDeadline: string | null
   arrivalTime: string | null
+  /** Jours entre départ et arrivée (0 à 3) ; absent = 0. */
+  arrivalDayOffset?: number | null
 }
 
 export interface UserTripRecurrence {
@@ -93,6 +97,8 @@ export interface UserTripRecurrence {
   deliveryAddress: SelectedPlace
   departureTime: string | null
   arrivalTime: string | null
+  /** Jours entre départ et arrivée (0 à 3). */
+  arrivalDayOffset: number
   cashAccepted: boolean
   handoverDeadline: string | null
   weekdays: string
@@ -118,11 +124,42 @@ export interface SaveTripRecurrencePayload {
   deliveryAddress: { label: string; lat: number; lng: number }
   departureTime: string | null
   arrivalTime: string | null
+  /** Jours entre départ et arrivée (0 à 3) ; absent = 0. */
+  arrivalDayOffset?: number | null
   cashAccepted: boolean
   handoverDeadline: string | null
   weekdays: string
   horizonDays: number | null
   active: boolean
+}
+
+/** Audience d'un trajet publié (`GET /announcements/{id}/insights`). */
+export interface TripInsights {
+  /** Personnes distinctes qui ont ouvert le trajet. */
+  uniqueViewerCount: number
+  /** Parmi elles, celles arrivées par un lien partagé. */
+  shareViewCount: number
+}
+
+export type RescheduleReason = 'FLIGHT_CANCELLED' | 'POSTPONED' | 'OTHER'
+
+export interface RescheduleTripPayload {
+  departureDate: string
+  departureTime: string
+  arrivalDate: string | null
+  arrivalTime: string | null
+  handoverDeadline: string
+  reason: RescheduleReason
+  note: string | null
+}
+
+export interface RescheduleTripResult {
+  rescheduleCount: number
+  remainingReschedules: number
+  /** Colis acceptés ou remis dont l'expéditeur doit garder ou quitter le trajet reporté. */
+  parcelsAwaitingDecision: number
+  /** Demandes seulement prévenues du nouveau calendrier. */
+  requestsInformed: number
 }
 
 export interface Trip {
@@ -133,6 +170,9 @@ export interface Trip {
   departureDate: string          // ISO date: "2026-06-01"
   departureTime: string | null   // "14:30" or null
   arrivalTime: string | null
+  arrivalDate: string | null
+  /** Reports encore possibles (sur 2) ; absent ou null si le backend ne le sert pas. */
+  remainingReschedules?: number | null
   transportMode: TransportMode
   pickupPlace: SelectedPlace
   dropoffPlace: SelectedPlace
@@ -167,6 +207,7 @@ export interface AnnouncementFormData {
   departureTime: string
   arrivalCity: SelectedPlace | null
   arrivalTime: string
+  arrivalDate: string
   departureDate: string
   transportMode: TransportMode | null
   pickupPlace: SelectedPlace | null
@@ -190,6 +231,7 @@ export interface CreateAnnouncementPayload {
   departureDate: string
   departureTime: string | null
   arrivalTime: string | null
+  arrivalDate?: string | null
   transportMode: TransportMode
   pickupAddress: { label: string; lat: number; lng: number }
   deliveryAddress: { label: string; lat: number; lng: number }
@@ -210,6 +252,7 @@ export interface ValidationErrors {
   departureCity?: string
   arrivalCity?: string
   departureDate?: string
+  arrivalDate?: string
   transportMode?: string
   pickupPlace?: string
   dropoffPlace?: string
@@ -238,6 +281,12 @@ export interface TripBid {
   negotiationCanCounter?: boolean
   negotiationCurrency?: string
   negotiationProposedGrossEuros?: number
+  /** Destinataire du colis (nom saisi par l'expéditeur) ; masqué ou absent selon le statut. */
+  recipientName?: string | null
+  /** CONFIRMED quand le destinataire suit le colis dans l'app : une conversation avec lui est possible. */
+  recipientAppStatus?: string | null
+  /** Le trajet a été reporté et l'expéditeur n'a pas encore choisi de garder ou quitter le colis. */
+  rescheduleDecisionPending?: boolean
   createdAt: string
 }
 

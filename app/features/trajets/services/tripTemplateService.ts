@@ -28,6 +28,7 @@ interface BackendTripTemplate {
   cashAccepted: boolean
   handoverDeadline?: string | null
   arrivalTime: string | null
+  arrivalDayOffset?: number | null
 }
 
 function mapToTemplate(t: BackendTripTemplate): UserTripTemplate {
@@ -49,6 +50,7 @@ function mapToTemplate(t: BackendTripTemplate): UserTripTemplate {
     cashAccepted: t.cashAccepted ?? false,
     handoverDeadline: t.handoverDeadline ?? null,
     arrivalTime: t.arrivalTime ? t.arrivalTime.slice(0, 5) : null,
+    arrivalDayOffset: t.arrivalDayOffset ?? 0,
   }
 }
 

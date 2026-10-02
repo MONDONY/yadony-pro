@@ -26,7 +26,8 @@ export interface SenderProfile {
   id: string
   name: string
   avatarInitials: string
-  rating: number
+  /** Note moyenne de l'expéditeur ; null tant que le backend ne la sert pas sur un colis. */
+  rating: number | null
   totalSentParcels: number
 }
 

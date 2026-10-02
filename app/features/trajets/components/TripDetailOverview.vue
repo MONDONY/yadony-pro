@@ -1,19 +1,28 @@
 <!-- app/features/trajets/components/TripDetailOverview.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { MapPin, Calendar, Clock, Package, CreditCard, FileText } from 'lucide-vue-next'
+import { MapPin, Calendar, Clock, Package, CreditCard, FileText, Eye } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
-import type { Trip } from '@/features/trajets/types/index'
+import type { Trip, TripInsights } from '@/features/trajets/types/index'
 import { formatPerKg } from '@/lib/money'
 
 const props = defineProps<{
   trip: Trip
+  insights?: TripInsights | null
 }>()
 
 const formattedDate = computed(() =>
   new Date(props.trip.departureDate).toLocaleDateString('fr-FR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
+)
+
+const formattedArrivalDate = computed(() =>
+  props.trip.arrivalDate && props.trip.arrivalDate !== props.trip.departureDate
+    ? new Date(props.trip.arrivalDate).toLocaleDateString('fr-FR', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      })
+    : null,
 )
 
 const fillPct = computed(() =>
@@ -65,6 +74,14 @@ const pricingModeLabel = computed(() => {
           <div>
             <p class="text-xs text-text-muted">Date de départ</p>
             <p class="text-sm text-text font-medium capitalize">{{ formattedDate }}</p>
+          </div>
+        </div>
+
+        <div v-if="formattedArrivalDate" class="flex items-start gap-3">
+          <Calendar class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p class="text-xs text-text-muted">Date d'arrivée</p>
+            <p class="text-sm text-text font-medium capitalize">{{ formattedArrivalDate }}</p>
           </div>
         </div>
 
@@ -124,6 +141,20 @@ const pricingModeLabel = computed(() => {
           <div class="bg-surface-el rounded-el px-3 py-2 text-center">
             <p class="font-mono text-lg font-semibold tabular-nums text-warning">{{ trip.pendingBidCount }}</p>
             <p class="text-xs text-text-subtle">Colis en attente</p>
+          </div>
+        </div>
+
+        <div v-if="insights" class="flex items-start gap-3 pt-1" data-test="trip-audience">
+          <Eye class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p class="text-xs text-text-muted">Audience</p>
+            <p class="text-sm text-text">
+              <span class="font-mono font-semibold tabular-nums" data-test="audience-unique">{{ insights.uniqueViewerCount }}</span>
+              personne{{ insights.uniqueViewerCount > 1 ? 's' : '' }} {{ insights.uniqueViewerCount > 1 ? 'ont' : 'a' }} vu ce trajet
+            </p>
+            <p v-if="insights.shareViewCount > 0" class="text-xs text-text-muted mt-0.5" data-test="audience-share">
+              dont <span class="font-mono tabular-nums">{{ insights.shareViewCount }}</span> via un lien partagé
+            </p>
           </div>
         </div>
 

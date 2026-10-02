@@ -10,6 +10,9 @@ import type {
   TripFilter,
   CorridorOption,
   CreateAnnouncementPayload,
+  RescheduleTripPayload,
+  RescheduleTripResult,
+  TripInsights,
 } from '@/features/trajets/types/index'
 
 export interface ListTripsParams {
@@ -38,6 +41,9 @@ interface BackendAnnouncementResponse {
   departureDate: string
   departureTime: string | null
   arrivalTime: string | null
+  /** Jour d'arrivée quand il diffère du départ (vol de nuit) ; absent = même jour. */
+  arrivalDate?: string | null
+  remainingReschedules?: number | null
   pickupAddress: BackendAddress
   deliveryAddress: BackendAddress
   availableKg: number
@@ -93,6 +99,9 @@ interface BackendBidResponse {
   /** Brut expéditeur et net voyageur calculés par le backend (BidResponse). */
   totalSenderAmountEur?: number | null
   totalNetAmountEur?: number | null
+  recipientName?: string | null
+  recipientAppStatus?: string | null
+  reschedule?: { decisionPending?: boolean } | null
 }
 
 interface BackendPage {
@@ -112,6 +121,8 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     departureDate: a.departureDate,
     departureTime: a.departureTime,
     arrivalTime: a.arrivalTime,
+    arrivalDate: a.arrivalDate ?? null,
+    remainingReschedules: a.remainingReschedules ?? null,
     transportMode: a.transportMode,
     pickupPlace: { placeId: '', label: a.pickupAddress.label, lat: a.pickupAddress.lat, lng: a.pickupAddress.lng },
     dropoffPlace: { placeId: '', label: a.deliveryAddress.label, lat: a.deliveryAddress.lat, lng: a.deliveryAddress.lng },
@@ -179,6 +190,9 @@ function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number):
     negotiationCanCounter: b.canCounter ?? undefined,
     negotiationCurrency: currency,
     negotiationProposedGrossEuros: proposedGrossEuros ?? undefined,
+    recipientName: b.recipientName ?? null,
+    recipientAppStatus: b.recipientAppStatus ?? null,
+    rescheduleDecisionPending: b.reschedule?.decisionPending === true,
     createdAt: b.createdAt,
   }
 }
@@ -243,6 +257,14 @@ export function tripsService() {
   async function updateAnnouncement(id: string, payload: CreateAnnouncementPayload): Promise<Trip> {
     const result = await api<BackendAnnouncementDetailResponse>(`/announcements/${id}`, { method: 'PUT', body: payload })
     return mapBackendToTrip(result)
+  }
+
+  async function getAnnouncementInsights(id: string): Promise<TripInsights> {
+    return api<TripInsights>(`/announcements/${id}/insights`, {})
+  }
+
+  async function rescheduleAnnouncement(id: string, payload: RescheduleTripPayload): Promise<RescheduleTripResult> {
+    return api<RescheduleTripResult>(`/announcements/${id}/reschedule`, { method: 'POST', body: payload })
   }
 
   async function deleteAnnouncement(id: string): Promise<void> {
@@ -315,7 +337,8 @@ export function tripsService() {
   }
 
   async function postTrackingEvent(bidId: string, eventType: 'DEPART' | 'TRANSIT' | 'ARRIVEE'): Promise<void> {
-    await api<void>('/tracking/events', { method: 'POST', body: { bidId, eventType } })
+    // Depuis le portail le voyageur déclare l'étape à la main : le backend garde la provenance (dony-back #337).
+    await api<void>('/tracking/events', { method: 'POST', body: { bidId, eventType, scanMethod: 'MANUAL' } })
   }
 
   async function getTrackingEvents(bidId: string): Promise<TrackingEvent[]> {
@@ -328,7 +351,7 @@ export function tripsService() {
 
   return {
     listTrips, getCorridors, createAnnouncement, publishAnnouncement, getTemplates, getAnnouncement,
-    updateAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
+    updateAnnouncement, rescheduleAnnouncement, getAnnouncementInsights, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
     counterBidNegotiation, acceptBidNegotiation, rejectBidNegotiation,
     confirmDelivery, confirmPresence, refuseParcel, uploadRefusalPhoto, cancelBid,
     postTrackingEvent, getTrackingEvents, getQrCode,

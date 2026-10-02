@@ -73,3 +73,39 @@ export function describePayoutStatus(status: StripeAccountStatus | null | undefi
       }
   }
 }
+
+// ── Versement par mobile money (pawaPay) ─────────────────────────────────────
+
+export type MobileMoneyPayoutStatus = 'NOT_CONFIGURED' | 'ACTIVE' | 'DISABLED'
+
+export interface MobileMoneyProviderView {
+  code: string
+  label: string
+}
+
+export interface MobileMoneyAccount {
+  status: MobileMoneyPayoutStatus
+  msisdnMasked: string | null
+  provider: string | null
+  providerLabel: string | null
+  country: string | null
+  /** Devise du compte : celle de l'opérateur du numéro. */
+  currency: string | null
+  verifiedAt: string | null
+  /** Réseaux acceptés pour recevoir un versement. */
+  providers: MobileMoneyProviderView[]
+}
+
+export interface MobileMoneyProviderOption {
+  code: string
+  label: string
+  detected: boolean
+}
+
+export interface MobileMoneyProviderCatalogue {
+  country: string
+  currency: string
+  msisdnMasked: string
+  detected: string | null
+  providers: MobileMoneyProviderOption[]
+}

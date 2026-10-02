@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { nextTick } from 'vue'
 
 const mockCreate = vi.fn()
 const mockUpdate = vi.fn()
@@ -158,6 +159,83 @@ describe('useAnnouncementForm', () => {
     form.handoverDeadline = '2026-06-01'
     const errors = validate()
     expect(Object.keys(errors)).toHaveLength(0)
+  })
+
+  describe('date d\'arrivée', () => {
+    async function validForm() {
+      const useAnnouncementForm = await importUseAnnouncementForm()
+      const api = useAnnouncementForm()
+      api.form.departureCity = validPlace
+      api.form.arrivalCity = validPlace2
+      api.form.departureDate = '2026-06-01'
+      api.form.transportMode = 'AVION'
+      api.form.pickupPlace = validPlace
+      api.form.dropoffPlace = validPlace2
+      api.form.handoverDeadline = '2026-06-01'
+      return api
+    }
+
+    it('accepte une arrivée le lendemain', async () => {
+      const { form, validate } = await validForm()
+      form.arrivalDate = '2026-06-02'
+      expect(validate().arrivalDate).toBeUndefined()
+    })
+
+    it('refuse une arrivée avant le départ', async () => {
+      const { form, validate } = await validForm()
+      form.arrivalDate = '2026-05-31'
+      expect(validate().arrivalDate).toMatch(/précéder/)
+    })
+
+    it('refuse une arrivée plus de 3 jours après le départ, accepte le 3e jour', async () => {
+      const { form, validate } = await validForm()
+      form.arrivalDate = '2026-06-04'
+      expect(validate().arrivalDate).toBeUndefined()
+      form.arrivalDate = '2026-06-05'
+      expect(validate().arrivalDate).toMatch(/3 jours/)
+    })
+
+    it('exige une heure d\'arrivée postérieure le jour même', async () => {
+      const { form, validate } = await validForm()
+      form.departureTime = '22:00'
+      form.arrivalTime = '06:30'
+      form.arrivalDate = '2026-06-01'
+      expect(validate().arrivalDate).toMatch(/heure d'arrivée/)
+      form.arrivalDate = '2026-06-02'
+      expect(validate().arrivalDate).toBeUndefined()
+    })
+  })
+
+  describe('décalage d\'arrivée des modèles', () => {
+    const tpl = {
+      id: 'tpl', label: 'Nuit', emoji: null, departureCity: validPlace, arrivalCity: validPlace2,
+      transportMode: 'PLANE' as const, capacityUnit: 'KG_FREE' as const, availableWeightKg: 10,
+      pricePerKg: 7, pricingMode: 'KG' as const, negotiable: false, currency: 'EUR',
+      acceptedCategories: [], refusedCategories: [], cashAccepted: false, handoverDeadline: null,
+      arrivalTime: '06:30', arrivalDayOffset: 1,
+    }
+
+    it('applique le décalage du modèle dès que la date de départ est choisie', async () => {
+      const useAnnouncementForm = await importUseAnnouncementForm()
+      const { form, applyQuickTemplate } = useAnnouncementForm()
+      applyQuickTemplate(tpl)
+      expect(form.arrivalDate).toBe('')
+      form.departureDate = '2026-06-01'
+      await nextTick()
+      expect(form.arrivalDate).toBe('2026-06-02')
+    })
+
+    it('enregistre le décalage calculé depuis les dates du formulaire', async () => {
+      const useAnnouncementForm = await importUseAnnouncementForm()
+      const { form, buildTemplatePayload } = useAnnouncementForm()
+      form.departureCity = validPlace
+      form.arrivalCity = validPlace2
+      form.departureDate = '2026-06-01'
+      form.arrivalDate = '2026-06-03'
+      expect(buildTemplatePayload('x').arrivalDayOffset).toBe(2)
+      form.arrivalDate = ''
+      expect(buildTemplatePayload('x').arrivalDayOffset).toBe(0)
+    })
   })
 
   it('validate rejects a deadline after the departure date', async () => {

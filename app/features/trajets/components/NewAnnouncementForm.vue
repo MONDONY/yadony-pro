@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { formatMoney, formatPerKg, isStripeCurrency } from '@/lib/money'
 import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
+import { addDaysToDateInput, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE } from '@/lib/dates'
 import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
 import { usePriceGrid } from '@/features/tarifs/composables/usePriceGrid'
@@ -91,6 +92,11 @@ const maxDate = computed(() => {
   d.setFullYear(d.getFullYear() + 1)
   return d.toISOString().split('T')[0]
 })
+
+// Le backend refuse une arrivée plus de 3 jours après le départ (ArrivalRules).
+const maxArrivalDate = computed(() =>
+  form.departureDate ? addDaysToDateInput(form.departureDate, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE) : undefined,
+)
 
 onMounted(async () => {
   // Chaque appel a son propre repli : un échec réseau sur l'un (notamment le
@@ -385,6 +391,22 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
           ]"
         />
         <p v-if="errors.departureDate" class="mt-1 text-xs text-danger">{{ errors.departureDate }}</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-text mb-1.5">Date d'arrivée</label>
+        <input
+          v-model="form.arrivalDate"
+          type="date"
+          :min="form.departureDate || minDate"
+          :max="maxArrivalDate"
+          :class="[
+            'flex h-10 w-full rounded-input border bg-surface px-3 py-1 text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]',
+            errors.arrivalDate ? 'border-danger' : 'border-border-strong',
+          ]"
+        />
+        <p v-if="errors.arrivalDate" class="mt-1 text-xs text-danger">{{ errors.arrivalDate }}</p>
+        <p v-else class="mt-1 text-xs text-text-muted">À renseigner si l'arrivée a lieu un autre jour (vol de nuit). Sinon, même jour que le départ.</p>
       </div>
 
       <div>

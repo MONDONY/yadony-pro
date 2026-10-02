@@ -2,12 +2,15 @@
 import { ref } from 'vue'
 import { walletService } from '@/features/wallet/services/walletService'
 import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
-import type { CardTopupOutcome, WalletTransaction, TopupMethod } from '@/features/wallet/types/index'
+import type { CardTopupOutcome, WalletCurrencyBalance, WalletTransaction, TopupMethod } from '@/features/wallet/types/index'
 
 export function useWallet() {
   const balance = ref<number | null>(null)
   const currency = ref('EUR')
   const transactions = ref<WalletTransaction[]>([])
+  const balances = ref<WalletCurrencyBalance[]>([])
+  const estimatedTotal = ref<number | null>(null)
+  const estimateComplete = ref(true)
   const isLoading = ref(false)
   const isToppingUp = ref(false)
   const error = ref<string | null>(null)
@@ -22,6 +25,9 @@ export function useWallet() {
       balance.value = Number(res.balance)
       currency.value = res.currency
       transactions.value = res.transactions
+      balances.value = (res.balances ?? []).map((b) => ({ ...b, balance: Number(b.balance) }))
+      estimatedTotal.value = res.estimatedTotal == null ? null : Number(res.estimatedTotal)
+      estimateComplete.value = res.estimateComplete ?? true
     } catch {
       error.value = 'Impossible de charger ton portefeuille.'
     } finally {
@@ -30,12 +36,11 @@ export function useWallet() {
   }
 
   /**
-   * Lance une recharge et renvoie l'URL de redirection éventuelle.
+   * Lance une recharge générique et renvoie l'URL de redirection éventuelle.
    *
-   * Plus appelée par le portail : le backend refuse les rails Wave et Orange
-   * Money (422 « mobile-money-topup-retired ») et répond à la carte par un
-   * clientSecret de PaymentIntent que seul un SDK Stripe sait confirmer. La
-   * recharge se fait depuis l'app mobile tant que Stripe.js n'est pas intégré.
+   * Plus appelée par le portail : la carte passe par `startCardTopup` (Stripe Checkout)
+   * et le mobile money par `useMobileMoneyTopup`. Les anciens rails Wave et Orange Money
+   * sont refusés par le backend (422 « mobile-money-topup-retired »).
    */
   async function startTopup(amount: number, method: TopupMethod): Promise<string | null> {
     isToppingUp.value = true
@@ -73,5 +78,5 @@ export function useWallet() {
     }
   }
 
-  return { balance, currency, transactions, isLoading, isToppingUp, error, fetchBalance, startTopup, startCardTopup }
+  return { balance, currency, transactions, balances, estimatedTotal, estimateComplete, isLoading, isToppingUp, error, fetchBalance, startTopup, startCardTopup }
 }

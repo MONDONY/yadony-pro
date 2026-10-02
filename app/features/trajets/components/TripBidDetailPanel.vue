@@ -25,6 +25,7 @@ const emit = defineEmits<{
   'report-noshow': [bidId: string]
   'cancel-after-handover': [bidId: string]
   'confirm-return': [bidId: string, returnCode: string]
+  'open-recipient-chat': [bidId: string]
 }>()
 
 const STATUS_LABELS: Record<string, string> = {
@@ -158,6 +159,23 @@ function submitCounter() {
           </div>
           <div v-if="bid.paymentMethod" class="text-xs text-text-muted">
             <span class="text-text-subtle">Paiement :</span> {{ bid.paymentMethod }}
+          </div>
+          <div v-if="bid.rescheduleDecisionPending" class="rounded-el border border-warning/40 bg-warning/10 p-3 text-xs text-text" data-test="detail-reschedule-pending">
+            Trajet reporté : l'expéditeur doit encore choisir de garder ce colis ou de se retirer sans frais.
+          </div>
+          <div v-if="bid.recipientAppStatus === 'CONFIRMED'" class="flex items-center justify-between gap-3 rounded-el border border-border bg-surface-el p-3 text-sm" data-test="detail-recipient">
+            <span class="text-text-muted min-w-0 truncate">
+              <span class="text-text-subtle">Destinataire :</span> {{ bid.recipientName || 'inscrit sur Yadony' }}
+            </span>
+            <button
+              type="button"
+              :disabled="isBusy"
+              class="shrink-0 h-8 px-3 rounded-btn border border-border-strong text-xs text-text hover:bg-surface transition-colors disabled:opacity-50"
+              data-test="detail-recipient-chat"
+              @click="emit('open-recipient-chat', bid.id)"
+            >
+              Écrire
+            </button>
           </div>
           <div v-if="bid.status === 'NEGOTIATING'" class="rounded-el border border-warning/40 bg-warning/10 p-3 text-sm">
             <div class="flex items-center justify-between gap-3">

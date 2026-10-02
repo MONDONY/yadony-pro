@@ -11,6 +11,10 @@ vi.mock('@/features/negociations/services/negotiationService', () => ({
   negotiationService: () => ({ startNegotiation: mockStartNegotiation }),
 }))
 
+vi.mock('@/features/trajets/services/placesService', () => ({
+  placesService: () => ({ autocomplete: vi.fn().mockResolvedValue([]), getDetails: vi.fn() }),
+}))
+
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 async function importModal() {
@@ -24,6 +28,17 @@ const fakeRequest = {
   senderName: 'Fatou D.', senderInitials: 'FD', senderRating: 4.8, senderTotalSent: 12,
   weightKg: 5, contentType: 'Vêtements', budgetPerKg: 9,
   messageExcerpt: '...', matchScore: 88, requestedAt: '2026-05-16T08:00:00Z',
+}
+
+const pickup = { placeId: 'p1', label: '12 rue de la Paix, Paris', lat: 48.86, lng: 2.33 }
+const dropoff = { placeId: 'p2', label: 'Plateau, Dakar', lat: 14.69, lng: -17.44 }
+
+/** Renseigne les deux lieux comme le ferait l'utilisateur via l'autocomplétion. */
+async function fillPlaces(wrapper: { findAllComponents: (q: { name: string }) => Array<{ vm: { $emit: (e: string, v: unknown) => void } }> }) {
+  const inputs = wrapper.findAllComponents({ name: 'GooglePlacesInput' })
+  inputs[0]!.vm.$emit('update:modelValue', pickup)
+  inputs[1]!.vm.$emit('update:modelValue', dropoff)
+  await new Promise(r => setTimeout(r, 0))
 }
 
 describe('CreateTripFromDemandModal', () => {
@@ -41,6 +56,23 @@ describe('CreateTripFromDemandModal', () => {
     expect(wrapper.text()).toContain('Dakar')
   })
 
+  it('exige les deux lieux et transmet leurs vraies coordonnées', async () => {
+    mockCreateAnnouncement.mockResolvedValue({ id: 'ann-geo', status: 'ACTIVE' })
+    mockStartNegotiation.mockResolvedValue({ id: 'thread-geo' })
+    const Modal = await importModal()
+    const { mount } = await import('@vue/test-utils')
+    const wrapper = mount(Modal, { props: { request: fakeRequest } })
+    await wrapper.find('[data-test="create-trip-date"]').setValue('2026-06-20')
+    expect(wrapper.find('[data-test="create-trip-submit"]').attributes('disabled')).toBeDefined()
+    await fillPlaces(wrapper)
+    await wrapper.find('[data-test="create-trip-submit"]').trigger('click')
+    await new Promise(r => setTimeout(r, 0))
+    expect(mockCreateAnnouncement).toHaveBeenCalledWith(expect.objectContaining({
+      pickupAddress: { label: pickup.label, lat: 48.86, lng: 2.33 },
+      deliveryAddress: { label: dropoff.label, lat: 14.69, lng: -17.44 },
+    }))
+  })
+
   it('pre-fills suggested price as budgetPerKg × weightKg', async () => {
     const Modal = await importModal()
     const { mount } = await import('@vue/test-utils')
@@ -55,6 +87,7 @@ describe('CreateTripFromDemandModal', () => {
     const Modal = await importModal()
     const { mount } = await import('@vue/test-utils')
     const wrapper = mount(Modal, { props: { request: fakeRequest } })
+    await fillPlaces(wrapper)
     await wrapper.find('[data-test="create-trip-date"]').setValue('2026-06-20')
     await wrapper.find('[data-test="create-trip-submit"]').trigger('click')
     await new Promise(r => setTimeout(r, 0))
@@ -88,6 +121,7 @@ describe('CreateTripFromDemandModal', () => {
     })
     expect(wrapper.find('[data-test="create-trip-price"]').text().replace(/[\s  ]/g, '')).toBe('100000FCFA')
     expect(wrapper.text()).not.toContain('€')
+    await fillPlaces(wrapper)
     await wrapper.find('[data-test="create-trip-date"]').setValue('2026-06-20')
     await wrapper.find('[data-test="create-trip-submit"]').trigger('click')
     await new Promise(r => setTimeout(r, 0))
@@ -99,15 +133,15 @@ describe('CreateTripFromDemandModal', () => {
     expect(mockStartNegotiation).toHaveBeenCalledWith(expect.objectContaining({ proposedPriceEur: 100000 }))
   })
 
-  it('plafonne le prix proposé à 500 € mis à l’échelle de la devise', async () => {
+  it('ne plafonne plus le prix proposé à 500 € : seul le budget de l’expéditeur borne', async () => {
     const Modal = await importModal()
     const { mount } = await import('@vue/test-utils')
-    // 20 000 F CFA/kg × 20 kg = 400 000 F CFA, au-dessus du plafond de 327 979 F CFA.
+    // 20 000 F CFA/kg × 20 kg = 400 000 F CFA, plus de plafond métier (dony-back #315).
     const wrapper = mount(Modal, {
       props: { request: { ...fakeRequest, currency: 'XOF', budgetPerKg: 20000, weightKg: 20 } },
     })
-    expect(wrapper.find('[data-test="create-trip-price"]').text().replace(/[\s  ]/g, '')).toBe('327979FCFA')
-    expect(wrapper.text().replace(/[\s  ]/g, '')).toContain('Max327979FCFA')
+    expect(wrapper.find('[data-test="create-trip-price"]').text().replace(/[\s  ]/g, '')).toBe('400000FCFA')
+    expect(wrapper.text().replace(/[\s  ]/g, '')).toContain('Max400000FCFA')
   })
 
   it('affiche le message du serveur quand la création du trajet est refusée', async () => {
@@ -117,6 +151,7 @@ describe('CreateTripFromDemandModal', () => {
     const Modal = await importModal()
     const { mount } = await import('@vue/test-utils')
     const wrapper = mount(Modal, { props: { request: fakeRequest } })
+    await fillPlaces(wrapper)
     await wrapper.find('[data-test="create-trip-date"]').setValue('2026-06-20')
     await wrapper.find('[data-test="create-trip-submit"]').trigger('click')
     await new Promise(r => setTimeout(r, 0))

@@ -183,6 +183,14 @@ describe('tripsService', () => {
     expect(result.reservedRevenueEuros).toBe(79)
   })
 
+  it('getAnnouncement reprend la date d\'arrivée du backend, null quand elle est absente', async () => {
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    mockApiFn.mockResolvedValue({ ...fakeDetailBase(), arrivalDate: '2026-08-02' })
+    expect((await tripsService().getAnnouncement('trip-42')).arrivalDate).toBe('2026-08-02')
+    mockApiFn.mockResolvedValue(fakeDetailBase())
+    expect((await tripsService().getAnnouncement('trip-42')).arrivalDate).toBeNull()
+  })
+
   it('getAnnouncement derives cashAccepted from acceptedPaymentMethods when the flag is absent (regression)', async () => {
     const fakeDetail = {
       id: 'trip-cash', travelerId: 'user-1', departureCity: 'Lyon', arrivalCity: 'Bamako',
@@ -468,7 +476,48 @@ describe('tripsService', () => {
     await svc.postTrackingEvent('bid-99', 'DEPART')
     expect(mockApiFn).toHaveBeenCalledWith('/tracking/events', {
       method: 'POST',
-      body: { bidId: 'bid-99', eventType: 'DEPART' },
+      body: { bidId: 'bid-99', eventType: 'DEPART', scanMethod: 'MANUAL' },
     })
+  })
+
+  it('rescheduleAnnouncement POSTe sur /announcements/{id}/reschedule', async () => {
+    const result = { rescheduleCount: 1, remainingReschedules: 1, parcelsAwaitingDecision: 0, requestsInformed: 0 }
+    mockApiFn.mockResolvedValue(result)
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const body = {
+      departureDate: '2026-12-10', departureTime: '22:00', arrivalDate: null, arrivalTime: null,
+      handoverDeadline: '2026-12-09T23:59:00.000Z', reason: 'POSTPONED' as const, note: 'Vol décalé',
+    }
+    await expect(tripsService().rescheduleAnnouncement('trip-7', body)).resolves.toEqual(result)
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/trip-7/reschedule', { method: 'POST', body })
+  })
+
+  it('getAnnouncement reprend les reports restants servis au voyageur', async () => {
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    mockApiFn.mockResolvedValue({ ...fakeDetailBase(), remainingReschedules: 1 })
+    expect((await tripsService().getAnnouncement('trip-42')).remainingReschedules).toBe(1)
+    mockApiFn.mockResolvedValue(fakeDetailBase())
+    expect((await tripsService().getAnnouncement('trip-42')).remainingReschedules).toBeNull()
+  })
+
+  it('getAnnouncementInsights lit GET /announcements/{id}/insights', async () => {
+    mockApiFn.mockResolvedValue({ uniqueViewerCount: 4, shareViewCount: 1 })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    await expect(tripsService().getAnnouncementInsights('trip-3')).resolves.toEqual({ uniqueViewerCount: 4, shareViewCount: 1 })
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/trip-3/insights', {})
+  })
+
+  it('getAnnouncementBids reprend destinataire et report en attente de décision', async () => {
+    const bid = {
+      id: 'b1', announcementId: 'trip-1', senderId: 's1', senderName: 'Fatou', weightKg: 5, pricePerKg: 8,
+      status: 'ACCEPTED', currency: 'EUR', createdAt: '2026-07-01T10:00:00',
+      recipientName: 'Moussa', recipientAppStatus: 'CONFIRMED', reschedule: { decisionPending: true },
+    }
+    mockApiFn.mockImplementation((url: string) =>
+      Promise.resolve(url.endsWith('/bids') ? [bid, { ...bid, id: 'b2', recipientName: null, recipientAppStatus: null, reschedule: null }] : {}))
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const [first, second] = await tripsService().getAnnouncementBids('trip-1')
+    expect(first).toMatchObject({ recipientName: 'Moussa', recipientAppStatus: 'CONFIRMED', rescheduleDecisionPending: true })
+    expect(second).toMatchObject({ recipientName: null, recipientAppStatus: null, rescheduleDecisionPending: false })
   })
 })

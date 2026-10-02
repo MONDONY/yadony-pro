@@ -48,3 +48,34 @@ describe('payoutService', () => {
     expect(mockApiFn).toHaveBeenCalledWith('/payments/connect/refresh', { method: 'POST' })
   })
 })
+
+describe('payoutService — mobile money', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.resetModules()
+    mockApiFn.mockResolvedValue({})
+  })
+
+  async function svc() {
+    const mod = await import('@/features/payout/services/payoutService')
+    return mod.payoutService()
+  }
+
+  it('lit le compte, cherche les réseaux par POST et active avec numéro et réseaux', async () => {
+    const s = await svc()
+    await s.fetchMobileMoneyAccount()
+    await s.lookupMobileMoneyProviders('+221771234567')
+    await s.activateMobileMoney('+221771234567', ['WAVE_SEN'])
+    expect(mockApiFn).toHaveBeenCalledWith('/payments/mobile-money/account')
+    expect(mockApiFn).toHaveBeenCalledWith('/payments/mobile-money/providers', { method: 'POST', body: { phoneNumber: '+221771234567' } })
+    expect(mockApiFn).toHaveBeenCalledWith('/payments/mobile-money/account', { method: 'POST', body: { phoneNumber: '+221771234567', providers: ['WAVE_SEN'] } })
+  })
+
+  it('met à jour les réseaux par PUT et désactive par DELETE', async () => {
+    const s = await svc()
+    await s.updateMobileMoneyProviders(['WAVE_SEN', 'ORANGE_SEN'])
+    await s.disableMobileMoney()
+    expect(mockApiFn).toHaveBeenCalledWith('/payments/mobile-money/account/providers', { method: 'PUT', body: { providers: ['WAVE_SEN', 'ORANGE_SEN'] } })
+    expect(mockApiFn).toHaveBeenCalledWith('/payments/mobile-money/account', { method: 'DELETE' })
+  })
+})
