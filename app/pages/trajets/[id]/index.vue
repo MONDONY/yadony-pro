@@ -34,8 +34,8 @@ const loadingBidId = ref<string | null>(null)
 
 const {
   trip, bids, insights, isLoading, bidsLoading, error,
-  deleteLoading, rescheduleLoading, rescheduleError, publishLoading, publishError, publishErrorCode, kpis,
-  fetchTrip, fetchBids, fetchInsights, deleteTrip, publishTrip, rescheduleTrip, acceptBid, rejectBid, confirmDelivery,
+  deleteLoading, rescheduleLoading, rescheduleError, recipientChatError, publishLoading, publishError, publishErrorCode, kpis,
+  fetchTrip, fetchBids, fetchInsights, deleteTrip, publishTrip, rescheduleTrip, openRecipientChat, acceptBid, rejectBid, confirmDelivery,
   acceptBidNegotiation, rejectBidNegotiation, counterBidNegotiation,
   confirmPresence, refuseParcel, cancelBid, markTrackingEvent,
   reportNoShow, cancelAfterHandover, confirmReturn, exportBidsCsv,
@@ -178,6 +178,10 @@ function onExportCsv() {
         @reschedule="rescheduleError = null; showRescheduleModal = true"
       />
 
+      <p v-if="recipientChatError" class="rounded-card border border-danger/40 bg-danger/10 p-3 text-sm text-danger" data-test="recipient-chat-error">
+        {{ recipientChatError }}
+      </p>
+
       <!-- Bilan du report -->
       <div
         v-if="rescheduleResult"
@@ -268,6 +272,7 @@ function onExportCsv() {
         @cancel-after-handover="onCancelAfterHandover"
         @confirm-return="onConfirmReturn"
         @tracking-event="onTrackingEvent"
+        @open-recipient-chat="openRecipientChat"
         @export-csv="onExportCsv"
       />
 

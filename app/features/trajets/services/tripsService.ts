@@ -99,6 +99,9 @@ interface BackendBidResponse {
   /** Brut expéditeur et net voyageur calculés par le backend (BidResponse). */
   totalSenderAmountEur?: number | null
   totalNetAmountEur?: number | null
+  recipientName?: string | null
+  recipientAppStatus?: string | null
+  reschedule?: { decisionPending?: boolean } | null
 }
 
 interface BackendPage {
@@ -187,6 +190,9 @@ function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number):
     negotiationCanCounter: b.canCounter ?? undefined,
     negotiationCurrency: currency,
     negotiationProposedGrossEuros: proposedGrossEuros ?? undefined,
+    recipientName: b.recipientName ?? null,
+    recipientAppStatus: b.recipientAppStatus ?? null,
+    rescheduleDecisionPending: b.reschedule?.decisionPending === true,
     createdAt: b.createdAt,
   }
 }

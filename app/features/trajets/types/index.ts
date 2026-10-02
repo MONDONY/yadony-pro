@@ -281,6 +281,12 @@ export interface TripBid {
   negotiationCanCounter?: boolean
   negotiationCurrency?: string
   negotiationProposedGrossEuros?: number
+  /** Destinataire du colis (nom saisi par l'expéditeur) ; masqué ou absent selon le statut. */
+  recipientName?: string | null
+  /** CONFIRMED quand le destinataire suit le colis dans l'app : une conversation avec lui est possible. */
+  recipientAppStatus?: string | null
+  /** Le trajet a été reporté et l'expéditeur n'a pas encore choisi de garder ou quitter le colis. */
+  rescheduleDecisionPending?: boolean
   createdAt: string
 }
 

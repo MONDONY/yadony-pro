@@ -506,4 +506,18 @@ describe('tripsService', () => {
     await expect(tripsService().getAnnouncementInsights('trip-3')).resolves.toEqual({ uniqueViewerCount: 4, shareViewCount: 1 })
     expect(mockApiFn).toHaveBeenCalledWith('/announcements/trip-3/insights', {})
   })
+
+  it('getAnnouncementBids reprend destinataire et report en attente de décision', async () => {
+    const bid = {
+      id: 'b1', announcementId: 'trip-1', senderId: 's1', senderName: 'Fatou', weightKg: 5, pricePerKg: 8,
+      status: 'ACCEPTED', currency: 'EUR', createdAt: '2026-07-01T10:00:00',
+      recipientName: 'Moussa', recipientAppStatus: 'CONFIRMED', reschedule: { decisionPending: true },
+    }
+    mockApiFn.mockImplementation((url: string) =>
+      Promise.resolve(url.endsWith('/bids') ? [bid, { ...bid, id: 'b2', recipientName: null, recipientAppStatus: null, reschedule: null }] : {}))
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const [first, second] = await tripsService().getAnnouncementBids('trip-1')
+    expect(first).toMatchObject({ recipientName: 'Moussa', recipientAppStatus: 'CONFIRMED', rescheduleDecisionPending: true })
+    expect(second).toMatchObject({ recipientName: null, recipientAppStatus: null, rescheduleDecisionPending: false })
+  })
 })

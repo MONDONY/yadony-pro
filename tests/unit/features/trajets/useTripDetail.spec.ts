@@ -35,6 +35,11 @@ const mockCancellationSvc = {
   confirmReturn: vi.fn(),
 }
 
+const mockConversations = { getRecipientConversation: vi.fn() }
+vi.mock('@/features/messagerie/services/conversationsService', () => ({
+  conversationsService: () => mockConversations,
+}))
+
 vi.mock('@/features/cancellation/services/cancellationService', () => ({
   cancellationService: () => mockCancellationSvc,
 }))
@@ -468,6 +473,28 @@ describe('useTripDetail', () => {
       await fetchTrip()
       await fetchInsights()
       expect(insights.value).toBeNull()
+      expect(error.value).toBeNull()
+    })
+  })
+
+  describe('openRecipientChat', () => {
+    it('ouvre la conversation avec le destinataire du colis', async () => {
+      mockConversations.getRecipientConversation.mockResolvedValue({ id: 'conv-9' })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { openRecipientChat, recipientChatError } = useTripDetail('trip-1')
+      await expect(openRecipientChat('bid-1')).resolves.toBe(true)
+      expect(mockConversations.getRecipientConversation).toHaveBeenCalledWith('bid-1')
+      expect(pushMock).toHaveBeenCalledWith('/messages/conv-9')
+      expect(recipientChatError.value).toBeNull()
+    })
+
+    it('signale l\'échec sans casser la page du trajet', async () => {
+      mockConversations.getRecipientConversation.mockRejectedValue({ status: 403 })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { openRecipientChat, recipientChatError, error } = useTripDetail('trip-1')
+      await expect(openRecipientChat('bid-1')).resolves.toBe(false)
+      expect(pushMock).not.toHaveBeenCalled()
+      expect(recipientChatError.value).toMatch(/Impossible d'ouvrir/)
       expect(error.value).toBeNull()
     })
   })

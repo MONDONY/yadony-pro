@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { roundToCurrency } from '@/lib/money'
 import { useRouter } from 'vue-router'
 import { tripsService } from '@/features/trajets/services/tripsService'
+import { conversationsService } from '@/features/messagerie/services/conversationsService'
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
 import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import { extractProblem } from '@/lib/apiError'
@@ -39,11 +40,13 @@ export function useTripDetail(tripId: string) {
   const publishErrorCode = ref<string | null>(null)
   const commissionRate = ref(FALLBACK_COMMISSION_RATE)
   const insights = ref<TripInsights | null>(null)
+  const recipientChatError = ref<string | null>(null)
   const rescheduleLoading = ref(false)
   const rescheduleError = ref<string | null>(null)
 
   const svc = tripsService()
   const cancellationSvc = cancellationService()
+  const conversationsSvc = conversationsService()
   const router = useRouter()
   const { getRate } = useCommissionRate()
 
@@ -129,6 +132,19 @@ export function useTripDetail(tripId: string) {
       return null
     } finally {
       rescheduleLoading.value = false
+    }
+  }
+
+  /** Ouvre la conversation avec le destinataire du colis ; false si elle n'est pas disponible. */
+  async function openRecipientChat(bidId: string): Promise<boolean> {
+    recipientChatError.value = null
+    try {
+      const conversation = await conversationsSvc.getRecipientConversation(bidId)
+      await router.push(`/messages/${conversation.id}`)
+      return true
+    } catch {
+      recipientChatError.value = "Impossible d'ouvrir la conversation avec le destinataire."
+      return false
     }
   }
 
@@ -278,6 +294,7 @@ export function useTripDetail(tripId: string) {
     publishErrorCode,
     rescheduleLoading,
     rescheduleError,
+    recipientChatError,
     kpis,
     fetchTrip,
     fetchBids,
@@ -285,6 +302,7 @@ export function useTripDetail(tripId: string) {
     deleteTrip,
     publishTrip,
     rescheduleTrip,
+    openRecipientChat,
     acceptBid,
     rejectBid,
     acceptBidNegotiation,
