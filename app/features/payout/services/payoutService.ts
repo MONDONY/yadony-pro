@@ -1,5 +1,7 @@
 import { useApi } from '@/composables/useApi'
-import type { ConnectAccount, OnboardingLink } from '@/features/payout/types/index'
+import type {
+  ConnectAccount, MobileMoneyAccount, MobileMoneyProviderCatalogue, OnboardingLink,
+} from '@/features/payout/types/index'
 
 export function payoutService() {
   const api = useApi()
@@ -20,5 +22,41 @@ export function payoutService() {
     return api<ConnectAccount>('/payments/connect/refresh', { method: 'POST' })
   }
 
-  return { fetchAccount, createAccount, createOnboardingLink, refreshAccount }
+  // ── Versement mobile money ────────────────────────────────────────────────
+
+  async function fetchMobileMoneyAccount(): Promise<MobileMoneyAccount> {
+    return api<MobileMoneyAccount>('/payments/mobile-money/account')
+  }
+
+  /** POST : le numéro voyage dans le corps, jamais dans l'URL. */
+  async function lookupMobileMoneyProviders(phoneNumber: string): Promise<MobileMoneyProviderCatalogue> {
+    return api<MobileMoneyProviderCatalogue>('/payments/mobile-money/providers', {
+      method: 'POST',
+      body: { phoneNumber },
+    })
+  }
+
+  async function activateMobileMoney(phoneNumber: string, providers: string[]): Promise<MobileMoneyAccount> {
+    return api<MobileMoneyAccount>('/payments/mobile-money/account', {
+      method: 'POST',
+      body: { phoneNumber, providers },
+    })
+  }
+
+  async function updateMobileMoneyProviders(providers: string[]): Promise<MobileMoneyAccount> {
+    return api<MobileMoneyAccount>('/payments/mobile-money/account/providers', {
+      method: 'PUT',
+      body: { providers },
+    })
+  }
+
+  async function disableMobileMoney(): Promise<MobileMoneyAccount> {
+    return api<MobileMoneyAccount>('/payments/mobile-money/account', { method: 'DELETE' })
+  }
+
+  return {
+    fetchAccount, createAccount, createOnboardingLink, refreshAccount,
+    fetchMobileMoneyAccount, lookupMobileMoneyProviders, activateMobileMoney,
+    updateMobileMoneyProviders, disableMobileMoney,
+  }
 }

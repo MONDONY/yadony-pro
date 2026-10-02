@@ -8,6 +8,7 @@ import ProfileInfoCard from '@/features/parametres/components/ProfileInfoCard.vu
 import BusinessPreferencesForm from '@/features/parametres/components/BusinessPreferencesForm.vue'
 import KycStatusCard from '@/features/kyc/components/KycStatusCard.vue'
 import PayoutCard from '@/features/payout/components/PayoutCard.vue'
+import MobileMoneyPayoutCard from '@/features/payout/components/MobileMoneyPayoutCard.vue'
 import WalletCard from '@/features/wallet/components/WalletCard.vue'
 import CashCommissionCard from '@/features/cash/components/CashCommissionCard.vue'
 import type { BusinessPreferences } from '@/features/parametres/types/index'
@@ -89,6 +90,8 @@ async function onSetupPayout() {
       @setup="onSetupPayout"
       @refresh="refreshPayout"
     />
+
+    <MobileMoneyPayoutCard />
 
     <WalletCard />
 
