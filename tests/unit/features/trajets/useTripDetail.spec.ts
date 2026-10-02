@@ -22,6 +22,7 @@ const mockSvc = {
   updateAnnouncement: vi.fn(),
   publishAnnouncement: vi.fn(),
   rescheduleAnnouncement: vi.fn(),
+  getAnnouncementInsights: vi.fn(),
 }
 
 vi.mock('@/features/trajets/services/tripsService', () => ({
@@ -434,6 +435,40 @@ describe('useTripDetail', () => {
       const { rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
       await rescheduleTrip(payload)
       expect(rescheduleError.value).toBe('Message serveur')
+    })
+  })
+
+  describe('fetchInsights', () => {
+    it('charge l\'audience d\'un trajet publié', async () => {
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'ACTIVE' })
+      mockSvc.getAnnouncementInsights.mockResolvedValue({ uniqueViewerCount: 12, shareViewCount: 3 })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { fetchTrip, fetchInsights, insights } = useTripDetail('trip-1')
+      await fetchTrip()
+      await fetchInsights()
+      expect(mockSvc.getAnnouncementInsights).toHaveBeenCalledWith('trip-1')
+      expect(insights.value).toEqual({ uniqueViewerCount: 12, shareViewCount: 3 })
+    })
+
+    it('ne demande rien pour un brouillon', async () => {
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'DRAFT' })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { fetchTrip, fetchInsights, insights } = useTripDetail('trip-1')
+      await fetchTrip()
+      await fetchInsights()
+      expect(mockSvc.getAnnouncementInsights).not.toHaveBeenCalled()
+      expect(insights.value).toBeNull()
+    })
+
+    it('reste silencieux quand l\'appel échoue', async () => {
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'ACTIVE' })
+      mockSvc.getAnnouncementInsights.mockRejectedValue(new Error('500'))
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { fetchTrip, fetchInsights, insights, error } = useTripDetail('trip-1')
+      await fetchTrip()
+      await fetchInsights()
+      expect(insights.value).toBeNull()
+      expect(error.value).toBeNull()
     })
   })
 })

@@ -12,6 +12,7 @@ import type {
   CreateAnnouncementPayload,
   RescheduleTripPayload,
   RescheduleTripResult,
+  TripInsights,
 } from '@/features/trajets/types/index'
 
 export interface ListTripsParams {
@@ -252,6 +253,10 @@ export function tripsService() {
     return mapBackendToTrip(result)
   }
 
+  async function getAnnouncementInsights(id: string): Promise<TripInsights> {
+    return api<TripInsights>(`/announcements/${id}/insights`, {})
+  }
+
   async function rescheduleAnnouncement(id: string, payload: RescheduleTripPayload): Promise<RescheduleTripResult> {
     return api<RescheduleTripResult>(`/announcements/${id}/reschedule`, { method: 'POST', body: payload })
   }
@@ -340,7 +345,7 @@ export function tripsService() {
 
   return {
     listTrips, getCorridors, createAnnouncement, publishAnnouncement, getTemplates, getAnnouncement,
-    updateAnnouncement, rescheduleAnnouncement, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
+    updateAnnouncement, rescheduleAnnouncement, getAnnouncementInsights, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
     counterBidNegotiation, acceptBidNegotiation, rejectBidNegotiation,
     confirmDelivery, confirmPresence, refuseParcel, uploadRefusalPhoto, cancelBid,
     postTrackingEvent, getTrackingEvents, getQrCode,

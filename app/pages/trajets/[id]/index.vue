@@ -33,9 +33,9 @@ const rescheduleResult = ref<RescheduleTripResult | null>(null)
 const loadingBidId = ref<string | null>(null)
 
 const {
-  trip, bids, isLoading, bidsLoading, error,
+  trip, bids, insights, isLoading, bidsLoading, error,
   deleteLoading, rescheduleLoading, rescheduleError, publishLoading, publishError, publishErrorCode, kpis,
-  fetchTrip, fetchBids, deleteTrip, publishTrip, rescheduleTrip, acceptBid, rejectBid, confirmDelivery,
+  fetchTrip, fetchBids, fetchInsights, deleteTrip, publishTrip, rescheduleTrip, acceptBid, rejectBid, confirmDelivery,
   acceptBidNegotiation, rejectBidNegotiation, counterBidNegotiation,
   confirmPresence, refuseParcel, cancelBid, markTrackingEvent,
   reportNoShow, cancelAfterHandover, confirmReturn, exportBidsCsv,
@@ -52,7 +52,7 @@ async function withBidLoading(bidId: string, fn: () => Promise<void>) {
 
 onMounted(async () => {
   await fetchTrip()
-  await fetchBids()
+  await Promise.all([fetchBids(), fetchInsights()])
 })
 
 async function onDeleteConfirm() {
@@ -248,7 +248,7 @@ function onExportCsv() {
       </div>
 
       <!-- Tab content -->
-      <TripDetailOverview v-if="activeTab === 'overview'" :trip="trip" />
+      <TripDetailOverview v-if="activeTab === 'overview'" :trip="trip" :insights="insights" />
 
       <TripDetailBids
         v-else-if="activeTab === 'bids'"

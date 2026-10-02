@@ -73,6 +73,27 @@ describe('RescheduleTripModal', () => {
   })
 })
 
+import TripDetailOverview from '@/features/trajets/components/TripDetailOverview.vue'
+
+describe('TripDetailOverview — audience', () => {
+  it('affiche les personnes uniques et les vues via lien partagé', () => {
+    const w = mount(TripDetailOverview, { props: { trip: baseTrip, insights: { uniqueViewerCount: 12, shareViewCount: 3 } } })
+    expect(w.find('[data-test="audience-unique"]').text()).toBe('12')
+    expect(w.find('[data-test="audience-share"]').text()).toContain('3')
+  })
+
+  it('accorde le singulier et masque le partage à zéro', () => {
+    const w = mount(TripDetailOverview, { props: { trip: baseTrip, insights: { uniqueViewerCount: 1, shareViewCount: 0 } } })
+    expect(w.find('[data-test="trip-audience"]').text()).toContain('1 personne a vu ce trajet')
+    expect(w.find('[data-test="audience-share"]').exists()).toBe(false)
+  })
+
+  it('n\'affiche pas le bloc sans données', () => {
+    const w = mount(TripDetailOverview, { props: { trip: baseTrip } })
+    expect(w.find('[data-test="trip-audience"]').exists()).toBe(false)
+  })
+})
+
 describe('TripDetailHeader — bouton Reporter', () => {
   const stubs = { NuxtLink: { template: '<a><slot /></a>' } }
 

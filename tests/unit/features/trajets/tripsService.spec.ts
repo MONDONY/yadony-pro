@@ -499,4 +499,11 @@ describe('tripsService', () => {
     mockApiFn.mockResolvedValue(fakeDetailBase())
     expect((await tripsService().getAnnouncement('trip-42')).remainingReschedules).toBeNull()
   })
+
+  it('getAnnouncementInsights lit GET /announcements/{id}/insights', async () => {
+    mockApiFn.mockResolvedValue({ uniqueViewerCount: 4, shareViewCount: 1 })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    await expect(tripsService().getAnnouncementInsights('trip-3')).resolves.toEqual({ uniqueViewerCount: 4, shareViewCount: 1 })
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/trip-3/insights', {})
+  })
 })

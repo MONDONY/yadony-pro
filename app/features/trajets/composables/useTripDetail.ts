@@ -5,7 +5,7 @@ import { tripsService } from '@/features/trajets/services/tripsService'
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
 import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import { extractProblem } from '@/lib/apiError'
-import type { RescheduleTripPayload, RescheduleTripResult, Trip, TripBid, TripKpis } from '@/features/trajets/types/index'
+import type { RescheduleTripPayload, RescheduleTripResult, Trip, TripBid, TripInsights, TripKpis } from '@/features/trajets/types/index'
 
 const publishErrorMessages: Record<string, string> = {
   'kyc-not-verified': 'Vérifiez votre identité avant de publier ce trajet.',
@@ -38,6 +38,7 @@ export function useTripDetail(tripId: string) {
   const publishError = ref<string | null>(null)
   const publishErrorCode = ref<string | null>(null)
   const commissionRate = ref(FALLBACK_COMMISSION_RATE)
+  const insights = ref<TripInsights | null>(null)
   const rescheduleLoading = ref(false)
   const rescheduleError = ref<string | null>(null)
 
@@ -57,6 +58,19 @@ export function useTripDetail(tripId: string) {
       error.value = 'Impossible de charger ce trajet.'
     } finally {
       isLoading.value = false
+    }
+  }
+
+  /** Audience du trajet : accessoire, un échec n'affiche simplement pas le bloc. */
+  async function fetchInsights(): Promise<void> {
+    if (trip.value?.status === 'DRAFT') {
+      insights.value = null
+      return
+    }
+    try {
+      insights.value = await svc.getAnnouncementInsights(tripId)
+    } catch {
+      insights.value = null
     }
   }
 
@@ -254,6 +268,7 @@ export function useTripDetail(tripId: string) {
   return {
     trip,
     bids,
+    insights,
     isLoading,
     bidsLoading,
     error,
@@ -266,6 +281,7 @@ export function useTripDetail(tripId: string) {
     kpis,
     fetchTrip,
     fetchBids,
+    fetchInsights,
     deleteTrip,
     publishTrip,
     rescheduleTrip,

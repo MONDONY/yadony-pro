@@ -133,6 +133,14 @@ export interface SaveTripRecurrencePayload {
   active: boolean
 }
 
+/** Audience d'un trajet publié (`GET /announcements/{id}/insights`). */
+export interface TripInsights {
+  /** Personnes distinctes qui ont ouvert le trajet. */
+  uniqueViewerCount: number
+  /** Parmi elles, celles arrivées par un lien partagé. */
+  shareViewCount: number
+}
+
 export type RescheduleReason = 'FLIGHT_CANCELLED' | 'POSTPONED' | 'OTHER'
 
 export interface RescheduleTripPayload {
