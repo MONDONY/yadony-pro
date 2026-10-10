@@ -111,4 +111,73 @@ describe('PhoneNumberForm', () => {
     resolveSendOtp()
     await wrapper.vm.$nextTick()
   })
+
+  describe('FLUTTER-JD : numéros hors France', () => {
+    async function submitWith(wrapper: ReturnType<typeof mount>, value: string) {
+      await wrapper.find('input[type="tel"]').setValue(value)
+      await wrapper.find('form').trigger('submit')
+      await wrapper.vm.$nextTick()
+    }
+
+    it('accepte un numéro américain collé en +1 et bascule le sélecteur', async () => {
+      const wrapper = mount(PhoneNumberForm)
+      await submitWith(wrapper, '+1 713 555 0100')
+      expect(sendOtpMock).toHaveBeenCalledWith('+17135550100', 'recaptcha-container')
+      expect(wrapper.text()).toContain('🇺🇸')
+    })
+
+    it('convertit 0033 en +33', async () => {
+      const wrapper = mount(PhoneNumberForm)
+      await submitWith(wrapper, '0033 6 12 34 56 78')
+      expect(sendOtpMock).toHaveBeenCalledWith('+33612345678', 'recaptcha-container')
+    })
+
+    it('retire le 0 national français', async () => {
+      const wrapper = mount(PhoneNumberForm)
+      await submitWith(wrapper, '06 12 34 56 78')
+      expect(sendOtpMock).toHaveBeenCalledWith('+33612345678', 'recaptcha-container')
+    })
+
+    it('garde le 0 ivoirien', async () => {
+      const wrapper = mount(PhoneNumberForm)
+      await wrapper.findAll('[data-test="country-chip"]')[2]!.trigger('click') // CI
+      await submitWith(wrapper, '07 48 84 08 74')
+      expect(sendOtpMock).toHaveBeenCalledWith('+2250748840874', 'recaptcha-container')
+    })
+
+    it('accepte un numéro canadien choisi dans la liste', async () => {
+      const wrapper = mount(PhoneNumberForm)
+      await wrapper.find('button[aria-haspopup="listbox"]').trigger('click')
+      await wrapper.find('[data-test="country-search"]').setValue('canada')
+      await wrapper.find('li[role="option"]').trigger('click')
+      expect(wrapper.find('input[type="tel"]').attributes('placeholder')).toBe('514 555 0123')
+      await submitWith(wrapper, '514 555 0123')
+      expect(sendOtpMock).toHaveBeenCalledWith('+15145550123', 'recaptcha-container')
+    })
+
+    it('garde le Canada choisi quand on colle un numéro en +1', async () => {
+      const wrapper = mount(PhoneNumberForm)
+      await wrapper.find('button[aria-haspopup="listbox"]').trigger('click')
+      await wrapper.find('[data-test="country-search"]').setValue('canada')
+      await wrapper.find('li[role="option"]').trigger('click')
+      await submitWith(wrapper, '+1 514 555 0123')
+      expect(wrapper.text()).toContain('🇨🇦')
+      expect(sendOtpMock).toHaveBeenCalledWith('+15145550123', 'recaptcha-container')
+    })
+
+    it('ne bascule pas le sélecteur pour un indicatif inconnu, et refuse le numéro', async () => {
+      const wrapper = mount(PhoneNumberForm)
+      await submitWith(wrapper, '+33+1713')
+      expect(wrapper.text()).toContain('🇫🇷')
+      expect(wrapper.text()).toContain('Numéro invalide (ex : 06 12 34 56 78)')
+      expect(sendOtpMock).not.toHaveBeenCalled()
+    })
+
+    it('refuse un numéro contenant des lettres', async () => {
+      const wrapper = mount(PhoneNumberForm)
+      await submitWith(wrapper, '06 12 AB 56 78')
+      expect(wrapper.text()).toContain('Numéro invalide')
+      expect(sendOtpMock).not.toHaveBeenCalled()
+    })
+  })
 })
