@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/stores/auth'
 import { getDeviceId } from '@/lib/deviceId'
+import { isMaintenanceProblem, useMaintenanceStore } from '@/stores/maintenance'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let apiInstance: any = null
@@ -26,6 +27,11 @@ export function useApi(): ReturnType<typeof $fetch.create> {
       options.headers = headers
     },
     onResponseError({ response }) {
+      // Mode maintenance : la page de maintenance recouvre le portail.
+      if (isMaintenanceProblem(response.status, response._data)) {
+        useMaintenanceStore().showFromProblem(response._data)
+        return
+      }
       if (response.status === 401) {
         auth.clear()
         navigateTo('/login')

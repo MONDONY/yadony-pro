@@ -114,6 +114,23 @@ describe('useApi', () => {
     expect(navigateToMock).not.toHaveBeenCalled()
   })
 
+  it('onResponseError on 503 maintenance shows the maintenance page without logging out', async () => {
+    const { useMaintenanceStore } = await import('@/stores/maintenance')
+    const auth = useAuthStore()
+    auth.setSession('token', {
+      id: 'u', phoneNumber: '+33', displayName: 'X',
+      isProAccount: true, roles: ['ROLE_TRAVELER'], avatarUrl: null,
+    })
+    const { useApi } = await import('@/composables/useApi')
+    useApi()
+    capturedOpts!.onResponseError({
+      response: { status: 503, _data: { code: 'maintenance', estimatedEndAt: '2026-10-16T14:30:00Z' } },
+    } as unknown as { response: { status: number } })
+    expect(useMaintenanceStore().active).toBe(true)
+    expect(useMaintenanceStore().estimatedEndAt).toBe('2026-10-16T14:30:00Z')
+    expect(auth.isAuthenticated).toBe(true)
+  })
+
   it('returns the same cached instance on second call', async () => {
     const { useApi } = await import('@/composables/useApi')
     const first = useApi()
