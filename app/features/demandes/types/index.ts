@@ -31,7 +31,8 @@ export interface SenderProfile {
   avatarUrl: string | null
   kycVerified: boolean
   isProAccount: boolean
-  isKiloPro: boolean
+  /** Badge GP Pro (voyageur régulier reconnu par l'équipe Yadony). Absent sur un back antérieur : vaut false. */
+  gpPro?: boolean
   completedBidsCount: number
   averageRating: number
   ratingCount: number

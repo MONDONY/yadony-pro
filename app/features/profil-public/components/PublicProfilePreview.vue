@@ -44,11 +44,12 @@ const memberSinceLabel = computed(() => {
 
     <div class="flex flex-wrap items-center gap-2 mt-4">
       <span
-        v-if="profile.isKiloPro"
+        v-if="profile.gpPro === true"
         class="inline-flex items-center gap-1 text-xs font-semibold bg-warning/15 text-warning px-2.5 py-1 rounded-full"
-        data-test="pp-kilopro"
+        data-test="pp-gppro"
+        title="Voyageur régulier reconnu par l'équipe Yadony"
       >
-        <Award class="w-3.5 h-3.5" /> Kilo Pro
+        <Award class="w-3.5 h-3.5" /> GP Pro
       </span>
       <span
         v-if="profile.kycVerified"
