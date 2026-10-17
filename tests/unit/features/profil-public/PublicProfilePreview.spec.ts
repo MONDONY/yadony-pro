@@ -8,7 +8,7 @@ const base = {
   avatarUrl: null,
   kycVerified: true,
   isProAccount: true,
-  isKiloPro: true,
+  gpPro: true,
   completedBidsCount: 12,
   averageRating: 4.8,
   ratingCount: 9,
@@ -26,17 +26,26 @@ describe('PublicProfilePreview', () => {
     expect(wrapper.find('[data-test="pp-rating"]').text()).toContain('4.8')
   })
 
-  it('highlights the Kilo Pro and KYC badges when present', () => {
+  it('highlights the GP Pro and KYC badges when present', () => {
     const wrapper = mount(PublicProfilePreview, { props: { profile: base } })
-    expect(wrapper.find('[data-test="pp-kilopro"]').exists()).toBe(true)
+    const badge = wrapper.find('[data-test="pp-gppro"]')
+    expect(badge.exists()).toBe(true)
+    expect(badge.text()).toContain('GP Pro')
+    expect(badge.attributes('title')).toBe("Voyageur régulier reconnu par l'équipe Yadony")
     expect(wrapper.find('[data-test="pp-kyc"]').exists()).toBe(true)
   })
 
-  it('hides the Kilo Pro badge and shows "Pas encore noté" without ratings', () => {
+  it('hides the GP Pro badge and shows "Pas encore noté" without ratings', () => {
     const wrapper = mount(PublicProfilePreview, {
-      props: { profile: { ...base, isKiloPro: false, ratingCount: 0 } },
+      props: { profile: { ...base, gpPro: false, ratingCount: 0 } },
     })
-    expect(wrapper.find('[data-test="pp-kilopro"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="pp-gppro"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="pp-rating"]').text()).toContain('Pas encore noté')
+  })
+
+  it('hides the GP Pro badge when an older backend omits gpPro', () => {
+    const { gpPro: _omitted, ...legacy } = base
+    const wrapper = mount(PublicProfilePreview, { props: { profile: legacy } })
+    expect(wrapper.find('[data-test="pp-gppro"]').exists()).toBe(false)
   })
 })

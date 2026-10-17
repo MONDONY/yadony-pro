@@ -13,7 +13,7 @@ async function importComposable() {
 
 const profile = {
   userId: 'u1', displayName: 'Awa', avatarUrl: null, kycVerified: true, isProAccount: true,
-  isKiloPro: true, completedBidsCount: 12, averageRating: 4.8, ratingCount: 9,
+  gpPro: true, completedBidsCount: 12, averageRating: 4.8, ratingCount: 9,
   memberSince: '2025-01-01', badges: [], contactMode: null, responseDelayHours: null,
 }
 
