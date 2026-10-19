@@ -25,10 +25,9 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
-let mockCommissionRate = 0.12
-vi.mock('@/composables/useCommissionRate', () => ({
-  FALLBACK_COMMISSION_RATE: 0.12,
-  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
+let mockGrid: { tiers: unknown[]; minimums: Record<string, number> } | null = null
+vi.mock('@/composables/useCommissionGrid', () => ({
+  useCommissionGrid: () => ({ getGrid: async () => mockGrid }),
 }))
 
 // Devise active du voyageur (préférences métier) : EUR par défaut, XOF dans les
@@ -55,7 +54,7 @@ describe('useAnnouncementForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.resetModules()
-    mockCommissionRate = 0.12
+    mockGrid = null
     mockActiveCurrency = 'EUR'
     setActivePinia(createPinia())
   })
@@ -70,7 +69,7 @@ describe('useAnnouncementForm', () => {
     await Promise.resolve()
     expect(form.currency).toBe('XOF')
     expect(form.pricePerKg).toBe(5000)
-    expect(netPrice.value).toBe(4400)
+    expect(netPrice.value).toBe(5000)
     form.departureCity = validPlace
     form.arrivalCity = validPlace2
     form.departureDate = '2026-06-10'
@@ -578,22 +577,33 @@ describe('useAnnouncementForm', () => {
     }))
   })
 
-  it('netPrice computes 88% of pricePerKg correctly', async () => {
+  it('netPrice est le prix saisi : le prix au kilo du voyageur EST son net', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
     const { form, netPrice } = useAnnouncementForm()
     form.pricePerKg = 8
-    expect(netPrice.value).toBeCloseTo(7.04, 2)
-    form.pricePerKg = 5
-    expect(netPrice.value).toBeCloseTo(4.40, 2)
+    expect(netPrice.value).toBe(8)
+    form.pricePerKg = 5.555
+    expect(netPrice.value).toBe(5.56)
+    form.currency = 'XOF'
+    form.pricePerKg = 5000.4
+    expect(netPrice.value).toBe(5000)
   })
 
-  it('netPrice applique le taux de commission dynamique une fois chargé', async () => {
-    mockCommissionRate = 0.2
+  it('minimumFee est null sans grille en vigueur', async () => {
     const useAnnouncementForm = await importUseAnnouncementForm()
-    const { form, netPrice, commissionRate } = useAnnouncementForm()
-    form.pricePerKg = 10
-    await vi.waitFor(() => expect(commissionRate.value).toBe(0.2))
-    expect(netPrice.value).toBeCloseTo(8, 2) // 10 × (1 − 0,20)
+    const { minimumFee } = useAnnouncementForm()
+    await Promise.resolve()
+    expect(minimumFee.value).toBeNull()
+  })
+
+  it('minimumFee suit la devise du trajet une fois la grille chargée', async () => {
+    mockGrid = { tiers: [{ fromEur: 0, rate: 0.07 }], minimums: { EUR: 1, XOF: 650 } }
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, minimumFee } = useAnnouncementForm()
+    form.currency = 'EUR'
+    await vi.waitFor(() => expect(minimumFee.value).toBe(1))
+    form.currency = 'XOF'
+    expect(minimumFee.value).toBe(650)
   })
 
   it('submitEdit calls updateAnnouncement with tripId and correct payload', async () => {

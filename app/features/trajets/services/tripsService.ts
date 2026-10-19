@@ -1,6 +1,7 @@
 import { useApi } from '@/composables/useApi'
 import { normalizeCurrency, roundToCurrency } from '@/lib/money'
-import { useCommissionRate } from '@/composables/useCommissionRate'
+import { useCommissionContext } from '@/composables/useCommissionContext'
+import { senderTotalFromNet, type CommissionContext } from '@/lib/commissionGrid'
 import type {
   TrackingEvent,
   QrCode,
@@ -151,20 +152,25 @@ function finiteOrNull(value: unknown): number | null {
   return value !== null && value !== undefined && Number.isFinite(n) ? n : null
 }
 
-function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number): TripBid {
+function mapBidResponseToTripBid(b: BackendBidResponse, commission: CommissionContext): TripBid {
   const currency = normalizeCurrency(b.currency)
   const weightKg = Number(b.weightKg) || 0
   const pricePerKg = Number(b.pricePerKg) || 0
   const proposedGrossEuros = typeof b.proposedGrossEur === 'number' ? b.proposedGrossEur : null
-  // Proposition en cours, sinon montants du backend (accord, grille, taux figé),
-  // sinon produit local arrondi à la précision de la devise.
+  // Le prix au kilo d'un bid vu par le voyageur EST son net. Montants du backend
+  // d'abord (accord, grille, commission figée) ; sinon net = prix × poids et total
+  // payé déduit de la grille (ou du taux unique sans grille). Dernier recours, si
+  // rien n'est connu : le net, sans commission affichée (le backend sert toujours
+  // ces montants, ce cas ne couvre qu'une réponse incomplète).
+  const localNet = roundToCurrency(pricePerKg * weightKg, currency)
+  const earningsEuros = typeof b.netEur === 'number'
+    ? b.netEur
+    : (finiteOrNull(b.totalNetAmountEur) ?? localNet)
   const paymentAmountEuros =
     proposedGrossEuros
     ?? finiteOrNull(b.totalSenderAmountEur)
-    ?? roundToCurrency(pricePerKg * weightKg, currency)
-  const earningsEuros = typeof b.netEur === 'number'
-    ? b.netEur
-    : (finiteOrNull(b.totalNetAmountEur) ?? roundToCurrency(paymentAmountEuros * (1 - commissionRate), currency))
+    ?? senderTotalFromNet(earningsEuros, currency, commission)
+    ?? earningsEuros
   const senderName = b.senderName ?? 'Expéditeur'
   const senderInitials = senderName
     .split(' ')
@@ -199,7 +205,7 @@ function mapBidResponseToTripBid(b: BackendBidResponse, commissionRate: number):
 
 export function tripsService() {
   const api = useApi()
-  const { getRate } = useCommissionRate()
+  const { getContext } = useCommissionContext()
 
   async function getCorridors(): Promise<CorridorOption[]> {
     const result = await api<Array<{ departure: string; arrival: string }>>('/announcements/my/corridors', {})
@@ -272,11 +278,11 @@ export function tripsService() {
   }
 
   async function getAnnouncementBids(id: string): Promise<TripBid[]> {
-    const [bids, rate] = await Promise.all([
+    const [bids, commission] = await Promise.all([
       api<BackendBidResponse[]>(`/announcements/${id}/bids`, {}),
-      getRate(),
+      getContext(),
     ])
-    return bids.map((b) => mapBidResponseToTripBid(b, rate))
+    return bids.map((b) => mapBidResponseToTripBid(b, commission))
   }
 
   async function acceptBid(bidId: string): Promise<void> {

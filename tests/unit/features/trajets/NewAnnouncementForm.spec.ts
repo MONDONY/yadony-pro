@@ -52,9 +52,9 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
-vi.mock('@/composables/useCommissionRate', () => ({
-  FALLBACK_COMMISSION_RATE: 0.12,
-  useCommissionRate: () => ({ getRate: async () => 0.12 }),
+let mockGrid: { tiers: unknown[]; minimums: Record<string, number> } | null = null
+vi.mock('@/composables/useCommissionGrid', () => ({
+  useCommissionGrid: () => ({ getGrid: async () => mockGrid }),
 }))
 
 let mockActiveCurrency = 'EUR'
@@ -86,7 +86,7 @@ vi.mock('@/features/trajets/components/CapacitySelector.vue', () => ({
   default: { template: '<div />', props: ['modelValue'] },
 }))
 vi.mock('@/features/trajets/components/PriceOptionCards.vue', () => ({
-  default: { template: '<div />', props: ['modelValue', 'commissionRate'] },
+  default: { template: '<div />', props: ['modelValue', 'currency'] },
 }))
 
 async function mountForm(props: Record<string, unknown> = {}) {
@@ -395,6 +395,7 @@ describe('NewAnnouncementForm — devise du trajet', () => {
     mockTplList.mockResolvedValue([])
     mockPriceGridItems.value = []
     mockFetchPriceGridItems.mockResolvedValue(undefined)
+    mockGrid = null
   })
 
   it('en euros, la carte est activée et les espèces restent un choix', async () => {
@@ -402,7 +403,7 @@ describe('NewAnnouncementForm — devise du trajet', () => {
     const wrapper = await mountForm()
     expect(wrapper.find('[data-test="cash-toggle-copy"]').text()).toContain('La carte bancaire Stripe est toujours activée')
     expect((wrapper.find('[data-test="cash-toggle"]').element as HTMLButtonElement).disabled).toBe(false)
-    expect(wrapper.find('[data-test="net-price-per-kg"]').text().replace(/[\s  ]/g, '')).toBe('6,16€/kg')
+    expect(wrapper.find('[data-test="net-price-per-kg"]').text().replace(/[\s  ]/g, '')).toBe('7,00€/kg')
     wrapper.unmount()
   })
 
@@ -413,7 +414,27 @@ describe('NewAnnouncementForm — devise du trajet', () => {
     const toggle = wrapper.find('[data-test="cash-toggle"]')
     expect((toggle.element as HTMLButtonElement).disabled).toBe(true)
     expect(toggle.attributes('aria-checked')).toBe('true')
-    expect(wrapper.find('[data-test="net-price-per-kg"]').text().replace(/[\s  ]/g, '')).toBe('4400FCFA/kg')
+    expect(wrapper.find('[data-test="net-price-per-kg"]').text().replace(/[\s  ]/g, '')).toBe('5000FCFA/kg')
+    wrapper.unmount()
+  })
+
+  it('sans grille, annonce que les frais s’ajoutent côté expéditeur, sans minimum ni pourcentage', async () => {
+    mockActiveCurrency = 'EUR'
+    const wrapper = await mountForm()
+    const note = wrapper.find('[data-test="net-price-per-kg"]').element.parentElement!.textContent!
+    expect(note).toContain('frais de service yadony s\'ajoutent côté expéditeur')
+    expect(note).not.toContain('%')
+    expect(wrapper.find('[data-test="minimum-fee"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('sous grille, annonce le minimum dans la devise du trajet', async () => {
+    mockGrid = { tiers: [{ fromEur: 0, rate: 0.07 }], minimums: { EUR: 1, XOF: 650 } }
+    mockActiveCurrency = 'XOF'
+    const wrapper = await mountForm()
+    await vi.waitFor(() => expect(wrapper.find('[data-test="minimum-fee"]').exists()).toBe(true))
+    expect(wrapper.find('[data-test="minimum-fee"]').text().replace(/[\s  ]/g, '')).toBe('650FCFA')
+    expect(wrapper.find('[data-test="net-price-per-kg"]').element.parentElement!.textContent).not.toContain('%')
     wrapper.unmount()
   })
 })

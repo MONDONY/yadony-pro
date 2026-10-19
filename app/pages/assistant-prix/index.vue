@@ -9,10 +9,10 @@ definePageMeta({
   pageSubtitle: 'Positionne tes tarifs par rapport au marché',
 })
 
-const { marketPrice, commissionRate, corridors, isLoading, error, loadCommissionRate, loadCorridors, selectCorridor } = usePricing()
+const { marketPrice, commissionGrid, corridors, isLoading, error, loadCommissionGrid, loadCorridors, selectCorridor } = usePricing()
 
 onMounted(() => {
-  loadCommissionRate()
+  loadCommissionGrid()
   loadCorridors()
 })
 </script>
@@ -23,7 +23,7 @@ onMounted(() => {
       <header class="mb-4">
         <h2 class="font-display font-semibold text-base text-text">Comparateur de tarifs</h2>
         <p class="text-sm text-text-muted">
-          Choisis un corridor et saisis ton prix au kilo pour voir le médian du marché et ton net après commission.
+          Choisis un corridor et saisis ton prix au kilo pour voir le médian du marché et ce que tu reçois.
         </p>
       </header>
 
@@ -32,7 +32,7 @@ onMounted(() => {
       <PricingAssistant
         :corridors="corridors"
         :market-price="marketPrice"
-        :commission-rate="commissionRate"
+        :commission-grid="commissionGrid"
         :is-loading="isLoading"
         @select-corridor="selectCorridor"
       />

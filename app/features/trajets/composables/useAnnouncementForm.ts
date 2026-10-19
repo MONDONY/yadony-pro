@@ -1,6 +1,7 @@
 import { reactive, computed, ref, watch } from 'vue'
 import { tripsService } from '@/features/trajets/services/tripsService'
-import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
+import { useCommissionGrid } from '@/composables/useCommissionGrid'
+import { minimumFor, type CommissionGrid } from '@/lib/commissionGrid'
 import { usePreferencesStore } from '@/stores/preferences'
 import { addDaysToDateInput, arrivalDateError, daysBetweenDateInputs, deadlineToIso, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE } from '@/lib/dates'
 import { defaultPricePerKg, normalizeCurrency, paymentMethodsFor, roundToCurrency } from '@/lib/money'
@@ -53,11 +54,12 @@ export function useAnnouncementForm() {
     handoverDeadline: '',
   })
 
-  const commissionRate = ref(FALLBACK_COMMISSION_RATE)
-  const { getRate } = useCommissionRate()
-  // Chargement non bloquant : le fallback s'affiche puis le taux réel prend le relais.
-  getRate().then((rate) => {
-    commissionRate.value = rate
+  // Grille de commission en vigueur, chargée sans bloquer le formulaire : sans
+  // grille (ou back qui ne la sert pas), aucun minimum n'est annoncé.
+  const commissionGrid = ref<CommissionGrid | null>(null)
+  const { getGrid } = useCommissionGrid()
+  getGrid().then((grid) => {
+    commissionGrid.value = grid
   })
 
   // Un modèle ou un trajet en édition fixe sa propre devise : la devise active
@@ -72,9 +74,12 @@ export function useAnnouncementForm() {
 
   const currency = computed(() => form.currency)
 
-  const netPrice = computed(
-    () => roundToCurrency(form.pricePerKg * (1 - commissionRate.value), form.currency),
-  )
+  // Le prix au kilo saisi EST le net du voyageur : le backend le stocke tel quel et
+  // les frais de service s'ajoutent côté expéditeur. Aucune conversion à faire ici.
+  const netPrice = computed(() => roundToCurrency(form.pricePerKg, form.currency))
+
+  /** Frais de service minimum dans la devise du trajet, `null` sans grille. */
+  const minimumFee = computed(() => minimumFor(commissionGrid.value, form.currency))
 
   const svc = tripsService()
 
@@ -261,5 +266,5 @@ export function useAnnouncementForm() {
     }
   }
 
-  return { form, currency, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
+  return { form, currency, netPrice, minimumFee, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
 }

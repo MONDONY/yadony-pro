@@ -1,6 +1,6 @@
 import { useApi } from '@/composables/useApi'
 import { PRICING_CORRIDORS } from '@/features/pricing/types/index'
-import type { CommissionRate, MarketPrice, PricingCorridor } from '@/features/pricing/types/index'
+import type { MarketPrice, PricingCorridor } from '@/features/pricing/types/index'
 
 interface PopularCorridorResponse {
   departureCity: string
@@ -26,10 +26,6 @@ export function pricingService() {
     return api<MarketPrice>('/announcements/market-price', { query: { corridor: corridorKey } })
   }
 
-  async function fetchCommissionRate(): Promise<CommissionRate> {
-    return api<CommissionRate>('/config/commission-rate')
-  }
-
   async function fetchCorridors(): Promise<PricingCorridor[]> {
     try {
       const popular = await api<PopularCorridorResponse[]>('/cities/corridors/popular', {
@@ -46,5 +42,5 @@ export function pricingService() {
     }
   }
 
-  return { fetchMarketPrice, fetchCommissionRate, fetchCorridors }
+  return { fetchMarketPrice, fetchCorridors }
 }

@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<{
   editTripId: undefined,
 })
 
-const { form, currency, netPrice, commissionRate, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
+const { form, currency, netPrice, minimumFee, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
 // En zone CFA le backend ne garde que le mobile money et les espèces : le
 // choix « espèces » n'en est plus un, on l'affiche activé et verrouillé.
 const cardCurrency = computed(() => isStripeCurrency(currency.value))
@@ -545,10 +545,12 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <label class="block text-sm font-medium text-text mb-3">
           Prix par kg <span class="text-danger">*</span>
         </label>
-        <PriceOptionCards v-model="form.pricePerKg" :commission-rate="commissionRate" :currency="currency" />
+        <PriceOptionCards v-model="form.pricePerKg" :currency="currency" />
         <p class="mt-2 text-xs text-text-muted">
-          Commission yadony déduite · Vous recevez
+          Vous recevez
           <span class="font-mono tabular-nums text-text font-medium" data-test="net-price-per-kg">{{ formatPerKg(netPrice, currency) }}</span>
+          · les frais de service yadony s'ajoutent côté expéditeur<template v-if="minimumFee !== null">
+            (minimum <span class="font-mono tabular-nums" data-test="minimum-fee">{{ formatMoney(minimumFee, currency) }}</span>)</template>
         </p>
       </div>
 
