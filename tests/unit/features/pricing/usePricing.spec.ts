@@ -1,15 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockFetchMarketPrice = vi.fn()
-const mockFetchCommissionRate = vi.fn()
+const mockGetGrid = vi.fn()
 const mockFetchCorridors = vi.fn()
 
 vi.mock('@/features/pricing/services/pricingService', () => ({
   pricingService: () => ({
     fetchMarketPrice: mockFetchMarketPrice,
-    fetchCommissionRate: mockFetchCommissionRate,
     fetchCorridors: mockFetchCorridors,
   }),
+}))
+
+vi.mock('@/composables/useCommissionGrid', () => ({
+  useCommissionGrid: () => ({ getGrid: mockGetGrid }),
 }))
 
 async function importComposable() {
@@ -23,18 +26,20 @@ describe('usePricing', () => {
     vi.resetModules()
   })
 
-  it('loadCommissionRate updates the rate', async () => {
-    mockFetchCommissionRate.mockResolvedValue({ rate: 0.15 })
-    const { commissionRate, loadCommissionRate } = (await importComposable())()
-    await loadCommissionRate()
-    expect(commissionRate.value).toBe(0.15)
+  it('loadCommissionGrid expose la grille en vigueur', async () => {
+    const grid = { tiers: [{ fromEur: 0, rate: 0.07 }], minimums: { EUR: 1 } }
+    mockGetGrid.mockResolvedValue(grid)
+    const { commissionGrid, loadCommissionGrid } = (await importComposable())()
+    expect(commissionGrid.value).toBeNull()
+    await loadCommissionGrid()
+    expect(commissionGrid.value).toEqual(grid)
   })
 
-  it('loadCommissionRate keeps the default rate on error', async () => {
-    mockFetchCommissionRate.mockRejectedValue(new Error('x'))
-    const { commissionRate, loadCommissionRate } = (await importComposable())()
-    await loadCommissionRate()
-    expect(commissionRate.value).toBe(0.12)
+  it('loadCommissionGrid reste à null sans grille (aucun taux de repli inventé)', async () => {
+    mockGetGrid.mockResolvedValue(null)
+    const { commissionGrid, loadCommissionGrid } = (await importComposable())()
+    await loadCommissionGrid()
+    expect(commissionGrid.value).toBeNull()
   })
 
   it('selectCorridor loads the market price for the corridor', async () => {

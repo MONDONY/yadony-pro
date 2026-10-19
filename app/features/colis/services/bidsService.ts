@@ -1,5 +1,6 @@
 import { useApi } from '@/composables/useApi'
-import { useCommissionRate } from '@/composables/useCommissionRate'
+import { useCommissionContext } from '@/composables/useCommissionContext'
+import { senderTotalFromNet, type CommissionContext } from '@/lib/commissionGrid'
 import type { Bid, BidPage, BidFilter, BidStatus } from '@/features/colis/types/index'
 import { normalizeCurrency, roundToCurrency } from '@/lib/money'
 
@@ -58,7 +59,7 @@ function finiteOrNull(value: unknown): number | null {
   return value !== null && value !== undefined && Number.isFinite(n) ? n : null
 }
 
-function mapBackendToBid(b: BackendBidResponse, commissionRate: number): Bid {
+function mapBackendToBid(b: BackendBidResponse, commission: CommissionContext): Bid {
   const currency = normalizeCurrency(b.currency)
   // Le poids peut être absent (mode GRID) ou null (bid rejeté sans pesée) → on
   // n'invente pas de 0 : weightKg reste null et les revenus qui en dépendent aussi
@@ -66,17 +67,19 @@ function mapBackendToBid(b: BackendBidResponse, commissionRate: number): Bid {
   const rawWeight = Number(b.weightKg)
   const weightKg = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : null
   const pricePerKg = Number(b.pricePerKg)
-  // Montants du backend d'abord : ils portent l'accord négocié, la grille et le
-  // taux figé sur le bid. Le produit prix/kg × poids × (1 − taux global) ne
-  // sert plus que de repli, arrondi à la précision de la devise.
-  const localGross =
+  // Montants du backend d'abord : ils portent l'accord négocié, la grille et la
+  // commission figés sur le bid. Le prix au kilo d'un bid vu par le voyageur EST son
+  // net : repli = prix × poids pour le net, et le total payé par l'expéditeur se
+  // déduit de la grille (ou du taux unique sans grille). Sans grille ni taux, le
+  // total reste inconnu (null, placeholder à l'écran) plutôt qu'inventé.
+  const localNet =
     weightKg !== null && Number.isFinite(pricePerKg)
       ? roundToCurrency(pricePerKg * weightKg, currency)
       : null
-  const paymentAmountEuros = finiteOrNull(b.totalSenderAmountEur) ?? localGross
-  const earningsEuros =
-    finiteOrNull(b.totalNetAmountEur)
-    ?? (localGross !== null ? roundToCurrency(localGross * (1 - commissionRate), currency) : null)
+  const earningsEuros = finiteOrNull(b.totalNetAmountEur) ?? localNet
+  const paymentAmountEuros =
+    finiteOrNull(b.totalSenderAmountEur)
+    ?? (earningsEuros !== null ? senderTotalFromNet(earningsEuros, currency, commission) : null)
   const senderName = b.senderName ?? 'Expéditeur'
 
   return {
@@ -117,7 +120,7 @@ export interface ListBidsParams {
 
 export function bidsService() {
   const api = useApi()
-  const { getRate } = useCommissionRate()
+  const { getContext } = useCommissionContext()
 
   async function listBids(params: ListBidsParams = {}): Promise<BidPage> {
     const query: Record<string, string> = {}
@@ -129,12 +132,12 @@ export function bidsService() {
     if (params.page !== undefined) query.page = String(params.page)
     if (params.size !== undefined) query.size = String(params.size)
 
-    const [page, rate] = await Promise.all([
+    const [page, commission] = await Promise.all([
       api<BackendPage>('/travelers/me/bids', { query }),
-      getRate(),
+      getContext(),
     ])
     return {
-      content: page.content.map((b) => mapBackendToBid(b, rate)),
+      content: page.content.map((b) => mapBackendToBid(b, commission)),
       totalElements: page.totalElements,
       totalPages: page.totalPages,
       number: page.number,
@@ -143,24 +146,24 @@ export function bidsService() {
   }
 
   async function getBid(id: string): Promise<Bid> {
-    const [res, rate] = await Promise.all([api<BackendBidResponse>(`/bids/${id}`, {}), getRate()])
-    return mapBackendToBid(res, rate)
+    const [res, commission] = await Promise.all([api<BackendBidResponse>(`/bids/${id}`, {}), getContext()])
+    return mapBackendToBid(res, commission)
   }
 
   async function acceptBid(id: string): Promise<Bid> {
-    const [res, rate] = await Promise.all([
+    const [res, commission] = await Promise.all([
       api<BackendBidResponse>(`/bids/${id}/accept`, { method: 'PUT' }),
-      getRate(),
+      getContext(),
     ])
-    return mapBackendToBid(res, rate)
+    return mapBackendToBid(res, commission)
   }
 
   async function rejectBid(id: string): Promise<Bid> {
-    const [res, rate] = await Promise.all([
+    const [res, commission] = await Promise.all([
       api<BackendBidResponse>(`/bids/${id}/reject`, { method: 'PUT' }),
-      getRate(),
+      getContext(),
     ])
-    return mapBackendToBid(res, rate)
+    return mapBackendToBid(res, commission)
   }
 
   return { listBids, getBid, acceptBid, rejectBid }

@@ -11,15 +11,19 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
-let mockCommissionRate = 0.12
-vi.mock('@/composables/useCommissionRate', () => ({
-  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
+const gridContext = {
+  grid: { tiers: [{ fromEur: 0, rate: 0.07 }, { fromEur: 100, rate: 0.06 }], minimums: { EUR: 1, XOF: 650 } },
+  rate: null,
+}
+let mockContext: { grid: typeof gridContext.grid | null; rate: number | null } = { grid: null, rate: 0.05 }
+vi.mock('@/composables/useCommissionContext', () => ({
+  useCommissionContext: () => ({ getContext: async () => mockContext }),
 }))
 
 describe('bidsService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockCommissionRate = 0.12
+    mockContext = { grid: null, rate: 0.05 }
     setActivePinia(createPinia())
   })
 
@@ -115,12 +119,36 @@ describe('bidsService', () => {
     return (await bidsService().listBids()).content[0]
   }
 
-  it('calcule poids et revenus quand le poids est présent', async () => {
+  it('sans montants du backend : net = prix × poids, total payé par le taux unique', async () => {
     const bid = await mapFirst()
     expect(bid.weightKg).toBe(10)
-    expect(bid.paymentAmountEuros).toBe(80) // 8 €/kg × 10 kg
-    expect(bid.earningsEuros).toBe(70.4) // 80 × 0,88 (commission 12 %)
+    expect(bid.earningsEuros).toBe(80) // 8 €/kg × 10 kg : le prix au kilo d'un bid EST le net
+    expect(bid.paymentAmountEuros).toBe(84) // 80 × (1 + 5 %)
     expect(bid.sender.name).toBe('abou')
+  })
+
+  it('sous grille, le total payé se déduit de la grille (minimum compris)', async () => {
+    mockContext = gridContext
+    const bid = await mapFirst()
+    expect(bid.earningsEuros).toBe(80)
+    expect(bid.paymentAmountEuros).toBe(85.6) // 7 % de 80
+    const small = await mapFirst({ weightKg: 0.5, pricePerKg: 4 }) // net 2 € : commission 0,14 € relevée au minimum
+    expect(small.earningsEuros).toBe(2)
+    expect(small.paymentAmountEuros).toBe(3)
+  })
+
+  it('déduit le total payé du net servi par le backend quand le total payé manque', async () => {
+    // Accord négocié à 60 € net : le repli part de ce net, pas de prix × poids (80 €).
+    const bid = await mapFirst({ totalNetAmountEur: 60 })
+    expect(bid.earningsEuros).toBe(60)
+    expect(bid.paymentAmountEuros).toBe(63) // 60 × (1 + 5 %)
+  })
+
+  it('laisse le total payé à null sans grille ni taux (jamais un montant inventé)', async () => {
+    mockContext = { grid: null, rate: null }
+    const bid = await mapFirst()
+    expect(bid.earningsEuros).toBe(80)
+    expect(bid.paymentAmountEuros).toBeNull()
   })
 
   it('préfère les montants calculés par le backend au produit local', async () => {
@@ -132,13 +160,16 @@ describe('bidsService', () => {
   })
 
   it('porte la devise du bid et arrondit le repli local à sa précision', async () => {
-    // 5 000 F CFA/kg × 3 kg = 15 000 ; 88 % = 13 200 ; jamais de centime en XOF.
+    // 5 000 F CFA/kg × 3 kg = 15 000 net ; jamais de centime en XOF.
     const bid = await mapFirst({ currency: 'XOF', pricePerKg: 5000, weightKg: 3 })
     expect(bid.currency).toBe('XOF')
-    expect(bid.paymentAmountEuros).toBe(15000)
-    expect(bid.earningsEuros).toBe(13200)
-    const odd = await mapFirst({ currency: 'XOF', pricePerKg: 5001, weightKg: 1 })
-    expect(odd.earningsEuros).toBe(4401) // 4 400,88 arrondi à l'unité
+    expect(bid.earningsEuros).toBe(15000)
+    expect(bid.paymentAmountEuros).toBe(15750) // 15 000 × (1 + 5 %)
+    const odd = await mapFirst({ currency: 'XOF', pricePerKg: 5000.4, weightKg: 1 })
+    expect(odd.earningsEuros).toBe(5000)
+    mockContext = gridContext
+    const grid = await mapFirst({ currency: 'XOF', pricePerKg: 5000, weightKg: 3 })
+    expect(grid.paymentAmountEuros).toBe(16050) // 15 000 + 1 050 (7 % de 15 000)
   })
 
   it('laisse poids et revenus à null quand le poids est absent (évite NaN)', async () => {
@@ -154,18 +185,18 @@ describe('bidsService', () => {
     expect(bid.earningsEuros).toBeNull()
   })
 
-  it('utilise le taux de commission dynamique (pas de 0,88 en dur)', async () => {
-    mockCommissionRate = 0.2
+  it('utilise le taux unique chargé (pas de taux en dur)', async () => {
+    mockContext = { grid: null, rate: 0.2 }
     const bid = await mapFirst()
-    expect(bid.earningsEuros).toBe(64) // 80 × (1 − 0,20)
+    expect(bid.paymentAmountEuros).toBe(96) // 80 × (1 + 20 %)
   })
 
-  it('applique aussi le taux dynamique sur acceptBid', async () => {
-    mockCommissionRate = 0.2
+  it('applique aussi le contexte de commission sur acceptBid et rejectBid', async () => {
+    mockContext = { grid: null, rate: 0.2 }
     mockApiFn.mockResolvedValue(backendBid())
     const { bidsService } = await import('@/features/colis/services/bidsService')
-    const bid = await bidsService().acceptBid('b1')
-    expect(bid.earningsEuros).toBe(64)
+    expect((await bidsService().acceptBid('b1')).paymentAmountEuros).toBe(96)
+    expect((await bidsService().rejectBid('b1')).paymentAmountEuros).toBe(96)
   })
 
   it('getBid charge GET /bids/:id et mappe la réponse', async () => {

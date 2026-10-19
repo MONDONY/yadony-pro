@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { conversationsService } from '@/features/messagerie/services/conversationsService'
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
-import { useCommissionRate, FALLBACK_COMMISSION_RATE } from '@/composables/useCommissionRate'
 import { extractProblem } from '@/lib/apiError'
 import type { RescheduleTripPayload, RescheduleTripResult, Trip, TripBid, TripInsights, TripKpis } from '@/features/trajets/types/index'
 
@@ -38,7 +37,6 @@ export function useTripDetail(tripId: string) {
   const publishLoading = ref(false)
   const publishError = ref<string | null>(null)
   const publishErrorCode = ref<string | null>(null)
-  const commissionRate = ref(FALLBACK_COMMISSION_RATE)
   const insights = ref<TripInsights | null>(null)
   const recipientChatError = ref<string | null>(null)
   const rescheduleLoading = ref(false)
@@ -48,15 +46,12 @@ export function useTripDetail(tripId: string) {
   const cancellationSvc = cancellationService()
   const conversationsSvc = conversationsService()
   const router = useRouter()
-  const { getRate } = useCommissionRate()
 
   async function fetchTrip(): Promise<void> {
     isLoading.value = true
     error.value = null
     try {
-      const [t, rate] = await Promise.all([svc.getAnnouncement(tripId), getRate()])
-      trip.value = t
-      commissionRate.value = rate
+      trip.value = await svc.getAnnouncement(tripId)
     } catch {
       error.value = 'Impossible de charger ce trajet.'
     } finally {
@@ -248,8 +243,8 @@ export function useTripDetail(tripId: string) {
       ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'COMPLETED'].includes(b.status),
     )
     // Sommes dans la devise du trajet, arrondies à sa précision : en francs CFA
-    // un centime n'existe pas. Le net vient des bids quand le backend l'a servi
-    // (accord négocié, taux figé), le taux global ne sert qu'en repli.
+    // un centime n'existe pas. Net et total payé viennent des bids (montants du
+    // backend : accord négocié, grille ou taux figé).
     const currency = t.currency
     const gross = confirmed.reduce((sum, b) => sum + b.paymentAmountEuros, 0)
     const net = roundToCurrency(confirmed.reduce((sum, b) => sum + b.earningsEuros, 0), currency)

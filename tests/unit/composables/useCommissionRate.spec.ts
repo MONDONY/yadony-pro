@@ -27,6 +27,14 @@ describe('useCommissionRate', () => {
     expect(mockApi).toHaveBeenCalledWith('/config/commission-rate')
   })
 
+  it('getRate shares a single in-flight request between concurrent callers', async () => {
+    mockApi.mockResolvedValue({ rate: 0.1 })
+    const { useCommissionRate } = await importComposable()
+    const [a, b] = await Promise.all([useCommissionRate().getRate(), useCommissionRate().getRate()])
+    expect([a, b]).toEqual([0.1, 0.1])
+    expect(mockApi).toHaveBeenCalledTimes(1)
+  })
+
   it('getRate caches the rate — a single API call for multiple invocations', async () => {
     mockApi.mockResolvedValue({ rate: 0.12 })
     const { useCommissionRate } = await importComposable()
@@ -45,27 +53,27 @@ describe('useCommissionRate', () => {
     expect(mockApi).toHaveBeenCalledTimes(1)
   })
 
-  it('getRate falls back to 0.12 when the API call fails', async () => {
+  it('getRate returns null (no invented rate) when the API call fails', async () => {
     mockApi.mockRejectedValue(new Error('network down'))
     const { useCommissionRate } = await importComposable()
     const rate = await useCommissionRate().getRate()
-    expect(rate).toBe(0.12)
+    expect(rate).toBeNull()
   })
 
-  it('getRate falls back to 0.12 on an invalid payload', async () => {
+  it('getRate returns null on an invalid payload', async () => {
     mockApi.mockResolvedValue({ rate: 'abc' })
     const { useCommissionRate } = await importComposable()
     const rate = await useCommissionRate().getRate()
-    expect(rate).toBe(0.12)
+    expect(rate).toBeNull()
   })
 
-  it('does not cache the fallback after a failure — retries on next call', async () => {
+  it('does not cache a failure — retries on next call', async () => {
     mockApi.mockRejectedValueOnce(new Error('boom'))
     mockApi.mockResolvedValue({ rate: 0.18 })
     const { useCommissionRate } = await importComposable()
     const first = await useCommissionRate().getRate()
     const second = await useCommissionRate().getRate()
-    expect(first).toBe(0.12)
+    expect(first).toBeNull()
     expect(second).toBe(0.18)
     expect(mockApi).toHaveBeenCalledTimes(2)
   })

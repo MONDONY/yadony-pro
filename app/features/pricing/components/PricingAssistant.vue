@@ -2,17 +2,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import {
-  netPerKg,
   compareToMarket,
   type MarketPrice,
   type PricingCorridor,
 } from '@/features/pricing/types/index'
-import { amountStep, currencySymbol, formatPerKg, roundToCurrency } from '@/lib/money'
+import { amountStep, currencySymbol, formatMoney, formatPerKg, roundToCurrency } from '@/lib/money'
+import { minimumFor, type CommissionGrid } from '@/lib/commissionGrid'
 
 const props = defineProps<{
   corridors: PricingCorridor[]
   marketPrice: MarketPrice | null
-  commissionRate: number
+  /** Grille de commission en vigueur, null sans grille. */
+  commissionGrid?: CommissionGrid | null
   isLoading: boolean
 }>()
 
@@ -30,11 +31,15 @@ const median = computed(() => props.marketPrice?.median ?? null)
 // Devise du marché du corridor : la saisie et le net s'y expriment.
 const currency = computed(() => props.marketPrice?.currency)
 
+// Le prix saisi EST le net du voyageur : les frais de service s'ajoutent côté
+// expéditeur, rien n'est déduit du prix affiché.
 const net = computed(() =>
-  pricePerKg.value === null
+  pricePerKg.value === null || !Number.isFinite(Number(pricePerKg.value)) || Number(pricePerKg.value) < 0
     ? null
-    : roundToCurrency(netPerKg(Number(pricePerKg.value), props.commissionRate), currency.value),
+    : roundToCurrency(Number(pricePerKg.value), currency.value),
 )
+
+const minimumFee = computed(() => minimumFor(props.commissionGrid ?? null, currency.value ?? 'EUR'))
 
 const comparison = computed(() =>
   pricePerKg.value === null ? 'unknown' : compareToMarket(Number(pricePerKg.value), median.value),
@@ -87,12 +92,16 @@ const inputClass =
         <span class="text-sm font-medium" :class="comparisonInfo.class" data-test="comparison">{{ comparisonInfo.label }}</span>
       </div>
       <div class="flex items-center justify-between border-t border-border pt-3">
-        <span class="text-sm text-text-muted">Ton net après commission</span>
+        <span class="text-sm text-text-muted">Tu reçois</span>
         <span class="text-sm font-semibold text-text" data-test="net-per-kg">
           <template v-if="net !== null">{{ formatPerKg(net, currency) }}</template>
           <template v-else>—</template>
         </span>
       </div>
+      <p class="text-xs text-text-muted" data-test="fees-note">
+        Les frais de service yadony s'ajoutent côté expéditeur<template v-if="minimumFee !== null">
+          (minimum <span class="font-mono tabular-nums" data-test="minimum-fee">{{ formatMoney(minimumFee, currency) }}</span>)</template>.
+      </p>
     </div>
   </div>
 </template>

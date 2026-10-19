@@ -26,14 +26,6 @@ describe('pricingService', () => {
     expect(result.median).toBe(12.5)
   })
 
-  it('fetchCommissionRate calls GET /config/commission-rate', async () => {
-    mockApiFn.mockResolvedValue({ rate: 0.12 })
-    const svc = (await importService())()
-    const result = await svc.fetchCommissionRate()
-    expect(mockApiFn).toHaveBeenCalledWith('/config/commission-rate')
-    expect(result.rate).toBe(0.12)
-  })
-
   it('fetchCorridors appelle GET /cities/corridors/popular et mappe en PricingCorridor', async () => {
     mockApiFn.mockResolvedValue([
       { departureCity: 'Paris', departureCountry: 'FR', arrivalCity: 'Dakar', arrivalCountry: 'SN' },

@@ -58,16 +58,9 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
-let mockCommissionRate = 0.12
-vi.mock('@/composables/useCommissionRate', () => ({
-  FALLBACK_COMMISSION_RATE: 0.12,
-  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
-}))
-
 describe('useTripDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockCommissionRate = 0.12
     setActivePinia(createPinia())
   })
 
@@ -184,8 +177,7 @@ describe('useTripDetail', () => {
     expect(mockSvc.getAnnouncementBids).toHaveBeenCalled()
   })
 
-  it('kpis applique le taux de commission dynamique (pas de 0,12 en dur)', async () => {
-    mockCommissionRate = 0.2
+  it('kpis tire net et commission des montants du backend (aucun taux en dur)', async () => {
     mockSvc.getAnnouncement.mockResolvedValue({ id: 't1', availableWeightKg: 20, usedWeightKg: 10, confirmedParcelCount: 2, pendingBidCount: 0, status: 'ACTIVE' })
     mockSvc.getAnnouncementBids.mockResolvedValue([
       { id: 'b1', status: 'ACCEPTED', paymentAmountEuros: 80, earningsEuros: 64 },
@@ -194,8 +186,8 @@ describe('useTripDetail', () => {
     const { kpis, fetchTrip, fetchBids } = useTripDetail('trip-1')
     await fetchTrip()
     await fetchBids()
-    expect(kpis.value.commissionEuros).toBe(16) // 80 × 0,20
-    expect(kpis.value.netRevenueEuros).toBe(64) // 80 × 0,80
+    expect(kpis.value.commissionEuros).toBe(16) // 80 payés − 64 reçus
+    expect(kpis.value.netRevenueEuros).toBe(64)
   })
 
   it('deleteTrip calls deleteAnnouncement and redirects to /trajets', async () => {

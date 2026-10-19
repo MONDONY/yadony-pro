@@ -12,9 +12,13 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ idToken: 'tok', clear: vi.fn() }),
 }))
 
-let mockCommissionRate = 0.12
-vi.mock('@/composables/useCommissionRate', () => ({
-  useCommissionRate: () => ({ getRate: async () => mockCommissionRate }),
+const gridContext = {
+  grid: { tiers: [{ fromEur: 0, rate: 0.07 }, { fromEur: 100, rate: 0.06 }], minimums: { EUR: 1, XOF: 650 } },
+  rate: null,
+}
+let mockContext: { grid: typeof gridContext.grid | null; rate: number | null } = { grid: null, rate: 0.05 }
+vi.mock('@/composables/useCommissionContext', () => ({
+  useCommissionContext: () => ({ getContext: async () => mockContext }),
 }))
 
 const fakeTrip = {
@@ -54,7 +58,7 @@ function fakeDetailBase() {
 describe('tripsService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockCommissionRate = 0.12
+    mockContext = { grid: null, rate: 0.05 }
     setActivePinia(createPinia())
   })
 
@@ -286,8 +290,8 @@ describe('tripsService', () => {
     expect(result[0].senderName).toBe('Alice Martin')
     expect(result[0].senderInitials).toBe('AM')
     expect(result[0].weightKg).toBe(3)
-    expect(result[0].paymentAmountEuros).toBe(24)
-    expect(result[0].earningsEuros).toBe(21.12)
+    expect(result[0].earningsEuros).toBe(24) // 8 €/kg × 3 kg : le prix au kilo EST le net
+    expect(result[0].paymentAmountEuros).toBe(25.2) // 24 × (1 + 5 %)
   })
 
   it('getAnnouncementBids porte la devise du bid et préfère les montants du backend', async () => {
@@ -322,25 +326,45 @@ describe('tripsService', () => {
     }])
     const { tripsService } = await import('@/features/trajets/services/tripsService')
     const result = await tripsService().getAnnouncementBids('trip-42')
-    expect(result[0].paymentAmountEuros).toBe(5001)
-    expect(result[0].earningsEuros).toBe(4401) // 4 400,88 arrondi à l'unité
+    expect(result[0].earningsEuros).toBe(5001)
+    expect(result[0].paymentAmountEuros).toBe(5251) // 5 001 × 1,05 = 5 251,05 arrondi à l'unité
   })
 
-  it('getAnnouncementBids applique le taux de commission dynamique (pas de 0,88 en dur)', async () => {
-    mockCommissionRate = 0.2
-    const fakeBid = {
-      id: 'bid-1', announcementId: 'trip-42', senderId: 'sender-1',
-      senderName: 'Alice Martin', senderTotalShipments: 5,
-      weightKg: 10, description: 'Vêtements',
-      contentCategory: null, status: 'PAYMENT_ESCROWED',
-      departureCity: 'Paris', arrivalCity: 'Dakar',
-      departureDate: '2026-08-01', pricePerKg: 8, createdAt: '2026-06-01T10:00:00',
-      paymentMethod: 'STRIPE',
-    }
-    mockApiFn.mockResolvedValue([fakeBid])
+  const bidWithoutAmounts = {
+    id: 'bid-1', announcementId: 'trip-42', senderId: 'sender-1',
+    senderName: 'Alice Martin', senderTotalShipments: 5,
+    weightKg: 10, description: 'Vêtements',
+    contentCategory: null, status: 'PAYMENT_ESCROWED',
+    departureCity: 'Paris', arrivalCity: 'Dakar',
+    departureDate: '2026-08-01', pricePerKg: 8, createdAt: '2026-06-01T10:00:00',
+    paymentMethod: 'STRIPE',
+  }
+
+  it('getAnnouncementBids utilise le taux unique chargé (pas de taux en dur)', async () => {
+    mockContext = { grid: null, rate: 0.2 }
+    mockApiFn.mockResolvedValue([bidWithoutAmounts])
     const { tripsService } = await import('@/features/trajets/services/tripsService')
     const result = await tripsService().getAnnouncementBids('trip-42')
-    expect(result[0].earningsEuros).toBe(64) // 80 × (1 − 0,20)
+    expect(result[0].earningsEuros).toBe(80)
+    expect(result[0].paymentAmountEuros).toBe(96) // 80 × (1 + 20 %)
+  })
+
+  it('getAnnouncementBids déduit le total payé de la grille quand elle est en vigueur', async () => {
+    mockContext = gridContext
+    mockApiFn.mockResolvedValue([bidWithoutAmounts])
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncementBids('trip-42')
+    expect(result[0].earningsEuros).toBe(80)
+    expect(result[0].paymentAmountEuros).toBe(85.6) // 7 % de 80
+  })
+
+  it('getAnnouncementBids sans grille ni taux : net seul, aucune commission inventée', async () => {
+    mockContext = { grid: null, rate: null }
+    mockApiFn.mockResolvedValue([bidWithoutAmounts])
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const result = await tripsService().getAnnouncementBids('trip-42')
+    expect(result[0].earningsEuros).toBe(80)
+    expect(result[0].paymentAmountEuros).toBe(80)
   })
 
   it('getAnnouncementBids maps a negotiated bid summary', async () => {

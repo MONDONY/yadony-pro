@@ -1,17 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { netPerKg, compareToMarket } from '@/features/pricing/types/index'
-
-describe('netPerKg', () => {
-  it('subtracts the commission and rounds to cents', () => {
-    expect(netPerKg(10, 0.12)).toBe(8.8)
-    expect(netPerKg(15, 0.15)).toBe(12.75)
-  })
-
-  it('returns 0 for negative or non-finite prices', () => {
-    expect(netPerKg(-5, 0.12)).toBe(0)
-    expect(netPerKg(Number.NaN, 0.12)).toBe(0)
-  })
-})
+import { compareToMarket } from '@/features/pricing/types/index'
 
 describe('compareToMarket', () => {
   it('returns unknown when the median is null or invalid', () => {
