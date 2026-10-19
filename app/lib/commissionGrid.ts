@@ -255,10 +255,17 @@ export function senderTotalFromNet(net: number, currency: string, context: Commi
   if (!Number.isFinite(net)) return null
   if (context.grid) return grossFromNet(net, currency, context.grid)
   if (context.rate === null) return null
-  const spec = CURRENCIES[currency.trim().toUpperCase()]
-  const minorUnit = spec?.minorUnit ?? 2
-  const factor = 10 ** minorUnit
-  return Math.round(net * (1 + context.rate) * factor) / factor
+  const rate = parseDecimal(context.rate)
+  const netValue = parseDecimal(net)
+  if (!rate || !netValue || netValue.n < 0n) return null
+  // Même ordre que `PriceBreakdown.fromNet` du back, en fractions exactes : net
+  // arrondi HALF_UP, commission = net arrondi × taux arrondie HALF_UP, brut = net +
+  // commission. L'unité mineure est celle de la devise (2 décimales, 0 en francs CFA).
+  const minorUnit = CURRENCIES[currency.trim().toUpperCase()]?.minorUnit ?? 2
+  const scale = frac(10n ** BigInt(minorUnit), 1n)
+  const netMinor = roundHalfUp(mul(netValue, scale))
+  const commissionMinor = roundHalfUp(mul(frac(netMinor, 1n), rate))
+  return toNumber(netMinor + commissionMinor, minorUnit)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

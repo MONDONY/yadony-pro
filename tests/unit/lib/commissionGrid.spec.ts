@@ -129,7 +129,8 @@ describe('netForGross', () => {
   })
 
   it('rend le plus grand net qui tient dans le budget', () => {
-    // 6,09 € couvre 5,00 € de net (6,00 €) mais pas 5,01 € (6,01 €) ? Si : 5,09 € de net.
+    // Le net rendu est le plus grand dont le total payé tient dans 6,09 € : un centime
+    // de net en plus dépasserait le budget.
     const result = netForGross(6.09, 'EUR', grid)!
     expect(grossFromNet(result.net, 'EUR', grid)!).toBeLessThanOrEqual(6.09)
     expect(grossFromNet(result.net + 0.01, 'EUR', grid)!).toBeGreaterThan(6.09)
@@ -159,12 +160,17 @@ describe('senderTotalFromNet', () => {
   it('retombe sur le taux unique sans grille, arrondi à la devise', () => {
     expect(senderTotalFromNet(100, 'EUR', { grid: null, rate: 0.05 })).toBe(105)
     expect(senderTotalFromNet(1001, 'XOF', { grid: null, rate: 0.05 })).toBe(1051)
+    // Ordre du back (PriceBreakdown.fromNet) : commission arrondie HALF_UP, puis somme.
+    expect(senderTotalFromNet(10.1, 'EUR', { grid: null, rate: 0.05 })).toBe(10.61) // 0,505 arrondi à 0,51
+    expect(senderTotalFromNet(0.1 + 0.2, 'EUR', { grid: null, rate: 0.05 })).toBe(0.32) // net 0,30, commission 0,015 arrondie à 0,02
+    expect(senderTotalFromNet(5001, 'XOF', { grid: null, rate: 0.05 })).toBe(5251) // 250,05 arrondi à 250
     expect(senderTotalFromNet(10, 'JPY', { grid: null, rate: 0.05 })).toBe(10.5)
   })
 
   it('rend null sans grille ni taux, ou pour un net illisible', () => {
     expect(senderTotalFromNet(100, 'EUR', { grid: null, rate: null })).toBeNull()
     expect(senderTotalFromNet(Number.NaN, 'EUR', { grid, rate: null })).toBeNull()
+    expect(senderTotalFromNet(-1, 'EUR', { grid: null, rate: 0.05 })).toBeNull()
   })
 
   it('rend null quand la grille ne permet pas le calcul', () => {

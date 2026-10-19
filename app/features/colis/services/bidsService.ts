@@ -79,7 +79,7 @@ function mapBackendToBid(b: BackendBidResponse, commission: CommissionContext): 
   const earningsEuros = finiteOrNull(b.totalNetAmountEur) ?? localNet
   const paymentAmountEuros =
     finiteOrNull(b.totalSenderAmountEur)
-    ?? (localNet !== null ? senderTotalFromNet(localNet, currency, commission) : null)
+    ?? (earningsEuros !== null ? senderTotalFromNet(earningsEuros, currency, commission) : null)
   const senderName = b.senderName ?? 'Expéditeur'
 
   return {

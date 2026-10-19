@@ -137,6 +137,13 @@ describe('bidsService', () => {
     expect(small.paymentAmountEuros).toBe(3)
   })
 
+  it('déduit le total payé du net servi par le backend quand le total payé manque', async () => {
+    // Accord négocié à 60 € net : le repli part de ce net, pas de prix × poids (80 €).
+    const bid = await mapFirst({ totalNetAmountEur: 60 })
+    expect(bid.earningsEuros).toBe(60)
+    expect(bid.paymentAmountEuros).toBe(63) // 60 × (1 + 5 %)
+  })
+
   it('laisse le total payé à null sans grille ni taux (jamais un montant inventé)', async () => {
     mockContext = { grid: null, rate: null }
     const bid = await mapFirst()
