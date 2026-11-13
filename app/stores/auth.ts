@@ -7,6 +7,8 @@ export interface AuthUser {
   email?: string | null
   displayName: string
   isProAccount: boolean
+  /** Badge GP Pro (transporteur vérifié) ; absent d'un serveur antérieur. */
+  gpPro?: boolean
   roles: string[]
   avatarUrl: string | null
   /** Langue des notifications, e-mails et messages du serveur ; absente d'un serveur antérieur. */
@@ -28,6 +30,13 @@ export const useAuthStore = defineStore('auth', {
       state.idToken !== null && state.user !== null,
     isProAccount: (state): boolean =>
       state.user?.isProAccount ?? false,
+    /** Copie de `BoatCapacity` côté back : badge GP Pro ou compte PRO. Champ absent : non vérifié. */
+    isVerifiedCarrier: (state): boolean =>
+      (state.user?.gpPro ?? false) || (state.user?.isProAccount ?? false),
+    carrierProfile: (state): { gpPro: boolean; proAccount: boolean } => ({
+      gpPro: state.user?.gpPro ?? false,
+      proAccount: state.user?.isProAccount ?? false,
+    }),
   },
   actions: {
     setSession(token: string, user: AuthUser) {

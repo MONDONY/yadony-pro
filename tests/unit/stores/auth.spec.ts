@@ -62,6 +62,23 @@ describe('useAuthStore', () => {
     expect(store.isAuthenticated).toBe(false)
   })
 
+  it('gpPro absent d’un ancien back : transporteur non vérifié', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    store.setSession('tok', { ...mockUser, isProAccount: false })
+    expect(store.isVerifiedCarrier).toBe(false)
+    expect(store.carrierProfile).toEqual({ gpPro: false, proAccount: false })
+  })
+
+  it('gpPro ou compte PRO : transporteur vérifié', async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const store = useAuthStore()
+    store.setSession('tok', { ...mockUser, isProAccount: false, gpPro: true })
+    expect(store.isVerifiedCarrier).toBe(true)
+    store.setSession('tok', { ...mockUser, isProAccount: true })
+    expect(store.isVerifiedCarrier).toBe(true)
+  })
+
   describe('refreshUser', () => {
     it('does nothing when no token is present', async () => {
       const { useAuthStore } = await import('@/stores/auth')
