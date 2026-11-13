@@ -42,7 +42,7 @@ interface BackendAnnouncementResponse {
   departureDate: string
   departureTime: string | null
   arrivalTime: string | null
-  /** Jour d'arrivée quand il diffère du départ (vol de nuit) ; absent = même jour. */
+  /** Jour d'arrivée quand il diffère du départ ; absent = même jour. */
   arrivalDate?: string | null
   remainingReschedules?: number | null
   pickupAddress: BackendAddress

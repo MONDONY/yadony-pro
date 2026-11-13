@@ -678,3 +678,81 @@ describe('useAnnouncementForm', () => {
     expect(result.status).toBe('DRAFT')
   })
 })
+
+describe('useAnnouncementForm : modes de transport', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.resetModules()
+    mockGrid = null
+    mockActiveCurrency = 'EUR'
+    setActivePinia(createPinia())
+  })
+
+  const busTrip = {
+    id: 't-bus',
+    status: 'ACTIVE' as const,
+    departureCity: validPlace,
+    arrivalCity: validPlace2,
+    departureDate: '2026-12-01',
+    departureTime: null,
+    arrivalTime: null,
+    arrivalDate: '2026-12-08',
+    transportMode: 'BUS' as const,
+    pickupPlace: validPlace,
+    dropoffPlace: validPlace2,
+    availableWeightKg: 20,
+    usedWeightKg: 0,
+    pricePerKg: 8,
+    acceptedCategories: [],
+    refusedCategories: [],
+    senderNote: null,
+    cashAccepted: false,
+    handoverDeadline: '2026-11-30',
+    confirmedParcelCount: 0,
+    pendingBidCount: 0,
+    reservedRevenueEuros: 0,
+    createdAt: '2026-11-01T00:00:00Z',
+  }
+
+  it('un trajet BUS existant garde son mode au renvoi', async () => {
+    mockUpdate.mockResolvedValue({ id: 't-bus', status: 'ACTIVE' })
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, applyTemplate, submitEdit } = useAnnouncementForm()
+    applyTemplate(busTrip)
+    // applyTemplate laisse la date à ressaisir ; l'édition la pose avant l'envoi.
+    form.departureDate = '2026-12-01'
+    form.arrivalDate = '2026-12-08'
+    await submitEdit('t-bus', 'PUBLISHED')
+    expect(mockUpdate).toHaveBeenCalledWith('t-bus', expect.objectContaining({ transportMode: 'BUS', arrivalDate: '2026-12-08' }))
+    expect(form.transportMode).toBe('BUS')
+  })
+
+  it('arrivée à J+7 : refusée en avion, acceptée sur la route', async () => {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, validate, applyTemplate } = useAnnouncementForm()
+    applyTemplate(busTrip)
+    form.departureDate = '2026-12-01'
+    form.arrivalDate = '2026-12-08'
+    expect(validate().arrivalDate).toBeUndefined()
+    form.transportMode = 'PLANE'
+    expect(validate().arrivalDate).toBe("L'arrivée doit avoir lieu au plus 3 jours après le départ")
+  })
+
+  it('pas de repli avion : le mode reste requis', async () => {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { validate } = useAnnouncementForm()
+    expect(validate().transportMode).toBe('Mode de transport requis')
+  })
+
+  it('le décalage des modèles reste borné à 3 jours même sur la route', async () => {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const { form, buildTemplatePayload } = useAnnouncementForm()
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.transportMode = 'CAR'
+    form.departureDate = '2026-12-01'
+    form.arrivalDate = '2026-12-10'
+    expect(buildTemplatePayload('x').arrivalDayOffset).toBe(3)
+    expect(buildTemplatePayload('x').transportMode).toBe('CAR')
+  })
+})

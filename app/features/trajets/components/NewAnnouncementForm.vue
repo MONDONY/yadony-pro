@@ -3,14 +3,16 @@ import { ref, computed, onMounted } from 'vue'
 import { formatMoney, formatPerKg, isStripeCurrency } from '@/lib/money'
 import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
-import { addDaysToDateInput, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE } from '@/lib/dates'
+import { addDaysToDateInput, maxArrivalDaysAfterDeparture } from '@/lib/dates'
+import { chipModes, type TransportModesFlags } from '@/lib/transportModes'
+import { useTransportModes } from '@/composables/useTransportModes'
 import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
 import { usePriceGrid } from '@/features/tarifs/composables/usePriceGrid'
 import { configService, type ContentCategory } from '@/features/trajets/services/configService'
 import { tripTemplateService } from '@/features/trajets/services/tripTemplateService'
 import type { PriceGridItem } from '@/features/tarifs/types/index'
-import type { PricingMode, UserTripTemplate } from '@/features/trajets/types/index'
+import type { PricingMode, TransportMode, UserTripTemplate } from '@/features/trajets/types/index'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
 import TransportModeChips from '@/features/trajets/components/TransportModeChips.vue'
 import WeightSlider from '@/features/trajets/components/WeightSlider.vue'
@@ -93,12 +95,24 @@ const maxDate = computed(() => {
   return d.toISOString().split('T')[0]
 })
 
-// Le backend refuse une arrivée plus de 3 jours après le départ (ArrivalRules).
+// Le backend borne l'arrivée selon le mode (ArrivalRules) : 3 jours en avion, 14 sur la route.
 const maxArrivalDate = computed(() =>
-  form.departureDate ? addDaysToDateInput(form.departureDate, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE) : undefined,
+  form.departureDate
+    ? addDaysToDateInput(form.departureDate, maxArrivalDaysAfterDeparture(form.transportMode))
+    : undefined,
 )
 
+// Modes proposés : selon les interrupteurs du serveur ; un mode déjà porté par le trajet ou le modèle
+// chargé reste affiché même s'il n'est plus proposable (BUS affiché « Route », train, bateau).
+const { getFlags } = useTransportModes()
+const transportFlags = ref<TransportModesFlags>({ road: false, boat: false })
+const loadedMode = ref<TransportMode | null>(null)
+const transportModes = computed(() => chipModes(transportFlags.value, loadedMode.value))
+
 onMounted(async () => {
+  getFlags().then((flags) => {
+    transportFlags.value = flags
+  }).catch(() => undefined)
   // Chaque appel a son propre repli : un échec réseau sur l'un (notamment le
   // catalogue de contenus) ne doit JAMAIS court-circuiter la suite du montage —
   // sinon le prefill d'édition (applyTemplate ci-dessous) ne s'appliquerait pas
@@ -121,22 +135,26 @@ onMounted(async () => {
   myTemplates.value = fetchedMyTemplates
   if (props.prefill) {
     applyTemplate(props.prefill)
+    loadedMode.value = props.prefill.transportMode ?? null
   }
 })
 
 function onSelectTemplate(trip: Trip) {
   applyTemplate(trip)
+  loadedMode.value = trip.transportMode ?? null
   selectedTemplateId.value = trip.id
   showTemplates.value = false
 }
 
 function onSelectQuickTemplate(t: TripTemplate) {
   applyQuickTemplate(t)
+  loadedMode.value = t.transportMode
   selectedQuickTemplateId.value = t.id
 }
 
 function onSelectMyTemplate(t: UserTripTemplate) {
   applyQuickTemplate(t)
+  loadedMode.value = t.transportMode
   selectedMyTemplateId.value = t.id
 }
 
@@ -155,7 +173,7 @@ async function onDeleteMyTemplate(t: UserTripTemplate) {
   }
 }
 
-const canSaveTemplate = computed(() => !!form.departureCity && !!form.arrivalCity)
+const canSaveTemplate = computed(() => !!form.departureCity && !!form.arrivalCity && !!form.transportMode)
 
 async function onSaveTemplate() {
   const label = newTemplateLabel.value.trim()
@@ -334,6 +352,13 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
     <section class="space-y-5">
       <h2 class="font-display text-lg font-semibold text-text border-b border-border pb-2">Trajet</h2>
 
+      <div>
+        <label class="block text-sm font-medium text-text mb-1.5">
+          Mode de transport <span class="text-danger">*</span>
+        </label>
+        <TransportModeChips v-model="form.transportMode" :modes="transportModes" :error="errors.transportMode" />
+      </div>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-text mb-1.5">
@@ -406,14 +431,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
           ]"
         />
         <p v-if="errors.arrivalDate" class="mt-1 text-xs text-danger">{{ errors.arrivalDate }}</p>
-        <p v-else class="mt-1 text-xs text-text-muted">À renseigner si l'arrivée a lieu un autre jour (vol de nuit). Sinon, même jour que le départ.</p>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-text mb-1.5">
-          Mode de transport <span class="text-danger">*</span>
-        </label>
-        <TransportModeChips v-model="form.transportMode" :error="errors.transportMode" />
+        <p v-else class="mt-1 text-xs text-text-muted">À renseigner si l'arrivée a lieu un autre jour. Sinon, même jour que le départ.</p>
       </div>
     </section>
 
@@ -436,7 +454,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         </label>
         <GooglePlacesInput
           v-model="form.dropoffPlace"
-          placeholder="Ex : Aéroport Léopold Sédar Senghor"
+          placeholder="Ex : 5 avenue Cheikh Anta Diop, Dakar"
           :error="errors.dropoffPlace"
         />
       </div>

@@ -433,6 +433,35 @@ describe('useTripDetail', () => {
       await rescheduleTrip(payload)
       expect(rescheduleError.value).toBe('Message serveur')
     })
+
+    it('arrival-too-far : affiche le message du serveur quand il est lisible', async () => {
+      mockSvc.rescheduleAnnouncement.mockRejectedValue({
+        data: { code: 'arrival-too-far', detail: 'L’arrivée doit avoir lieu au plus 14 jours après le départ.' },
+      })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
+      await rescheduleTrip(payload)
+      expect(rescheduleError.value).toBe('L’arrivée doit avoir lieu au plus 14 jours après le départ.')
+    })
+
+    it('arrival-too-far : repli sur le plafond du mode du trajet', async () => {
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'ACTIVE', transportMode: 'CAR' })
+      mockSvc.getAnnouncementBids.mockResolvedValue([])
+      mockSvc.rescheduleAnnouncement.mockRejectedValue({ data: { code: 'arrival-too-far' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { fetchTrip, rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
+      await fetchTrip()
+      await rescheduleTrip(payload)
+      expect(rescheduleError.value).toBe('L’arrivée doit avoir lieu au plus 14 jours après le départ.')
+    })
+
+    it('arrival-too-far : plafond de l’avion sans trajet chargé', async () => {
+      mockSvc.rescheduleAnnouncement.mockRejectedValue({ data: { code: 'arrival-too-far', detail: 'GET /api/x 422' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
+      await rescheduleTrip(payload)
+      expect(rescheduleError.value).toBe('L’arrivée doit avoir lieu au plus 3 jours après le départ.')
+    })
   })
 
   describe('fetchInsights', () => {

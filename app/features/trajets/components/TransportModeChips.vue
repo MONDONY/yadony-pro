@@ -1,30 +1,32 @@
 <script setup lang="ts">
-import { Plane, Car, Bus, Bike, Footprints } from 'lucide-vue-next'
+import { computed } from 'vue'
 import { cn } from '@/lib/utils'
+import { transportModeIcon, transportModeLabel } from '@/lib/transportModes'
 import type { TransportMode } from '@/features/trajets/types/index'
 
-defineProps<{
+const props = defineProps<{
   modelValue: TransportMode | null
+  /** Modes à afficher, déjà filtrés par l'appelant (interrupteurs du serveur, mode courant). */
+  modes: TransportMode[]
   error?: string
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [v: TransportMode] }>()
 
-const modes: Array<{ key: TransportMode; label: string; icon: typeof Plane }> = [
-  { key: 'PLANE', label: 'Avion', icon: Plane },
-  { key: 'CAR', label: 'Voiture', icon: Car },
-  { key: 'TRAIN', label: 'Train', icon: Plane },
-  { key: 'BUS', label: 'Bus', icon: Bus },
-  { key: 'BOAT', label: 'Bateau', icon: Footprints },
-  { key: 'OTHER', label: 'Autre', icon: Footprints },
-]
+const ORDER: TransportMode[] = ['PLANE', 'BOAT', 'CAR', 'BUS', 'TRAIN', 'OTHER']
+
+const items = computed(() =>
+  [...props.modes]
+    .sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b))
+    .map((key) => ({ key, label: transportModeLabel(key), icon: transportModeIcon(key) })),
+)
 </script>
 
 <template>
   <div>
     <div class="flex flex-wrap gap-2">
       <button
-        v-for="m in modes"
+        v-for="m in items"
         :key="m.key"
         type="button"
         :data-test="`transport-${m.key}`"

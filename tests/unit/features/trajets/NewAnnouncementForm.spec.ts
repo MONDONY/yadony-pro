@@ -43,6 +43,11 @@ vi.mock('@/features/tarifs/composables/usePriceGrid', () => ({
   }),
 }))
 
+let mockFlags = { road: false, boat: false }
+vi.mock('@/composables/useTransportModes', () => ({
+  useTransportModes: () => ({ getFlags: async () => mockFlags }),
+}))
+
 vi.mock('@/composables/useApi', () => ({
   useApi: () => vi.fn(),
   _resetApiInstance: vi.fn(),
@@ -77,7 +82,7 @@ vi.mock('@/features/trajets/components/GooglePlacesInput.vue', () => ({
   default: { template: '<div />', props: ['modelValue', 'placeholder', 'label', 'error'] },
 }))
 vi.mock('@/features/trajets/components/TransportModeChips.vue', () => ({
-  default: { template: '<div />', props: ['modelValue', 'error'] },
+  default: { template: '<div />', props: ['modelValue', 'modes', 'error'] },
 }))
 vi.mock('@/features/trajets/components/WeightSlider.vue', () => ({
   default: { template: '<div />', props: ['modelValue', 'min', 'max'] },
@@ -102,6 +107,7 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockActiveCurrency = 'EUR'
+    mockFlags = { road: false, boat: false }
     setActivePinia(createPinia())
     mockFetchContentCategories.mockResolvedValue(catalogSample)
     mockFetchTemplates.mockResolvedValue([])
@@ -361,6 +367,12 @@ describe('NewAnnouncementForm — catalogue de contenus', () => {
     await placesInputs[1]!.vm.$emit('update:modelValue', { placeId: 'p2', label: 'Dakar', lat: 14.71, lng: -17.46 })
 
     const openBtn = wrapper.find('[data-test="open-save-template"]')
+    // Sans mode choisi, pas de modèle : aucun repli sur l'avion.
+    expect((openBtn.element as HTMLButtonElement).disabled).toBe(true)
+    const { default: TransportModeChips } = await import(
+      '@/features/trajets/components/TransportModeChips.vue'
+    )
+    await wrapper.findComponent(TransportModeChips).vm.$emit('update:modelValue', 'PLANE')
     expect((openBtn.element as HTMLButtonElement).disabled).toBe(false)
     await openBtn.trigger('click')
     await wrapper.find('[data-test="save-template-label"]').setValue('Mon modèle')
@@ -435,6 +447,73 @@ describe('NewAnnouncementForm — devise du trajet', () => {
     await vi.waitFor(() => expect(wrapper.find('[data-test="minimum-fee"]').exists()).toBe(true))
     expect(wrapper.find('[data-test="minimum-fee"]').text().replace(/[\s  ]/g, '')).toBe('650FCFA')
     expect(wrapper.find('[data-test="net-price-per-kg"]').element.parentElement!.textContent).not.toContain('%')
+    wrapper.unmount()
+  })
+
+  it('route éteinte : seul l’avion est proposé', async () => {
+    mockFlags = { road: false, boat: false }
+    const wrapper = await mountForm()
+    const { default: TransportModeChips } = await import(
+      '@/features/trajets/components/TransportModeChips.vue'
+    )
+    expect(wrapper.findComponent(TransportModeChips).props('modes')).toEqual(['PLANE'])
+    wrapper.unmount()
+  })
+
+  it('route allumée : avion et route, jamais le bateau', async () => {
+    mockFlags = { road: true, boat: true }
+    const wrapper = await mountForm()
+    const { default: TransportModeChips } = await import(
+      '@/features/trajets/components/TransportModeChips.vue'
+    )
+    expect(wrapper.findComponent(TransportModeChips).props('modes')).toEqual(['PLANE', 'CAR'])
+    wrapper.unmount()
+  })
+
+  it('un trajet BUS en édition garde son mode affiché même route éteinte', async () => {
+    mockFlags = { road: false, boat: false }
+    const wrapper = await mountForm({
+      editTripId: 't-bus',
+      prefill: {
+        id: 't-bus',
+        status: 'ACTIVE',
+        departureCity: { placeId: 'a', label: 'Paris', lat: 1, lng: 1 },
+        arrivalCity: { placeId: 'b', label: 'Dakar', lat: 1, lng: 1 },
+        departureDate: '2026-12-01',
+        departureTime: null,
+        arrivalTime: null,
+        arrivalDate: null,
+        transportMode: 'BUS',
+        pickupPlace: { placeId: 'c', label: 'x', lat: 1, lng: 1 },
+        dropoffPlace: { placeId: 'd', label: 'y', lat: 1, lng: 1 },
+        availableWeightKg: 20,
+        pricePerKg: 8,
+        acceptedCategories: [],
+        refusedCategories: [],
+        senderNote: null,
+        cashAccepted: false,
+        handoverDeadline: null,
+      },
+    })
+    const { default: TransportModeChips } = await import(
+      '@/features/trajets/components/TransportModeChips.vue'
+    )
+    expect(wrapper.findComponent(TransportModeChips).props('modes')).toEqual(['PLANE', 'BUS'])
+    wrapper.unmount()
+  })
+
+  it('le max de la date d’arrivée suit le mode', async () => {
+    mockFlags = { road: false, boat: false }
+    const wrapper = await mountForm()
+    const { default: TransportModeChips } = await import(
+      '@/features/trajets/components/TransportModeChips.vue'
+    )
+    const dates = wrapper.findAll('input[type="date"]')
+    await dates[0]!.setValue('2026-12-01')
+    const arrival = wrapper.findAll('input[type="date"]')[1]!
+    expect(arrival.attributes('max')).toBe('2026-12-04')
+    await wrapper.findComponent(TransportModeChips).vm.$emit('update:modelValue', 'CAR')
+    expect(wrapper.findAll('input[type="date"]')[1]!.attributes('max')).toBe('2026-12-15')
     wrapper.unmount()
   })
 })

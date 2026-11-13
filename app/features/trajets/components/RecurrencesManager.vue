@@ -197,7 +197,7 @@ async function onDelete(rec: UserTripRecurrence) {
       </div>
       <div>
         <label class="block text-sm font-medium text-text mb-1">Lieu de récupération</label>
-        <GooglePlacesInput v-model="dropoffPlace" placeholder="Ex : Aéroport de Dakar" />
+        <GooglePlacesInput v-model="dropoffPlace" placeholder="Ex : Dakar, Plateau" />
       </div>
 
       <div class="flex justify-end gap-2">
