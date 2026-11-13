@@ -1,6 +1,6 @@
 <!-- app/pages/trajets/[id]/modifier.vue -->
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, CheckCircle } from 'lucide-vue-next'
 import { tripsService } from '@/features/trajets/services/tripsService'
@@ -23,9 +23,6 @@ const loadError = ref<string | null>(null)
 const updatedTrip = ref<Trip | null>(null)
 
 const svc = tripsService()
-
-// Un trajet bateau (au m³) ne s'édite pas ici tant que la création bateau de Yadony Pro n'est pas livrée.
-const isBoatTrip = computed(() => trip.value?.transportMode === 'BOAT')
 
 onMounted(async () => {
   try {
@@ -84,24 +81,6 @@ function goBack() {
         @click="goBack"
       >
         Voir le trajet →
-      </button>
-    </div>
-
-    <!-- Trajet bateau : pas d'édition ici (m³ et fourchette d'arrivée), un PUT en kilos le casserait -->
-    <div
-      v-else-if="trip && isBoatTrip"
-      data-test="boat-edit-disabled"
-      class="max-w-md mx-auto flex flex-col items-center py-16 text-center"
-    >
-      <h2 class="font-bold text-xl text-text mb-2">Modifiable dans l'app</h2>
-      <p class="text-text-muted text-sm mb-6">
-        Les trajets en bateau se modifient pour l'instant dans l'app Yadony.
-      </p>
-      <button
-        class="px-6 py-2.5 rounded-btn bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors"
-        @click="goBack"
-      >
-        Retour au trajet
       </button>
     </div>
 
