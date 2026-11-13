@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Plane, Car, Bus, Footprints, Clock, ChevronRight } from 'lucide-vue-next'
+import { Clock } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
-import type { Trip, TransportMode } from '@/features/trajets/types/index'
-import { formatMoney, formatPerKg } from '@/lib/money'
+import type { Trip } from '@/features/trajets/types/index'
+import { formatMoney } from '@/lib/money'
+import { transportModeIcon } from '@/lib/transportModes'
+import { capacityView, isVolumeTrip, priceLabel } from '@/features/trajets/lib/tripCapacity'
 
 const props = defineProps<Trip>()
 
-const fillPct = computed(() => {
-  if (props.availableWeightKg === 0) return 0
-  return Math.round((props.usedWeightKg / props.availableWeightKg) * 100)
-})
+const capacity = computed(() => capacityView(props))
+const fillPct = computed(() => capacity.value.pct)
+const volumeTrip = computed(() => isVolumeTrip(props))
 
 const barColorClass = computed(() => {
   if (fillPct.value >= 70) return 'bg-success'
@@ -19,16 +20,7 @@ const barColorClass = computed(() => {
   return 'bg-danger'
 })
 
-const transportIcon: Record<TransportMode, typeof Plane> = {
-  PLANE: Plane,
-  CAR: Car,
-  TRAIN: Plane,
-  BUS: Bus,
-  BOAT: Footprints,
-  OTHER: Footprints,
-}
-
-const modeIcon = computed(() => transportIcon[props.transportMode])
+const modeIcon = computed(() => transportModeIcon(props.transportMode))
 
 const formattedDate = computed(() => {
   const d = new Date(props.departureDate)
@@ -77,7 +69,7 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
         <template v-if="departureTime"> · {{ departureTime }}</template>
       </span>
       <span class="font-medium text-text">
-        <span class="font-mono tabular-nums">{{ formatPerKg(pricePerKg, currency) }}</span>
+        <span class="font-mono tabular-nums">{{ priceLabel(props) }}</span>
       </span>
     </div>
 
@@ -85,7 +77,7 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
     <div class="space-y-1.5">
       <div class="flex justify-between text-xs text-text-muted">
         <span>Capacité utilisée</span>
-        <span class="font-mono tabular-nums text-text">{{ usedWeightKg }} / {{ availableWeightKg }} kg</span>
+        <span class="font-mono tabular-nums text-text">{{ capacity.label }}</span>
       </div>
       <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-el">
         <div
@@ -95,7 +87,7 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
         />
       </div>
       <span
-        v-if="capacityUnit && capacityUnit !== 'KG_FREE'"
+        v-if="!volumeTrip && capacityUnit && capacityUnit !== 'KG_FREE'"
         class="inline-flex items-center gap-1 text-xs text-text-subtle"
       >
         {{ capacityUnit === 'SUITCASE_23KG' ? '1 valise 23 kg' : '1 valise 32 kg' }}

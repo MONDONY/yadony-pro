@@ -10,9 +10,8 @@ const NuxtLink = {
 vi.mock('lucide-vue-next', () => ({
   Plane: { template: '<svg data-icon="Plane" />' },
   Car: { template: '<svg data-icon="Car" />' },
-  Bus: { template: '<svg data-icon="Bus" />' },
-  Bike: { template: '<svg data-icon="Bike" />' },
-  Footprints: { template: '<svg data-icon="Footprints" />' },
+  Ship: { template: '<svg data-icon="Ship" />' },
+  Route: { template: '<svg data-icon="Route" />' },
   Package: { template: '<svg data-icon="Package" />' },
   Clock: { template: '<svg data-icon="Clock" />' },
   Euro: { template: '<svg data-icon="Euro" />' },
@@ -131,5 +130,43 @@ describe('TripCard', () => {
   it('affiche le badge Brouillon en variante warning pour un trajet DRAFT', async () => {
     const wrapper = await mountTripCard({ ...baseTripProps, status: 'DRAFT' })
     expect(wrapper.text()).toContain('Brouillon')
+  })
+
+  it('bateau = Ship, train = Route, jamais l’avion', async () => {
+    const boat = await mountTripCard({ ...baseTripProps, transportMode: 'BOAT' as const })
+    expect(boat.find('[data-icon="Ship"]').exists()).toBe(true)
+    const train = await mountTripCard({ ...baseTripProps, transportMode: 'TRAIN' as const })
+    expect(train.find('[data-icon="Route"]').exists()).toBe(true)
+    expect(train.find('[data-icon="Plane"]').exists()).toBe(false)
+  })
+
+  it('BUS = Car', async () => {
+    const bus = await mountTripCard({ ...baseTripProps, transportMode: 'BUS' as const })
+    expect(bus.find('[data-icon="Car"]').exists()).toBe(true)
+  })
+
+  it('trajet bateau au m³ : volume et prix au m³, sans null affiché', async () => {
+    const wrapper = await mountTripCard({
+      ...baseTripProps,
+      transportMode: 'BOAT' as const,
+      availableWeightKg: null,
+      usedWeightKg: null,
+      pricePerKg: null,
+      volumeCapacityM3: 12,
+      availableVolumeM3: 7.5,
+      pricePerM3: 120,
+      currency: 'EUR',
+    })
+    expect(wrapper.text()).toContain('4,5 / 12 m³')
+    expect(wrapper.text()).toContain('/m³')
+    expect(wrapper.text()).not.toContain('null')
+    expect(wrapper.text()).not.toContain('NaN')
+    expect(wrapper.text()).not.toContain('kg')
+  })
+
+  it('trajet sans capacité ni prix : ne casse pas', async () => {
+    const wrapper = await mountTripCard({ ...baseTripProps, availableWeightKg: null, usedWeightKg: null, pricePerKg: null })
+    expect(wrapper.text()).not.toContain('NaN')
+    expect(wrapper.text()).not.toContain('null')
   })
 })

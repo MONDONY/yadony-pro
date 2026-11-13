@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { LinkedTripSummary } from '@/features/negociations/types'
+import { transportModeLabel } from '@/lib/transportModes'
+import { linkedTripCapacityLabel } from '@/features/negociations/lib/linkedTripCapacity'
 
 defineProps<{
   open: boolean
@@ -9,15 +11,6 @@ defineProps<{
 const emit = defineEmits<{
   close: []
 }>()
-
-function transportLabel(mode: string | null): string {
-  switch (mode) {
-    case 'PLANE': return 'Avion'
-    case 'TRAIN': return 'Train'
-    case 'CAR': return 'Voiture'
-    default: return 'Transport'
-  }
-}
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
@@ -37,7 +30,7 @@ function formatDate(iso: string | null): string {
         <div class="space-y-3">
           <div v-if="trip.transportMode" class="flex gap-3 items-start">
             <span class="text-sm text-text-muted w-28 shrink-0">Transport</span>
-            <span class="text-sm font-semibold text-text">{{ transportLabel(trip.transportMode) }}</span>
+            <span class="text-sm font-semibold text-text">{{ transportModeLabel(trip.transportMode) }}</span>
           </div>
           <div class="flex gap-3 items-start">
             <span class="text-sm text-text-muted w-28 shrink-0">Itinéraire</span>
@@ -51,9 +44,9 @@ function formatDate(iso: string | null): string {
             <span class="text-sm text-text-muted w-28 shrink-0">Heure départ</span>
             <span class="text-sm font-semibold text-text font-mono tabular-nums">{{ trip.departureTime }}</span>
           </div>
-          <div class="flex gap-3 items-start">
-            <span class="text-sm text-text-muted w-28 shrink-0">Poids dispo</span>
-            <span class="text-sm font-semibold text-text font-mono tabular-nums">{{ trip.availableKg }} kg</span>
+          <div v-if="linkedTripCapacityLabel(trip)" class="flex gap-3 items-start">
+            <span class="text-sm text-text-muted w-28 shrink-0">{{ trip.availableKg != null ? 'Poids dispo' : 'Volume dispo' }}</span>
+            <span class="text-sm font-semibold text-text font-mono tabular-nums">{{ linkedTripCapacityLabel(trip) }}</span>
           </div>
           <div v-if="trip.pickupAddressLabel" class="flex gap-3 items-start">
             <span class="text-sm text-text-muted w-28 shrink-0">Remise</span>

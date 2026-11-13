@@ -102,6 +102,11 @@ export function formatPerKg(amount: number | null | undefined, currency?: string
   return `${formatMoney(amount, currency)}/kg`
 }
 
+/** « 120,00 €/m³ », « 80 000 F CFA/m³ » (trajet bateau au volume). */
+export function formatPerM3(amount: number | null | undefined, currency?: string | null): string {
+  return `${formatMoney(amount, currency)}/m³`
+}
+
 /** Symbole seul (« € », « F CFA », « $US »), pour un suffixe de champ de saisie. */
 export function currencySymbol(currency?: string | null): string {
   const code = normalizeCurrency(currency)

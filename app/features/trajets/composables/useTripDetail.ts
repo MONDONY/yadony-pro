@@ -6,6 +6,7 @@ import { conversationsService } from '@/features/messagerie/services/conversatio
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
 import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
 import { maxArrivalDaysAfterDeparture } from '@/lib/dates'
+import { capacityView } from '@/features/trajets/lib/tripCapacity'
 import type { RescheduleTripPayload, RescheduleTripResult, Trip, TripBid, TripInsights, TripKpis } from '@/features/trajets/types/index'
 
 const publishErrorMessages: Record<string, string> = {
@@ -257,9 +258,9 @@ export function useTripDetail(tripId: string) {
     const gross = confirmed.reduce((sum, b) => sum + b.paymentAmountEuros, 0)
     const net = roundToCurrency(confirmed.reduce((sum, b) => sum + b.earningsEuros, 0), currency)
     const commission = roundToCurrency(gross - net, currency)
-    const used = t.usedWeightKg
+    const used = t.usedWeightKg ?? 0
     return {
-      fillRatePct: t.availableWeightKg > 0 ? Math.round((used / t.availableWeightKg) * 100) : 0,
+      fillRatePct: capacityView(t).pct,
       grossRevenueEuros: roundToCurrency(gross, currency),
       commissionEuros: commission,
       netRevenueEuros: net,

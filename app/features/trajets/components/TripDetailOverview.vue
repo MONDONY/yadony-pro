@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import { MapPin, Calendar, Clock, Package, CreditCard, FileText, Eye } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
 import type { Trip, TripInsights } from '@/features/trajets/types/index'
-import { formatPerKg } from '@/lib/money'
+import { capacityView, isVolumeTrip, priceLabel } from '@/features/trajets/lib/tripCapacity'
 
 const props = defineProps<{
   trip: Trip
@@ -25,10 +25,13 @@ const formattedArrivalDate = computed(() =>
     : null,
 )
 
-const fillPct = computed(() =>
-  props.trip.availableWeightKg > 0
-    ? Math.round((props.trip.usedWeightKg / props.trip.availableWeightKg) * 100)
-    : 0
+const capacity = computed(() => capacityView(props.trip))
+const fillPct = computed(() => capacity.value.pct)
+const volumeTrip = computed(() => isVolumeTrip(props.trip))
+const formattedArrivalMax = computed(() =>
+  props.trip.arrivalDateMax
+    ? new Date(props.trip.arrivalDateMax).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null,
 )
 
 const barColor = computed(() =>
@@ -80,8 +83,10 @@ const pricingModeLabel = computed(() => {
         <div v-if="formattedArrivalDate" class="flex items-start gap-3">
           <Calendar class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
           <div>
-            <p class="text-xs text-text-muted">Date d'arrivée</p>
-            <p class="text-sm text-text font-medium capitalize">{{ formattedArrivalDate }}</p>
+            <p class="text-xs text-text-muted">{{ formattedArrivalMax ? "Arrivée estimée" : "Date d'arrivée" }}</p>
+            <p class="text-sm text-text font-medium capitalize">
+              {{ formattedArrivalMax ? `du ${formattedArrivalDate} au ${formattedArrivalMax}` : formattedArrivalDate }}
+            </p>
           </div>
         </div>
 
@@ -122,7 +127,7 @@ const pricingModeLabel = computed(() => {
         <div class="space-y-1.5">
           <div class="flex justify-between text-sm">
             <span class="text-text-muted">Utilisé</span>
-            <span class="font-mono tabular-nums text-text font-medium">{{ trip.usedWeightKg }} / {{ trip.availableWeightKg }} kg</span>
+            <span class="font-mono tabular-nums text-text font-medium">{{ capacity.label }}</span>
           </div>
           <div class="h-2 w-full bg-surface-el rounded-full overflow-hidden">
             <div
@@ -162,8 +167,8 @@ const pricingModeLabel = computed(() => {
           <Package class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
           <div>
             <p class="text-xs text-text-muted">Prix</p>
-            <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ formatPerKg(trip.pricePerKg, trip.currency) }}</p>
-            <p class="text-xs text-text-muted mt-0.5">{{ pricingModeLabel }}</p>
+            <p class="font-mono text-sm font-semibold tabular-nums text-text">{{ priceLabel(trip) }}</p>
+            <p class="text-xs text-text-muted mt-0.5">{{ volumeTrip ? 'Au mètre cube' : pricingModeLabel }}</p>
           </div>
         </div>
 

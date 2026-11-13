@@ -71,6 +71,36 @@ describe('tripsService', () => {
     expect(result.content).toEqual([])
   })
 
+  it('un trajet bateau au m³ se lit sans kilos ni prix au kilo, sans NaN', async () => {
+    mockApiFn.mockResolvedValue({
+      content: [{
+        ...fakeTrip, transportMode: 'BOAT', availableKg: null, totalKg: null, pricePerKg: null,
+        arrivalDate: '2026-12-20', arrivalDateMax: '2026-12-30',
+        volumeCapacityM3: 12, availableVolumeM3: 7.5, pricePerM3: 120,
+      }],
+      totalElements: 1, totalPages: 1, number: 0, size: 10,
+    })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const [trip] = (await tripsService().listTrips({ filter: 'TOUS' })).content
+    expect(trip).toMatchObject({
+      transportMode: 'BOAT',
+      availableWeightKg: null,
+      usedWeightKg: null,
+      pricePerKg: null,
+      arrivalDateMax: '2026-12-30',
+      volumeCapacityM3: 12,
+      availableVolumeM3: 7.5,
+      pricePerM3: 120,
+    })
+  })
+
+  it('un trajet avion garde ses kilos et ne porte aucun volume', async () => {
+    mockApiFn.mockResolvedValue({ content: [{ ...fakeTrip, availableKg: 10, totalKg: 15 }], totalElements: 1, totalPages: 1, number: 0, size: 10 })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const [trip] = (await tripsService().listTrips({ filter: 'TOUS' })).content
+    expect(trip).toMatchObject({ availableWeightKg: 10, usedWeightKg: 5, pricePerKg: 7, volumeCapacityM3: null, pricePerM3: null })
+  })
+
   it('listTrips maps ACTIFS filter to status=ACTIVE', async () => {
     mockApiFn.mockResolvedValue({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 10 })
     const { tripsService } = await import('@/features/trajets/services/tripsService')

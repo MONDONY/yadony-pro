@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Plane, Train, Car, Package, ChevronRight } from 'lucide-vue-next'
+import { ChevronRight } from 'lucide-vue-next'
+import { linkedTripCapacityLabel } from '@/features/negociations/lib/linkedTripCapacity'
+import { transportModeIcon } from '@/lib/transportModes'
 import type { LinkedTripSummary } from '@/features/negociations/types'
 
 const props = defineProps<{
@@ -11,14 +13,7 @@ const emit = defineEmits<{
   click: []
 }>()
 
-const transportIcon = computed(() => {
-  switch (props.trip.transportMode) {
-    case 'PLANE': return Plane
-    case 'TRAIN': return Train
-    case 'CAR': return Car
-    default: return Package
-  }
-})
+const transportIcon = computed(() => transportModeIcon(props.trip.transportMode))
 </script>
 
 <template>
@@ -33,7 +28,7 @@ const transportIcon = computed(() => {
         {{ trip.departureCity }} → {{ trip.arrivalCity }}
       </p>
       <p class="text-xs text-text-muted font-mono tabular-nums">
-        {{ trip.departureDate ?? '' }} · {{ trip.availableKg }} kg
+        {{ trip.departureDate ?? '' }}<template v-if="linkedTripCapacityLabel(trip)"> · {{ linkedTripCapacityLabel(trip) }}</template>
       </p>
     </div>
     <ChevronRight class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />

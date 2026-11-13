@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
   Home,
-  Plane,
+  Route,
   Package,
   Bot,
   MessageSquareDot,
@@ -96,7 +96,7 @@ const initials = computed(() =>
         <template #icon><Home class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/trajets" label="Mes Trajets">
-        <template #icon><Plane class="w-4 h-4" /></template>
+        <template #icon><Route class="w-4 h-4" /></template>
       </NavItem>
       <NavItem to="/colis" label="Mes Colis">
         <template #icon><Package class="w-4 h-4" /></template>
