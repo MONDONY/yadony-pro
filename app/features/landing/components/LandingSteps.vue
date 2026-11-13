@@ -23,7 +23,7 @@ const steps: Step[] = [
     number: '01',
     icon: Route,
     title: 'Publie ton trajet',
-    description: 'Déclare ta destination, ta date de départ et la capacité bagage disponible. En quelques minutes, ton annonce est visible.',
+    description: 'Déclare ta destination, ta date de départ et la place disponible. En quelques minutes, ton annonce est visible.',
     preview: {
       caption: 'Aperçu annonce',
       rows: [

@@ -33,7 +33,7 @@ const features = [
     title: 'Encaisse sans risque',
     description: 'Les fonds sont bloqués en séquestre Stripe dès la confirmation. Tu es payé automatiquement à la livraison confirmée.',
     bullets: [
-      'Séquestre Stripe : fonds garantis avant le vol',
+      'Séquestre Stripe : fonds garantis avant le départ',
       'Libération automatique après lecture du QR de livraison',
       'Protection en cas de litige via yadony',
     ],
