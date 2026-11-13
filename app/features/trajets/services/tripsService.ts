@@ -13,6 +13,8 @@ import type {
   CreateAnnouncementPayload,
   RescheduleTripPayload,
   RescheduleTripResult,
+  AnnounceDelayPayload,
+  TripDelay,
   TripInsights,
 } from '@/features/trajets/types/index'
 
@@ -53,6 +55,7 @@ interface BackendAnnouncementResponse {
   pricePerKg: number | null
   /** Bateau : fin de la fourchette d'arrivée, volume en m³, prix net au m³ ; nuls hors bateau. */
   arrivalDateMax?: string | null
+  latestTripDelay?: TripDelay | null
   volumeCapacityM3?: number | null
   availableVolumeM3?: number | null
   pricePerM3?: number | null
@@ -142,6 +145,7 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     availableWeightKg: numberOrNull(a.availableKg),
     usedWeightKg: a.totalKg == null || a.availableKg == null ? null : Number(a.totalKg) - Number(a.availableKg),
     arrivalDateMax: a.arrivalDateMax ?? null,
+    latestTripDelay: a.latestTripDelay ?? null,
     volumeCapacityM3: numberOrNull(a.volumeCapacityM3),
     availableVolumeM3: numberOrNull(a.availableVolumeM3),
     pricePerM3: numberOrNull(a.pricePerM3),
@@ -289,6 +293,11 @@ export function tripsService() {
     return api<RescheduleTripResult>(`/announcements/${id}/reschedule`, { method: 'POST', body: payload })
   }
 
+  /** Annonce un retard aux expéditeurs ; un rejeu dans les 10 minutes renvoie le retard précédent. */
+  async function announceDelay(id: string, payload: AnnounceDelayPayload): Promise<TripDelay> {
+    return api<TripDelay>(`/announcements/${id}/delays`, { method: 'POST', body: payload })
+  }
+
   async function deleteAnnouncement(id: string): Promise<void> {
     await api<void>(`/announcements/${id}`, { method: 'DELETE' })
   }
@@ -373,7 +382,7 @@ export function tripsService() {
 
   return {
     listTrips, getCorridors, createAnnouncement, publishAnnouncement, getTemplates, getAnnouncement,
-    updateAnnouncement, rescheduleAnnouncement, getAnnouncementInsights, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
+    updateAnnouncement, rescheduleAnnouncement, announceDelay, getAnnouncementInsights, deleteAnnouncement, getAnnouncementBids, acceptBid, rejectBid,
     counterBidNegotiation, acceptBidNegotiation, rejectBidNegotiation,
     confirmDelivery, confirmPresence, refuseParcel, uploadRefusalPhoto, cancelBid,
     postTrackingEvent, getTrackingEvents, getQrCode,

@@ -141,6 +141,25 @@ export interface TripInsights {
   shareViewCount: number
 }
 
+/** Motif d'un retard annoncé aux expéditeurs ; `PORT_CONGESTION` ne vaut que pour le bateau. */
+export type TripDelayReason = 'PORT_CONGESTION' | 'WEATHER' | 'EXTENDED_STOPOVER' | 'TRANSPORT_DISRUPTION' | 'OTHER'
+
+export interface TripDelay {
+  id: string
+  reason: TripDelayReason
+  arrivalDate: string
+  arrivalDateMax: string
+  message: string | null
+  announcedAt: string
+}
+
+export interface AnnounceDelayPayload {
+  reason: TripDelayReason
+  arrivalDate: string
+  arrivalDateMax: string
+  message: string | null
+}
+
 export type RescheduleReason = 'FLIGHT_CANCELLED' | 'TRANSPORT_CANCELLED' | 'POSTPONED' | 'OTHER'
 
 export interface RescheduleTripPayload {
@@ -181,6 +200,8 @@ export interface Trip {
   usedWeightKg: number | null
   /** Bateau : fin de la fourchette d'arrivée estimée (`arrivalDate` = début) ; absent ou nul hors bateau. */
   arrivalDateMax?: string | null
+  /** Dernier retard annoncé aux expéditeurs ; absent ou nul sans retard ou sur un ancien back. */
+  latestTripDelay?: TripDelay | null
   /** Bateau : volume proposé et volume restant en m³, prix net voyageur au m³. */
   volumeCapacityM3?: number | null
   availableVolumeM3?: number | null

@@ -22,6 +22,7 @@ const mockSvc = {
   updateAnnouncement: vi.fn(),
   publishAnnouncement: vi.fn(),
   rescheduleAnnouncement: vi.fn(),
+  announceDelay: vi.fn(),
   getAnnouncementInsights: vi.fn(),
 }
 
@@ -461,6 +462,61 @@ describe('useTripDetail', () => {
       const { rescheduleTrip, rescheduleError } = useTripDetail('trip-1')
       await rescheduleTrip(payload)
       expect(rescheduleError.value).toBe('L’arrivée doit avoir lieu au plus 3 jours après le départ.')
+    })
+  })
+
+  describe('announceDelay', () => {
+    const payload = { reason: 'WEATHER' as const, arrivalDate: '2027-01-10', arrivalDateMax: '2027-01-25', message: null }
+    const delay = { id: 'd1', ...payload, announcedAt: '2027-01-02T10:00:00Z' }
+
+    it('annonce le retard puis recharge le trajet et ses colis', async () => {
+      mockSvc.announceDelay.mockResolvedValue(delay)
+      mockSvc.getAnnouncement.mockResolvedValue({ id: 'trip-1', status: 'IN_PROGRESS' })
+      mockSvc.getAnnouncementBids.mockResolvedValue([])
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { announceDelay, delayError, delayLoading } = useTripDetail('trip-1')
+      await expect(announceDelay(payload)).resolves.toEqual(delay)
+      expect(mockSvc.announceDelay).toHaveBeenCalledWith('trip-1', payload)
+      expect(mockSvc.getAnnouncement).toHaveBeenCalled()
+      expect(delayError.value).toBeNull()
+      expect(delayLoading.value).toBe(false)
+    })
+
+    it.each([
+      ['trip-delay-too-frequent', '5 retards au plus par 24 heures'],
+      ['trip-delay-not-allowed', 'Seul un trajet en cours'],
+      ['trip-delay-reason-invalid', 'trajet en bateau'],
+      ['arrival-range-invalid', 'nouvelle arrivée estimée'],
+      ['forbidden', 'ne vous appartient pas'],
+    ])('%s : message lisible, trajet non rechargé', async (code, fragment) => {
+      mockSvc.announceDelay.mockRejectedValue({ data: { code, detail: 'raw' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { announceDelay, delayError } = useTripDetail('trip-1')
+      await expect(announceDelay(payload)).resolves.toBeNull()
+      expect(delayError.value).toContain(fragment)
+      expect(mockSvc.getAnnouncement).not.toHaveBeenCalled()
+    })
+
+    it('arrival-too-far : détail du serveur, sinon repli local sur 120 jours', async () => {
+      mockSvc.announceDelay.mockRejectedValueOnce({ data: { code: 'arrival-too-far', detail: 'Trop loin (serveur)' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { announceDelay, delayError } = useTripDetail('trip-1')
+      await announceDelay(payload)
+      expect(delayError.value).toBe('Trop loin (serveur)')
+      mockSvc.announceDelay.mockRejectedValueOnce({ data: { code: 'arrival-too-far', detail: 'GET /api/x 422' } })
+      await announceDelay({ ...payload, arrivalDateMax: '2027-12-31' })
+      expect(delayError.value).toBe("L'arrivée estimée est trop éloignée du départ.")
+    })
+
+    it('code inconnu : détail du serveur, sinon message générique', async () => {
+      mockSvc.announceDelay.mockRejectedValueOnce({ data: { code: 'autre', detail: 'Message serveur' } })
+      const { useTripDetail } = await import('@/features/trajets/composables/useTripDetail')
+      const { announceDelay, delayError } = useTripDetail('trip-1')
+      await announceDelay(payload)
+      expect(delayError.value).toBe('Message serveur')
+      mockSvc.announceDelay.mockRejectedValueOnce(new Error('réseau'))
+      await announceDelay(payload)
+      expect(delayError.value).toBe("Impossible d'annoncer ce retard.")
     })
   })
 
