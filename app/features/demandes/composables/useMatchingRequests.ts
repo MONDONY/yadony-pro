@@ -30,6 +30,7 @@ export function useMatchingRequests() {
           tripCorridor: r.tripCorridor,
           tripDepartureDate: r.tripDepartureDate,
           tripAvailableKg: r.tripAvailableKg,
+          tripTransportMode: r.tripTransportMode ?? null,
           matchCount: 0,
         })
       }

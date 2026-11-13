@@ -72,7 +72,8 @@ export interface StartNegotiationPayload {
   packageRequestId: string
   proposedPriceEur: number
   travelerTravelDate: string
-  travelerAvailableKg: number
+  /** Absent pour un trajet bateau au m³ (pas de kilos). */
+  travelerAvailableKg?: number
   travelerAnnouncementId: string
   body?: string
 }

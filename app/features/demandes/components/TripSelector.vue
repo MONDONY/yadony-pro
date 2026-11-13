@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { Plane, Layers, ChevronDown, Plus } from 'lucide-vue-next'
+import { Layers, ChevronDown, Plus } from 'lucide-vue-next'
+import { transportModeIcon } from '@/lib/transportModes'
 import { SectionLabel } from '@/components/ui/section-label'
 import type { ActiveTrip } from '@/features/demandes/types/index'
 
@@ -55,10 +56,10 @@ onBeforeUnmount(() => {
       <div class="relative flex-1 min-w-0">
         <div class="flex items-center justify-between gap-2 bg-surface border border-primary/40 rounded-input px-3 py-2.5">
           <span class="flex items-center gap-1.5 text-sm font-semibold text-text min-w-0 truncate">
-            <component :is="selectedTrip ? Plane : Layers" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <component :is="selectedTrip ? transportModeIcon(selectedTrip.tripTransportMode) : Layers" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             <span class="truncate">{{ selectedTrip ? selectedTrip.tripCorridor : 'Tous mes trajets' }}</span>
             <span v-if="selectedTrip" class="hidden sm:inline text-text-muted font-normal text-xs ml-2 font-mono tabular-nums whitespace-nowrap">
-              · {{ selectedTrip.tripDepartureDate }} · {{ selectedTrip.tripAvailableKg }} kg dispo
+              · {{ selectedTrip.tripDepartureDate }}<template v-if="selectedTrip.tripAvailableKg != null"> · {{ selectedTrip.tripAvailableKg }} kg dispo</template>
             </span>
           </span>
           <button
@@ -94,7 +95,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="select(trip.tripId)"
           >
-            <span class="flex items-center gap-2 font-medium text-text"><Plane class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> {{ trip.tripCorridor }}</span>
+            <span class="flex items-center gap-2 font-medium text-text"><component :is="transportModeIcon(trip.tripTransportMode)" class="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> {{ trip.tripCorridor }}</span>
             <span class="text-xs text-text-muted"><span class="font-mono tabular-nums">{{ trip.matchCount }}</span> demande{{ trip.matchCount > 1 ? 's' : '' }}</span>
           </button>
         </div>
