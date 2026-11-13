@@ -3,7 +3,7 @@ import { tripsService } from '@/features/trajets/services/tripsService'
 import { useCommissionGrid } from '@/composables/useCommissionGrid'
 import { minimumFor, type CommissionGrid } from '@/lib/commissionGrid'
 import { usePreferencesStore } from '@/stores/preferences'
-import { addDaysToDateInput, arrivalDateError, daysBetweenDateInputs, deadlineToIso, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE } from '@/lib/dates'
+import { addDaysToDateInput, arrivalDateError, daysBetweenDateInputs, deadlineToIso, MAX_TEMPLATE_ARRIVAL_OFFSET_DAYS } from '@/lib/dates'
 import { defaultPricePerKg, normalizeCurrency, paymentMethodsFor, roundToCurrency } from '@/lib/money'
 import type {
   AnnouncementFormData,
@@ -83,7 +83,7 @@ export function useAnnouncementForm() {
 
   const svc = tripsService()
 
-  // Un modèle porte un décalage de jours (vol de nuit), pas une date : on l'applique
+  // Un modèle porte un décalage de jours (arrivée un autre jour), pas une date : on l'applique
   // à la date d'arrivée dès que le voyageur choisit sa date de départ.
   let pendingArrivalOffset = 0
   watch(() => form.departureDate, (date) => {
@@ -96,7 +96,7 @@ export function useAnnouncementForm() {
   function currentArrivalDayOffset(): number {
     if (form.departureDate && form.arrivalDate) {
       const days = daysBetweenDateInputs(form.departureDate, form.arrivalDate)
-      return Math.min(Math.max(days, 0), MAX_ARRIVAL_DAYS_AFTER_DEPARTURE)
+      return Math.min(Math.max(days, 0), MAX_TEMPLATE_ARRIVAL_OFFSET_DAYS)
     }
     return pendingArrivalOffset
   }
@@ -106,7 +106,7 @@ export function useAnnouncementForm() {
     if (!form.departureCity) errors.departureCity = 'Ville de départ requise'
     if (!form.arrivalCity) errors.arrivalCity = "Ville d'arrivée requise"
     if (!form.departureDate) errors.departureDate = 'Date de départ requise'
-    const arrivalError = arrivalDateError(form.departureDate, form.departureTime, form.arrivalDate, form.arrivalTime)
+    const arrivalError = arrivalDateError(form.departureDate, form.departureTime, form.arrivalDate, form.arrivalTime, form.transportMode)
     if (arrivalError) errors.arrivalDate = arrivalError
     if (!form.transportMode) errors.transportMode = 'Mode de transport requis'
     if (!form.pickupPlace) errors.pickupPlace = 'Lieu de remise requis'
@@ -250,7 +250,7 @@ export function useAnnouncementForm() {
       arrivalCity: arr.label,
       arrivalLat: arr.lat || null,
       arrivalLng: arr.lng || null,
-      transportMode: form.transportMode ?? 'PLANE',
+      transportMode: form.transportMode!,
       capacityUnit: form.capacityUnit,
       availableKg: form.availableWeightKg,
       pricePerKg: form.pricePerKg,

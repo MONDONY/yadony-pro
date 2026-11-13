@@ -1,7 +1,7 @@
 <!-- app/features/demandes/components/MatchingRequestGroup.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Plane } from 'lucide-vue-next'
+import { transportModeIcon } from '@/lib/transportModes'
 import { Badge } from '@/components/ui/badge'
 import { SectionLabel } from '@/components/ui/section-label'
 import MatchingRequestCard from '@/features/demandes/components/MatchingRequestCard.vue'
@@ -19,6 +19,9 @@ const emit = defineEmits<{
   'negotiate': [request: MatchingRequest]
 }>()
 
+// Mode du trajet : celui de la première demande du groupe (toutes partagent le même trajet).
+const groupIcon = computed(() => transportModeIcon(props.requests[0]?.tripTransportMode))
+
 const sortedRequests = computed(() =>
   [...props.requests].sort((a, b) => b.matchScore - a.matchScore),
 )
@@ -29,7 +32,7 @@ const sortedRequests = computed(() =>
     <div class="flex items-center gap-3">
       <div class="h-px flex-1 bg-border" />
       <div class="flex items-center gap-2">
-        <Plane class="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+        <component :is="groupIcon" class="h-3.5 w-3.5 text-primary" aria-hidden="true" />
         <SectionLabel>{{ tripCorridor }}</SectionLabel>
         <Badge variant="info" size="sm">
           <span class="font-mono tabular-nums">{{ requests.length }}</span>&nbsp;demande{{ requests.length > 1 ? 's' : '' }}

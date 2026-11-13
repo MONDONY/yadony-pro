@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plane, Car, Train, Minus, Plus, X } from 'lucide-vue-next'
+import { Minus, Plus, X } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { negotiationService } from '@/features/negociations/services/negotiationService'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
-import type { SelectedPlace } from '@/features/trajets/types/index'
+import type { SelectedPlace, TransportMode } from '@/features/trajets/types/index'
+import { isRoad, proposableModes, transportModeIcon, transportModeLabel, type TransportModesFlags } from '@/lib/transportModes'
+import { useTransportModes } from '@/composables/useTransportModes'
 import type { MatchingRequest } from '@/features/demandes/types/index'
 import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
 import {
@@ -38,7 +40,7 @@ const departureDate = ref('')
 // Lieux de remise et de récupération : coordonnées réelles (Google Places) exigées par le matching.
 const pickupPlace = ref<SelectedPlace | null>(null)
 const dropoffPlace = ref<SelectedPlace | null>(null)
-const transportMode = ref<'PLANE' | 'CAR' | 'TRAIN'>('PLANE')
+const transportMode = ref<TransportMode>('PLANE')
 const availableKg = ref(10)
 const proposedPrice = ref(0)
 const isLoading = ref(false)
@@ -75,6 +77,7 @@ const canSubmit = computed(() =>
   && !!dropoffPlace.value
   && proposedPrice.value >= priceFloor.value
   && proposedPrice.value <= priceCap.value
+  && !blockedReason.value
   && !isLoading.value,
 )
 
@@ -87,6 +90,7 @@ watch(
       departureDate.value = ''
       pickupPlace.value = null
       dropoffPlace.value = null
+      transportMode.value = req.requestTransportMode ? (req.requestTransportMode as TransportMode) : 'PLANE'
       errorMsg.value = null
     }
   },
@@ -119,11 +123,32 @@ const priceBarWidth = computed(() => {
 })
 
 // ── Transport mode chips ─────────────────────────────────────────────────────
-const modes = [
-  { value: 'PLANE' as const, label: 'Avion', icon: Plane },
-  { value: 'CAR' as const, label: 'Voiture', icon: Car },
-  { value: 'TRAIN' as const, label: 'Train', icon: Train },
-]
+// Interrupteurs du serveur (route, bateau) : en cas d'échec ou d'ancien back, avion seul.
+const { getFlags } = useTransportModes()
+const flags = ref<TransportModesFlags>({ road: false, boat: false })
+onMounted(() => {
+  getFlags().then((f) => { flags.value = f }).catch(() => undefined)
+})
+
+/** Mode demandé par l'expéditeur, figé ; null si « peu importe » ou si le back ne le sert pas encore. */
+const lockedMode = computed<TransportMode | null>(() => {
+  const m = props.request?.requestTransportMode
+  return typeof m === 'string' && m.length > 0 ? (m as TransportMode) : null
+})
+
+const modes = computed(() => {
+  const list = lockedMode.value ? [lockedMode.value] : proposableModes(flags.value)
+  return list.map((value) => ({ value, label: transportModeLabel(value), icon: transportModeIcon(value) }))
+})
+
+/** Raison pour laquelle le mode de la demande ne peut pas être créé depuis ici ; null si tout va bien. */
+const blockedReason = computed<string | null>(() => {
+  const m = lockedMode.value
+  if (!m || m === 'PLANE') return null
+  if (isRoad(m)) return flags.value.road ? null : "Le mode Route n'est pas encore ouvert."
+  if (m === 'BOAT') return 'Les trajets en bateau ne se créent pas encore depuis Yadony Pro.'
+  return 'Ce mode de transport ne se crée pas encore depuis Yadony Pro.'
+})
 
 // ── Submit ───────────────────────────────────────────────────────────────────
 async function submit() {
@@ -268,6 +293,7 @@ async function submit() {
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'border-border bg-surface-el text-text-muted hover:text-text hover:border-primary/50',
               ]"
+              :data-test="`create-trip-mode-${mode.value}`"
               @click="transportMode = mode.value"
             >
               <component :is="mode.icon" class="h-3.5 w-3.5" aria-hidden="true" />
@@ -275,6 +301,8 @@ async function submit() {
             </button>
           </div>
         </div>
+
+        <p v-if="blockedReason" data-test="create-trip-blocked" class="text-xs text-warning">{{ blockedReason }}</p>
 
         <!-- Capacité disponible -->
         <div class="space-y-1.5">

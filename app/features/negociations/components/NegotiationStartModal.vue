@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { XCircle, Plane } from 'lucide-vue-next'
+import { XCircle } from 'lucide-vue-next'
+import { transportModeIcon } from '@/lib/transportModes'
 import { SectionLabel } from '@/components/ui/section-label'
 import { negotiationService } from '@/features/negociations/services/negotiationService'
 import type { MatchingRequest } from '@/features/demandes/types/index'
@@ -92,7 +93,7 @@ async function submit() {
       packageRequestId: props.request.id,
       proposedPriceEur: proposedPrice.value,
       travelerTravelDate: props.request.tripDepartureDate,
-      travelerAvailableKg: props.request.tripAvailableKg,
+      travelerAvailableKg: props.request.tripAvailableKg ?? undefined,
       travelerAnnouncementId: props.request.tripId,
       body: message.value.trim() || undefined,
     })
@@ -150,8 +151,8 @@ async function submit() {
         <div class="px-5 py-3 border-b border-border">
           <SectionLabel class="mb-2">Mon trajet (auto-sélectionné)</SectionLabel>
           <div class="bg-success/5 border border-success/20 rounded-input px-3 py-2 text-xs">
-            <span class="inline-flex items-center gap-1.5 font-semibold text-text"><Plane class="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {{ request.tripCorridor }}</span>
-            <span class="text-text-muted ml-2">· {{ request.tripDepartureDate }} · <span class="font-mono tabular-nums">{{ request.tripAvailableKg }}</span> kg dispo</span>
+            <span class="inline-flex items-center gap-1.5 font-semibold text-text"><component :is="transportModeIcon(request.tripTransportMode)" class="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {{ request.tripCorridor }}</span>
+            <span class="text-text-muted ml-2">· {{ request.tripDepartureDate }}<template v-if="request.tripAvailableKg != null"> · <span class="font-mono tabular-nums">{{ request.tripAvailableKg }}</span> kg dispo</template></span>
           </div>
         </div>
 

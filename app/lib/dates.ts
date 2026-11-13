@@ -1,5 +1,24 @@
-/** Au-delà de ce délai après le départ, le backend refuse l'arrivée (ArrivalRules, « arrival-too-far »). */
-export const MAX_ARRIVAL_DAYS_AFTER_DEPARTURE = 3
+import type { TransportMode } from '@/features/trajets/types/index'
+
+/**
+ * Au-delà de ce délai après le départ, le backend refuse l'arrivée (ArrivalRules, « arrival-too-far »).
+ * Plafond par mode : avion, train et autre 3 jours ; route (voiture, bus) 14 jours ; bateau 120 jours.
+ * Sans mode choisi : 3 jours.
+ */
+export function maxArrivalDaysAfterDeparture(mode: TransportMode | null): number {
+  switch (mode) {
+    case 'CAR':
+    case 'BUS':
+      return 14
+    case 'BOAT':
+      return 120
+    default:
+      return 3
+  }
+}
+
+/** Décalage départ → arrivée des modèles et récurrences : le DTO back reste borné à 3 jours (`@Max(3)`). */
+export const MAX_TEMPLATE_ARRIVAL_OFFSET_DAYS = 3
 
 /** Ajoute `days` jours à une date `YYYY-MM-DD` sans passer par le fuseau local. */
 export function addDaysToDateInput(date: string, days: number): string {
@@ -23,11 +42,13 @@ export function arrivalDateError(
   departureTime: string,
   arrivalDate: string,
   arrivalTime: string,
+  mode: TransportMode | null = null,
 ): string | null {
   if (!departureDate || !arrivalDate) return null
   if (arrivalDate < departureDate) return "La date d'arrivée ne peut pas précéder le départ"
-  if (arrivalDate > addDaysToDateInput(departureDate, MAX_ARRIVAL_DAYS_AFTER_DEPARTURE)) {
-    return `L'arrivée doit avoir lieu au plus ${MAX_ARRIVAL_DAYS_AFTER_DEPARTURE} jours après le départ`
+  const maxDays = maxArrivalDaysAfterDeparture(mode)
+  if (arrivalDate > addDaysToDateInput(departureDate, maxDays)) {
+    return `L'arrivée doit avoir lieu au plus ${maxDays} jours après le départ`
   }
   if (arrivalDate === departureDate && departureTime && arrivalTime && arrivalTime <= departureTime) {
     return "Le même jour, l'heure d'arrivée doit suivre l'heure de départ"

@@ -4,6 +4,7 @@ import { TrendingUp, Percent, Euro, Weight } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
 import type { Trip, TripKpis } from '@/features/trajets/types/index'
 import { formatMoney } from '@/lib/money'
+import { capacityView, isVolumeTrip } from '@/features/trajets/lib/tripCapacity'
 
 defineProps<{
   trip: Trip
@@ -33,7 +34,7 @@ defineProps<{
               :style="{ width: kpis.fillRatePct + '%' }"
             />
           </div>
-          <p class="font-mono tabular-nums text-xs text-text-muted mt-1">{{ trip.usedWeightKg }} / {{ trip.availableWeightKg }} kg</p>
+          <p class="font-mono tabular-nums text-xs text-text-muted mt-1">{{ capacityView(trip).label }}</p>
         </div>
       </div>
 
@@ -65,8 +66,8 @@ defineProps<{
         </div>
       </div>
 
-      <!-- Revenu par kg -->
-      <div class="rounded-el border border-border bg-surface p-5 shadow-card space-y-3">
+      <!-- Revenu par kg (sans objet pour un trajet au m³) -->
+      <div v-if="!isVolumeTrip(trip)" class="rounded-el border border-border bg-surface p-5 shadow-card space-y-3">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-el bg-primary/10 flex items-center justify-center">
             <Weight class="w-4 h-4 text-primary" />

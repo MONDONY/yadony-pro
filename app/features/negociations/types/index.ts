@@ -28,7 +28,10 @@ export interface LinkedTripSummary {
   transportMode: string | null
   pickupAddressLabel: string | null
   deliveryAddressLabel: string | null
-  availableKg: number
+  /** Nul pour un trajet bateau au m³ (clé absente ou nulle). */
+  availableKg?: number | null
+  /** Bateau : volume restant en m³ ; absent hors bateau. */
+  availableVolumeM3?: number | null
   description: string | null
 }
 
@@ -69,7 +72,8 @@ export interface StartNegotiationPayload {
   packageRequestId: string
   proposedPriceEur: number
   travelerTravelDate: string
-  travelerAvailableKg: number
+  /** Absent pour un trajet bateau au m³ (pas de kilos). */
+  travelerAvailableKg?: number
   travelerAnnouncementId: string
   body?: string
 }

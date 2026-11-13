@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import RescheduleTripModal from '@/features/trajets/components/RescheduleTripModal.vue'
 import TripDetailHeader from '@/features/trajets/components/TripDetailHeader.vue'
+import { rescheduleReasons } from '@/features/trajets/lib/rescheduleReasons'
 
 const place = { placeId: '', label: 'Paris', lat: 0, lng: 0 }
 const baseTrip = {
@@ -16,6 +17,27 @@ const baseTrip = {
 function mountModal(extra: Record<string, unknown> = {}) {
   return mount(RescheduleTripModal, { props: { trip: baseTrip, isLoading: false, error: null, ...extra } })
 }
+
+describe('rescheduleReasons', () => {
+  it('avion : Vol annulé / FLIGHT_CANCELLED', () => {
+    expect(rescheduleReasons('PLANE')[0]).toEqual({ value: 'FLIGHT_CANCELLED', label: 'Vol annulé' })
+  })
+
+  it('route : Panne ou contretemps / TRANSPORT_CANCELLED', () => {
+    expect(rescheduleReasons('BUS')[0]).toEqual({ value: 'TRANSPORT_CANCELLED', label: 'Panne ou contretemps' })
+    expect(rescheduleReasons('CAR')[0]).toEqual({ value: 'TRANSPORT_CANCELLED', label: 'Panne ou contretemps' })
+  })
+
+  it('bateau et autres : Transport annulé', () => {
+    expect(rescheduleReasons('BOAT')[0]).toEqual({ value: 'TRANSPORT_CANCELLED', label: 'Transport annulé' })
+    expect(rescheduleReasons('TRAIN')[0].label).toBe('Transport annulé')
+    expect(rescheduleReasons(null)[0].label).toBe('Transport annulé')
+  })
+
+  it('les deux autres motifs ne changent pas', () => {
+    expect(rescheduleReasons('BOAT').slice(1).map((r) => r.value)).toEqual(['POSTPONED', 'OTHER'])
+  })
+})
 
 describe('RescheduleTripModal', () => {
   it('désactive l\'envoi tant que les champs requis manquent', () => {
@@ -111,5 +133,21 @@ describe('TripDetailHeader — bouton Reporter', () => {
     const trip = { ...(baseTrip as object), status, remainingReschedules: remaining } as never
     const w = mount(TripDetailHeader, { props: { trip }, global: { stubs } })
     expect(w.find('[data-test="btn-reschedule-trip"]').exists()).toBe(false)
+  })
+
+  it('trajet route : motif adapté, report à J+10 accepté', async () => {
+    const w = mountModal({ trip: { ...(baseTrip as object), transportMode: 'CAR' } })
+    const options = w.findAll('[data-test="reschedule-reason"] option').map((o) => o.text())
+    expect(options[0]).toBe('Panne ou contretemps')
+    await w.find('[data-test="reschedule-departure-date"]').setValue('2030-06-10')
+    await w.find('[data-test="reschedule-arrival-date"]').setValue('2030-06-20')
+    expect(w.find('[data-test="reschedule-arrival-error"]').exists()).toBe(false)
+  })
+
+  it('trajet avion : report à J+10 refusé avec le plafond de 3 jours', async () => {
+    const w = mountModal()
+    await w.find('[data-test="reschedule-departure-date"]').setValue('2030-06-10')
+    await w.find('[data-test="reschedule-arrival-date"]').setValue('2030-06-20')
+    expect(w.find('[data-test="reschedule-arrival-error"]').text()).toContain('au plus 3 jours')
   })
 })

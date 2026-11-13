@@ -15,6 +15,11 @@ vi.mock('@/features/trajets/services/placesService', () => ({
   placesService: () => ({ autocomplete: vi.fn().mockResolvedValue([]), getDetails: vi.fn() }),
 }))
 
+let mockFlags = { road: false, boat: false }
+vi.mock('@/composables/useTransportModes', () => ({
+  useTransportModes: () => ({ getFlags: async () => mockFlags }),
+}))
+
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 async function importModal() {
@@ -46,6 +51,7 @@ describe('CreateTripFromDemandModal', () => {
     vi.resetModules()
     mockCreateAnnouncement.mockReset()
     mockStartNegotiation.mockReset()
+    mockFlags = { road: false, boat: false }
   })
 
   it('extracts departureCity and arrivalCity from tripCorridor', async () => {
@@ -178,12 +184,14 @@ describe('CreateTripFromDemandModal', () => {
   })
 
   it('change le mode de transport et se ferme depuis la croix et le fond', async () => {
+    mockFlags = { road: true, boat: false }
     const Modal = await importModal()
-    const { mount } = await import('@vue/test-utils')
+    const { mount, flushPromises } = await import('@vue/test-utils')
     const wrapper = mount(Modal, { props: { request: fakeRequest } })
-    const train = wrapper.findAll('button').find((b) => b.text().includes('Train'))!
-    await train.trigger('click')
-    expect(train.attributes('class')).toContain('primary')
+    await flushPromises()
+    const road = wrapper.findAll('button').find((b) => b.text().includes('Route'))!
+    await road.trigger('click')
+    expect(road.attributes('class')).toContain('primary')
     await wrapper.find('[data-test="create-trip-close"]').trigger('click')
     expect(wrapper.emitted('close')).toHaveLength(1)
     await wrapper.find('[data-test="create-trip-kg"]').setValue(12)
@@ -203,5 +211,67 @@ describe('CreateTripFromDemandModal', () => {
     const wrapper = mount(Modal, { props: { request: fakeRequest } })
     await wrapper.find('[data-test="create-trip-cancel"]').trigger('click')
     expect(wrapper.emitted('close')).toBeTruthy()
+  })
+
+  describe('mode de transport', () => {
+    async function mountWith(request: Record<string, unknown>, flags = { road: false, boat: false }) {
+      mockFlags = flags
+      const Modal = await importModal()
+      const { mount, flushPromises } = await import('@vue/test-utils')
+      const wrapper = mount(Modal, { props: { request } })
+      await flushPromises()
+      return wrapper
+    }
+    const modeLabels = (w: { findAll: (q: string) => Array<{ text: () => string }> }) =>
+      w.findAll('[data-test^="create-trip-mode-"]').map((b) => b.text())
+
+    it('demande Route, route allumée : mode figé sur Route', async () => {
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'CAR' }, { road: true, boat: false })
+      expect(modeLabels(w)).toEqual(['Route'])
+      expect(w.find('[data-test="create-trip-blocked"]').exists()).toBe(false)
+    })
+
+    it('demande Route, route éteinte : bouton désactivé avec la raison', async () => {
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'BUS' })
+      expect(w.get('[data-test="create-trip-submit"]').attributes('disabled')).toBeDefined()
+      expect(w.get('[data-test="create-trip-blocked"]').text()).toContain('Route')
+    })
+
+    it('demande Bateau : bouton désactivé avec la raison, même interrupteur allumé', async () => {
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'BOAT' }, { road: true, boat: true })
+      await w.find('[data-test="create-trip-date"]').setValue('2026-06-20')
+      await fillPlaces(w)
+      expect(w.get('[data-test="create-trip-submit"]').attributes('disabled')).toBeDefined()
+      expect(w.get('[data-test="create-trip-blocked"]').text()).toContain('bateau')
+    })
+
+    it('demande peu importe (null) : avion et route proposés, avion par défaut', async () => {
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: null }, { road: true, boat: false })
+      expect(modeLabels(w)).toEqual(['Avion', 'Route'])
+      expect(w.get('[data-test="create-trip-mode-PLANE"]').classes()).toContain('border-primary')
+    })
+
+    it('ancien back (champ absent), route éteinte : avion seul et envoi PLANE', async () => {
+      mockCreateAnnouncement.mockResolvedValue({ id: 'ann-1', status: 'ACTIVE' })
+      mockStartNegotiation.mockResolvedValue({ id: 'thread-1' })
+      const w = await mountWith(fakeRequest)
+      expect(modeLabels(w)).toEqual(['Avion'])
+      await w.find('[data-test="create-trip-date"]').setValue('2026-06-20')
+      await fillPlaces(w)
+      await w.find('[data-test="create-trip-submit"]').trigger('click')
+      await new Promise((r) => setTimeout(r, 0))
+      expect(mockCreateAnnouncement).toHaveBeenCalledWith(expect.objectContaining({ transportMode: 'PLANE' }))
+    })
+
+    it('demande Route : le trajet est créé dans le mode de la demande', async () => {
+      mockCreateAnnouncement.mockResolvedValue({ id: 'ann-2', status: 'ACTIVE' })
+      mockStartNegotiation.mockResolvedValue({ id: 'thread-2' })
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'CAR' }, { road: true, boat: false })
+      await w.find('[data-test="create-trip-date"]').setValue('2026-06-20')
+      await fillPlaces(w)
+      await w.find('[data-test="create-trip-submit"]').trigger('click')
+      await new Promise((r) => setTimeout(r, 0))
+      expect(mockCreateAnnouncement).toHaveBeenCalledWith(expect.objectContaining({ transportMode: 'CAR' }))
+    })
   })
 })

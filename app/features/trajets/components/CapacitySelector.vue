@@ -10,7 +10,7 @@ const emit = defineEmits<{
 }>()
 
 const options: Array<{ value: CapacityUnit; label: string; description: string }> = [
-  { value: 'SUITCASE_23KG', label: '1 valise 23 kg', description: 'Format standard cabine' },
+  { value: 'SUITCASE_23KG', label: '1 valise 23 kg', description: 'Format standard' },
   { value: 'SUITCASE_32KG', label: '1 valise 32 kg', description: 'Grande valise' },
   { value: 'KG_FREE',       label: 'Kg libre',         description: 'Au kilo, sans contrainte' },
   { value: 'KG_EXACT',      label: 'Kg exact',         description: 'Capacité précise' },

@@ -141,7 +141,7 @@ export interface TripInsights {
   shareViewCount: number
 }
 
-export type RescheduleReason = 'FLIGHT_CANCELLED' | 'POSTPONED' | 'OTHER'
+export type RescheduleReason = 'FLIGHT_CANCELLED' | 'TRANSPORT_CANCELLED' | 'POSTPONED' | 'OTHER'
 
 export interface RescheduleTripPayload {
   departureDate: string
@@ -176,13 +176,21 @@ export interface Trip {
   transportMode: TransportMode
   pickupPlace: SelectedPlace
   dropoffPlace: SelectedPlace
-  availableWeightKg: number
-  usedWeightKg: number
+  /** Nul pour un trajet bateau au m³ : la capacité est alors `volumeCapacityM3`. */
+  availableWeightKg: number | null
+  usedWeightKg: number | null
+  /** Bateau : fin de la fourchette d'arrivée estimée (`arrivalDate` = début) ; absent ou nul hors bateau. */
+  arrivalDateMax?: string | null
+  /** Bateau : volume proposé et volume restant en m³, prix net voyageur au m³. */
+  volumeCapacityM3?: number | null
+  availableVolumeM3?: number | null
+  pricePerM3?: number | null
   capacityUnit?: CapacityUnit
   pricingMode?: PricingMode
   negotiable?: boolean
   currency?: string
-  pricePerKg: number
+  /** Nul pour un trajet bateau au m³. */
+  pricePerKg: number | null
   acceptedCategories: string[]
   refusedCategories: string[]
   senderNote: string | null

@@ -42,14 +42,20 @@ interface BackendAnnouncementResponse {
   departureDate: string
   departureTime: string | null
   arrivalTime: string | null
-  /** Jour d'arrivée quand il diffère du départ (vol de nuit) ; absent = même jour. */
+  /** Jour d'arrivée quand il diffère du départ ; absent = même jour. */
   arrivalDate?: string | null
   remainingReschedules?: number | null
   pickupAddress: BackendAddress
   deliveryAddress: BackendAddress
-  availableKg: number
-  totalKg: number
-  pricePerKg: number
+  /** Nuls pour un trajet bateau au m³ (clés présentes, valeur nulle). */
+  availableKg: number | null
+  totalKg: number | null
+  pricePerKg: number | null
+  /** Bateau : fin de la fourchette d'arrivée, volume en m³, prix net au m³ ; nuls hors bateau. */
+  arrivalDateMax?: string | null
+  volumeCapacityM3?: number | null
+  availableVolumeM3?: number | null
+  pricePerM3?: number | null
   transportMode: Trip['transportMode']
   status: Trip['status']
   pendingBidCount: number
@@ -113,6 +119,12 @@ interface BackendPage {
   size: number
 }
 
+function numberOrNull(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  const n = Number(value)
+  return Number.isFinite(n) ? n : null
+}
+
 function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
   return {
     id: a.id,
@@ -127,13 +139,17 @@ function mapBackendToTrip(a: BackendAnnouncementResponse): Trip {
     transportMode: a.transportMode,
     pickupPlace: { placeId: '', label: a.pickupAddress.label, lat: a.pickupAddress.lat, lng: a.pickupAddress.lng },
     dropoffPlace: { placeId: '', label: a.deliveryAddress.label, lat: a.deliveryAddress.lat, lng: a.deliveryAddress.lng },
-    availableWeightKg: a.availableKg,
-    usedWeightKg: a.totalKg - a.availableKg,
+    availableWeightKg: numberOrNull(a.availableKg),
+    usedWeightKg: a.totalKg == null || a.availableKg == null ? null : Number(a.totalKg) - Number(a.availableKg),
+    arrivalDateMax: a.arrivalDateMax ?? null,
+    volumeCapacityM3: numberOrNull(a.volumeCapacityM3),
+    availableVolumeM3: numberOrNull(a.availableVolumeM3),
+    pricePerM3: numberOrNull(a.pricePerM3),
     capacityUnit: a.capacityUnit ?? 'SUITCASE_23KG',
     pricingMode: a.pricingMode ?? 'KG',
     negotiable: a.negotiable ?? false,
     currency: normalizeCurrency(a.currency),
-    pricePerKg: a.pricePerKg,
+    pricePerKg: numberOrNull(a.pricePerKg),
     acceptedCategories: a.acceptedContentTypes,
     refusedCategories: a.refusedTypes,
     senderNote: a.senderNote ?? null,

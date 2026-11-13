@@ -98,7 +98,7 @@ function onSubmit() {
               v-model="note"
               type="text"
               maxlength="280"
-              placeholder="Ex. : Vol Air France AF558"
+              placeholder="Ex. : départ en fin de journée"
               class="w-full h-10 px-3 rounded-input border border-border bg-transparent text-sm text-text focus:border-primary focus:outline-none placeholder:text-text-muted/50"
             />
           </div>

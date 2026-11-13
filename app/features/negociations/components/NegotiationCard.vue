@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plane, AlertTriangle } from 'lucide-vue-next'
+import { CalendarDays, AlertTriangle } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { NegotiationThread } from '@/features/negociations/types'
 import { formatMoney } from '@/lib/money'
@@ -132,7 +132,7 @@ function timeAgo(isoDate: string): string {
         />
         <span class="text-[11px] text-text-muted font-medium ml-1 flex-1 truncate">
           R.{{ thread.roundsCount }}/5
-          <template v-if="runDate"> · <Plane class="inline-block h-3 w-3 -mt-0.5" aria-hidden="true" /> {{ runDate }}</template>
+          <template v-if="runDate"> · <CalendarDays class="inline-block h-3 w-3 -mt-0.5" aria-hidden="true" /> {{ runDate }}</template>
           · {{ timeAgo(thread.lastActivityAt) }}
         </span>
         <span

@@ -4,7 +4,9 @@ import { useRouter } from 'vue-router'
 import { tripsService } from '@/features/trajets/services/tripsService'
 import { conversationsService } from '@/features/messagerie/services/conversationsService'
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
-import { extractProblem } from '@/lib/apiError'
+import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
+import { maxArrivalDaysAfterDeparture } from '@/lib/dates'
+import { capacityView } from '@/features/trajets/lib/tripCapacity'
 import type { RescheduleTripPayload, RescheduleTripResult, Trip, TripBid, TripInsights, TripKpis } from '@/features/trajets/types/index'
 
 const publishErrorMessages: Record<string, string> = {
@@ -23,7 +25,6 @@ const rescheduleErrorMessages: Record<string, string> = {
   'invalid-departure-date': 'La nouvelle date de départ doit être dans le futur.',
   'handover-deadline-past': 'La date limite de remise doit être dans le futur.',
   'arrival-before-departure': 'La date d’arrivée ne peut pas précéder le départ.',
-  'arrival-too-far': 'L’arrivée doit avoir lieu au plus 3 jours après le départ.',
   'arrival-time-before-departure': 'Le même jour, l’heure d’arrivée doit suivre l’heure de départ.',
 }
 
@@ -122,6 +123,14 @@ export function useTripDetail(tripId: string) {
       return result
     } catch (e) {
       const { code, detail } = extractProblem(e)
+      if (code === 'arrival-too-far') {
+        // Le serveur chiffre le plafond selon le mode du trajet ; repli local sur le même plafond.
+        const days = maxArrivalDaysAfterDeparture(trip.value?.transportMode ?? null)
+        rescheduleError.value =
+          (detail && !TECHNICAL_ERROR_PATTERN.test(detail) ? detail : null) ||
+          `L’arrivée doit avoir lieu au plus ${days} jours après le départ.`
+        return null
+      }
       rescheduleError.value =
         (code && rescheduleErrorMessages[code]) || detail || 'Impossible de reporter ce trajet.'
       return null
@@ -249,9 +258,9 @@ export function useTripDetail(tripId: string) {
     const gross = confirmed.reduce((sum, b) => sum + b.paymentAmountEuros, 0)
     const net = roundToCurrency(confirmed.reduce((sum, b) => sum + b.earningsEuros, 0), currency)
     const commission = roundToCurrency(gross - net, currency)
-    const used = t.usedWeightKg
+    const used = t.usedWeightKg ?? 0
     return {
-      fillRatePct: t.availableWeightKg > 0 ? Math.round((used / t.availableWeightKg) * 100) : 0,
+      fillRatePct: capacityView(t).pct,
       grossRevenueEuros: roundToCurrency(gross, currency),
       commissionEuros: commission,
       netRevenueEuros: net,

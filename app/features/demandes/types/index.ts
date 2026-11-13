@@ -3,7 +3,12 @@ export interface MatchingRequest {
   tripId: string
   tripCorridor: string
   tripDepartureDate: string
-  tripAvailableKg: number
+  /** Kilos restants du trajet ; absent ou nul pour un trajet bateau au m³. */
+  tripAvailableKg?: number | null
+  /** Mode du trajet compatible ; absent sur un back antérieur (repli neutre). */
+  tripTransportMode?: string | null
+  /** Mode demandé par l'expéditeur ; nul ou absent = peu importe. */
+  requestTransportMode?: string | null
   tripNegotiable?: boolean
   senderId: string
   senderName: string
@@ -63,7 +68,8 @@ export interface ActiveTrip {
   tripId: string
   tripCorridor: string       // "Paris → Dakar"
   tripDepartureDate: string  // "2026-06-15"
-  tripAvailableKg: number
+  tripAvailableKg?: number | null
+  tripTransportMode?: string | null
   matchCount: number         // nombre de demandes compatibles pour ce trajet
 }
 

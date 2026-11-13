@@ -1,9 +1,10 @@
 <!-- app/features/trajets/components/TripDetailHeader.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Plane, Car, Bus, Footprints, ArrowLeft, Pencil, Trash2, CalendarClock } from 'lucide-vue-next'
+import { ArrowLeft, Pencil, Trash2, CalendarClock } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
-import type { Trip, TransportMode } from '@/features/trajets/types/index'
+import type { Trip } from '@/features/trajets/types/index'
+import { transportModeIcon } from '@/lib/transportModes'
 
 const props = defineProps<{
   trip: Trip
@@ -20,10 +21,6 @@ const canReschedule = computed(
     ['ACTIVE', 'FULL', 'IN_PROGRESS'].includes(props.trip.status)
     && props.trip.remainingReschedules !== 0,
 )
-
-const transportIcon: Record<TransportMode, typeof Plane> = {
-  PLANE: Plane, CAR: Car, TRAIN: Plane, BUS: Bus, BOAT: Footprints, OTHER: Footprints,
-}
 
 const statusLabel: Record<string, string> = {
   DRAFT: 'Brouillon', ACTIVE: 'Actif', FULL: 'Complet', IN_PROGRESS: 'En cours',
@@ -50,7 +47,7 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
       >
         <ArrowLeft class="w-4 h-4" />
       </NuxtLink>
-      <component :is="transportIcon[trip.transportMode]" class="w-5 h-5 text-primary flex-shrink-0" />
+      <component :is="transportModeIcon(trip.transportMode)" class="w-5 h-5 text-primary flex-shrink-0" />
       <h1 class="text-xl font-semibold text-text font-display truncate">
         {{ trip.departureCity.label }}
         <span class="text-primary mx-1">→</span>
