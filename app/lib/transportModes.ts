@@ -3,11 +3,11 @@ import type { Component } from 'vue'
 import type { TransportMode } from '@/features/trajets/types/index'
 
 /**
- * La création et l'édition de trajets bateau dans Yadony Pro arrivent avec le lot 5
- * (m³, fourchette d'arrivée, paiement au dépôt). Tant que ce drapeau est faux, le bateau
- * n'est jamais proposé, même interrupteur serveur allumé.
+ * La création et l'édition de trajets bateau dans Yadony Pro (m³, fourchette d'arrivée,
+ * paiement au dépôt) sont livrées au lot 5. Le bateau n'apparaît toutefois que si
+ * l'interrupteur serveur est allumé (`/config/transport-modes`) et le transporteur vérifié.
  */
-export const PRO_BOAT_TRIP_CREATION_READY = false
+export const PRO_BOAT_TRIP_CREATION_READY = true
 
 export const BOAT_NOT_VERIFIED_MESSAGE =
   'Le bateau est réservé aux entreprises et aux transporteurs vérifiés.'

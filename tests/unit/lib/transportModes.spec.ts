@@ -29,16 +29,23 @@ describe('transportModes', () => {
     expect(boatBlockedReason({ road: true, boat: true }, { gpPro: true, proAccount: false })).toBeNull()
   })
 
-  it('le bateau reste hors des modes proposables tant que le drapeau est faux', () => {
-    expect(proposableModes({ road: false, boat: true }, { gpPro: true, proAccount: true })).toEqual(['PLANE'])
+  it('bateau proposable à un transporteur vérifié quand le serveur l’ouvre', () => {
+    expect(proposableModes({ road: true, boat: true }, { gpPro: true, proAccount: false }))
+      .toEqual(['PLANE', 'BOAT', 'CAR'])
+    expect(proposableModes({ road: false, boat: true }, { gpPro: false, proAccount: true }))
+      .toEqual(['PLANE', 'BOAT'])
+    expect(proposableModes({ road: true, boat: true }, { gpPro: false, proAccount: false }))
+      .toEqual(['PLANE', 'CAR'])
+    expect(proposableModes({ road: true, boat: false }, { gpPro: true, proAccount: true }))
+      .toEqual(['PLANE', 'CAR'])
   })
 
-  it('profil absent : comportement du lot 4 inchangé', () => {
+  it('profil absent : jamais de bateau', () => {
     expect(proposableModes({ road: true, boat: true })).toEqual(['PLANE', 'CAR'])
   })
 
-  it('la création bateau est désactivée dans ce lot', () => {
-    expect(PRO_BOAT_TRIP_CREATION_READY).toBe(false)
+  it('la création bateau est livrée', () => {
+    expect(PRO_BOAT_TRIP_CREATION_READY).toBe(true)
   })
 
   it('route éteinte : avion seul', () => {
