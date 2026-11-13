@@ -284,6 +284,7 @@ function onExportCsv() {
         :bids="bids"
         :is-loading="bidsLoading"
         :loading-bid-id="loadingBidId"
+        :transport-mode="trip.transportMode"
         @accept="onAcceptBid"
         @reject="onRejectBid"
         @accept-negotiation="onAcceptBidNegotiation"

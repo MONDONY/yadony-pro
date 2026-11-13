@@ -5,6 +5,7 @@ import { SectionLabel } from '@/components/ui/section-label'
 import type { Trip, TripKpis } from '@/features/trajets/types/index'
 import { formatMoney } from '@/lib/money'
 import { capacityView, isVolumeTrip } from '@/features/trajets/lib/tripCapacity'
+import { payoutHint } from '@/features/trajets/lib/payout'
 
 defineProps<{
   trip: Trip
@@ -99,8 +100,8 @@ defineProps<{
           <span class="font-mono tabular-nums text-sm font-semibold text-success">{{ formatMoney(kpis.netRevenueEuros, trip.currency) }}</span>
         </div>
       </div>
-      <p class="text-xs text-text-muted mt-4">
-        Estimations basées sur les colis acceptés, remis ou en transit. Les colis livrés déclenchent le virement.
+      <p class="text-xs text-text-muted mt-4" data-test="revenue-hint">
+        Estimations basées sur les colis acceptés, remis ou en transit. {{ payoutHint(trip) }}
       </p>
     </div>
 

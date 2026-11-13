@@ -5,10 +5,13 @@ import { X, CheckCircle, XCircle, UserCheck, UserX, Ban, PackageCheck, Undo2 } f
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { TripBid } from '@/features/trajets/types/index'
 import { formatMoney } from '@/lib/money'
+import { parcelPayoutLabel } from '@/features/trajets/lib/payout'
 
 const props = defineProps<{
   bid: TripBid | null
   loadingBidId?: string | null
+  /** Mode du trajet : fixe le moment du versement (dépôt en bateau, livraison sinon). */
+  transportMode?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -159,6 +162,9 @@ function submitCounter() {
           </div>
           <div v-if="bid.paymentMethod" class="text-xs text-text-muted">
             <span class="text-text-subtle">Paiement :</span> {{ bid.paymentMethod }}
+          </div>
+          <div v-if="transportMode" class="text-xs text-text-muted" data-test="detail-payout-moment">
+            {{ parcelPayoutLabel(transportMode) }}
           </div>
           <div v-if="bid.rescheduleDecisionPending" class="rounded-el border border-warning/40 bg-warning/10 p-3 text-xs text-text" data-test="detail-reschedule-pending">
             Trajet reporté : l'expéditeur doit encore choisir de garder ce colis ou de se retirer sans frais.
