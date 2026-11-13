@@ -7,13 +7,16 @@ import { tripsService } from '@/features/trajets/services/tripsService'
 import { negotiationService } from '@/features/negociations/services/negotiationService'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
 import type { SelectedPlace, TransportMode } from '@/features/trajets/types/index'
-import { isRoad, proposableModes, transportModeIcon, transportModeLabel, type TransportModesFlags } from '@/lib/transportModes'
+import { boatBlockedReason, isRoad, proposableModes, transportModeIcon, transportModeLabel, type TransportModesFlags } from '@/lib/transportModes'
+import { arrivalRangeError, maxArrivalDaysAfterDeparture, addDaysToDateInput } from '@/lib/dates'
+import { useAuthStore } from '@/stores/auth'
 import { useTransportModes } from '@/composables/useTransportModes'
 import type { MatchingRequest } from '@/features/demandes/types/index'
 import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
 import {
   formatMoney,
   formatPerKg,
+  formatPerM3,
   maxNegotiationPrice,
   minNegotiationPrice,
   normalizeCurrency,
@@ -42,6 +45,11 @@ const pickupPlace = ref<SelectedPlace | null>(null)
 const dropoffPlace = ref<SelectedPlace | null>(null)
 const transportMode = ref<TransportMode>('PLANE')
 const availableKg = ref(10)
+// Trajet au m³ : volume, prix au m³ et fourchette d'arrivée estimée.
+const volumeM3 = ref<number | null>(null)
+const pricePerM3 = ref<number | null>(null)
+const arrivalMin = ref('')
+const arrivalMax = ref('')
 const proposedPrice = ref(0)
 const isLoading = ref(false)
 const errorMsg = ref<string | null>(null)
@@ -71,12 +79,31 @@ const pricePerKg = computed(() =>
     : null,
 )
 
+const isBoat = computed(() => transportMode.value === 'BOAT')
+
+const boatFieldsValid = computed(() =>
+  volumeM3.value !== null && volumeM3.value > 0
+  && pricePerM3.value !== null && pricePerM3.value > 0
+  && arrivalRangeError(departureDate.value, arrivalMin.value, arrivalMax.value, 'BOAT') === null,
+)
+
+const arrivalError = computed(() =>
+  isBoat.value && arrivalMin.value && arrivalMax.value
+    ? arrivalRangeError(departureDate.value, arrivalMin.value, arrivalMax.value, 'BOAT')
+    : null,
+)
+
+const maxArrivalDate = computed(() =>
+  departureDate.value ? addDaysToDateInput(departureDate.value, maxArrivalDaysAfterDeparture('BOAT')) : undefined,
+)
+
 const canSubmit = computed(() =>
   !!departureDate.value
   && !!pickupPlace.value
   && !!dropoffPlace.value
   && proposedPrice.value >= priceFloor.value
   && proposedPrice.value <= priceCap.value
+  && (!isBoat.value || boatFieldsValid.value)
   && !blockedReason.value
   && !isLoading.value,
 )
@@ -91,6 +118,10 @@ watch(
       pickupPlace.value = null
       dropoffPlace.value = null
       transportMode.value = req.requestTransportMode ? (req.requestTransportMode as TransportMode) : 'PLANE'
+      volumeM3.value = null
+      pricePerM3.value = null
+      arrivalMin.value = ''
+      arrivalMax.value = ''
       errorMsg.value = null
     }
   },
@@ -126,6 +157,8 @@ const priceBarWidth = computed(() => {
 // Interrupteurs du serveur (route, bateau) : en cas d'échec ou d'ancien back, avion seul.
 const { getFlags } = useTransportModes()
 const flags = ref<TransportModesFlags>({ road: false, boat: false })
+const auth = useAuthStore()
+const carrierProfile = computed(() => auth.carrierProfile ?? null)
 onMounted(() => {
   getFlags().then((f) => { flags.value = f }).catch(() => undefined)
 })
@@ -137,7 +170,7 @@ const lockedMode = computed<TransportMode | null>(() => {
 })
 
 const modes = computed(() => {
-  const list = lockedMode.value ? [lockedMode.value] : proposableModes(flags.value)
+  const list = lockedMode.value ? [lockedMode.value] : proposableModes(flags.value, carrierProfile.value)
   return list.map((value) => ({ value, label: transportModeLabel(value), icon: transportModeIcon(value) }))
 })
 
@@ -146,7 +179,7 @@ const blockedReason = computed<string | null>(() => {
   const m = lockedMode.value
   if (!m || m === 'PLANE') return null
   if (isRoad(m)) return flags.value.road ? null : "Le mode Route n'est pas encore ouvert."
-  if (m === 'BOAT') return 'Les trajets en bateau ne se créent pas encore depuis Yadony Pro.'
+  if (m === 'BOAT') return boatBlockedReason(flags.value, carrierProfile.value)
   return 'Ce mode de transport ne se crée pas encore depuis Yadony Pro.'
 })
 
@@ -158,6 +191,7 @@ async function submit() {
 
   let announcementId: string
   try {
+    const boat = isBoat.value
     const trip = await tripsSvc.createAnnouncement({
       departureCity: departureCity.value,
       arrivalCity: arrivalCity.value,
@@ -167,12 +201,21 @@ async function submit() {
       transportMode: transportMode.value,
       pickupAddress: { label: pickupPlace.value!.label, lat: pickupPlace.value!.lat, lng: pickupPlace.value!.lng },
       deliveryAddress: { label: dropoffPlace.value!.label, lat: dropoffPlace.value!.lat, lng: dropoffPlace.value!.lng },
-      availableKg: availableKg.value,
-      capacityUnit: 'KG_FREE',
+      availableKg: boat ? null : availableKg.value,
+      // Au m³, « kilo libre » est refusé : l'unité est « kilo exact ».
+      capacityUnit: boat ? 'KG_EXACT' : 'KG_FREE',
       pricingMode: 'KG',
       negotiable: true,
       currency: currency.value,
-      pricePerKg: props.request.budgetPerKg,
+      pricePerKg: boat ? null : props.request.budgetPerKg,
+      ...(boat
+        ? {
+            arrivalDate: arrivalMin.value,
+            arrivalDateMax: arrivalMax.value,
+            volumeCapacityM3: volumeM3.value!,
+            pricePerM3: pricePerM3.value!,
+          }
+        : {}),
       description: null,
       acceptedContentTypes: [props.request.contentType],
       refusedTypes: [],
@@ -191,7 +234,7 @@ async function submit() {
       packageRequestId: props.request.id,
       proposedPriceEur: proposedPrice.value,
       travelerTravelDate: departureDate.value,
-      travelerAvailableKg: availableKg.value,
+      travelerAvailableKg: isBoat.value ? props.request.weightKg : availableKg.value,
       travelerAnnouncementId: announcementId,
     })
     emit('success', props.request.id)
@@ -304,8 +347,63 @@ async function submit() {
 
         <p v-if="blockedReason" data-test="create-trip-blocked" class="text-xs text-warning">{{ blockedReason }}</p>
 
+        <!-- Trajet au m³ : volume, prix au m³ et fourchette d'arrivée -->
+        <template v-if="isBoat">
+          <div class="space-y-1.5">
+            <SectionLabel as="label">Volume proposé (m³)</SectionLabel>
+            <input
+              v-model.number="volumeM3"
+              type="number"
+              min="0.1"
+              max="9999"
+              step="0.1"
+              data-test="create-trip-volume"
+              class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-text text-sm font-mono tabular-nums focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/25 transition-[border-color,box-shadow]"
+            />
+          </div>
+          <div class="space-y-1.5">
+            <SectionLabel as="label">Prix par m³</SectionLabel>
+            <input
+              v-model.number="pricePerM3"
+              type="number"
+              min="0.01"
+              :step="step"
+              data-test="create-trip-price-m3"
+              class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-text text-sm font-mono tabular-nums focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/25 transition-[border-color,box-shadow]"
+            />
+            <p v-if="pricePerM3 !== null && pricePerM3 > 0" class="text-xs text-text-muted">
+              Vous recevez <span class="font-mono tabular-nums">{{ formatPerM3(pricePerM3, currency) }}</span>
+            </p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1.5">
+              <SectionLabel as="label">Arrivée au plus tôt</SectionLabel>
+              <input
+                v-model="arrivalMin"
+                type="date"
+                :min="departureDate || undefined"
+                :max="maxArrivalDate"
+                data-test="create-trip-arrival-min"
+                class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-text text-sm font-mono tabular-nums focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/25 transition-[border-color,box-shadow]"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <SectionLabel as="label">Arrivée au plus tard</SectionLabel>
+              <input
+                v-model="arrivalMax"
+                type="date"
+                :min="arrivalMin || departureDate || undefined"
+                :max="maxArrivalDate"
+                data-test="create-trip-arrival-max"
+                class="w-full px-3 py-2 rounded-input bg-surface-el border border-border-strong text-text text-sm font-mono tabular-nums focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/25 transition-[border-color,box-shadow]"
+              />
+            </div>
+          </div>
+          <p v-if="arrivalError" data-test="create-trip-arrival-error" class="text-xs text-danger">{{ arrivalError }}</p>
+        </template>
+
         <!-- Capacité disponible -->
-        <div class="space-y-1.5">
+        <div v-else class="space-y-1.5">
           <SectionLabel as="label">Capacité disponible (kg)</SectionLabel>
           <input
             v-model.number="availableKg"
@@ -334,7 +432,7 @@ async function submit() {
             <div class="flex-1 text-center">
               <p class="text-2xl font-mono font-semibold text-text tabular-nums" data-test="create-trip-price">{{ formatMoney(proposedPrice, currency) }}</p>
               <p class="text-xs text-text-muted mt-0.5">
-                soit <span class="font-mono tabular-nums">{{ pricePerKg !== null ? formatPerKg(pricePerKg, currency) : '—' }}</span>
+                soit <span class="font-mono tabular-nums">{{ pricePerKg !== null ? formatPerKg(pricePerKg, currency) : '-' }}</span>
               </p>
             </div>
             <button

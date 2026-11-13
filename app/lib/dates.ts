@@ -57,6 +57,27 @@ export function arrivalDateError(
 }
 
 /**
+ * Fourchette d'arrivée estimée d'un trajet bateau, identique à ArrivalRules.validateRange
+ * côté dony-back : les deux bornes sont requises, le début ne précède pas le départ,
+ * la fin ne précède pas le début et reste dans le plafond du mode.
+ */
+export function arrivalRangeError(
+  departureDate: string,
+  arrivalDate: string,
+  arrivalDateMax: string,
+  mode: TransportMode | null = 'BOAT',
+): string | null {
+  if (!arrivalDate || !arrivalDateMax) return 'Arrivée estimée requise, au plus tôt et au plus tard'
+  if (departureDate && arrivalDate < departureDate) return "L'arrivée ne peut pas précéder le départ"
+  if (arrivalDateMax < arrivalDate) return "L'arrivée au plus tard doit suivre l'arrivée au plus tôt"
+  const maxDays = maxArrivalDaysAfterDeparture(mode)
+  if (departureDate && arrivalDateMax > addDaysToDateInput(departureDate, maxDays)) {
+    return `L'arrivée doit avoir lieu au plus ${maxDays} jours après le départ`
+  }
+  return null
+}
+
+/**
  * Date limite de dépôt au format ISO. Le voyageur ne choisit qu'un jour : on le borne
  * à la fin de journée, sauf si le départ a lieu ce jour-là — auquel cas la limite est
  * l'heure de départ, le backend refusant toute limite postérieure au départ.

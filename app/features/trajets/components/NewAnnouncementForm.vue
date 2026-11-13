@@ -3,8 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { formatMoney, formatPerKg, isStripeCurrency } from '@/lib/money'
 import { ChevronDown, LayoutTemplate, BookmarkPlus, X } from 'lucide-vue-next'
 import { useAnnouncementForm } from '@/features/trajets/composables/useAnnouncementForm'
-import { addDaysToDateInput, maxArrivalDaysAfterDeparture } from '@/lib/dates'
-import { chipModes, type TransportModesFlags } from '@/lib/transportModes'
+import { addDaysToDateInput, arrivalRangeError, maxArrivalDaysAfterDeparture } from '@/lib/dates'
+import { BOAT_NOT_VERIFIED_MESSAGE, boatBlockedReason, chipModes, PRO_BOAT_TRIP_CREATION_READY, type TransportModesFlags } from '@/lib/transportModes'
+import { useAuthStore } from '@/stores/auth'
 import { useTransportModes } from '@/composables/useTransportModes'
 import { extractProblem } from '@/lib/apiError'
 import { useTrips } from '@/features/trajets/composables/useTrips'
@@ -14,6 +15,7 @@ import { tripTemplateService } from '@/features/trajets/services/tripTemplateSer
 import type { PriceGridItem } from '@/features/tarifs/types/index'
 import type { PricingMode, TransportMode, UserTripTemplate } from '@/features/trajets/types/index'
 import GooglePlacesInput from '@/features/trajets/components/GooglePlacesInput.vue'
+import BoatCapacityPrice from '@/features/trajets/components/BoatCapacityPrice.vue'
 import TransportModeChips from '@/features/trajets/components/TransportModeChips.vue'
 import WeightSlider from '@/features/trajets/components/WeightSlider.vue'
 import CapacitySelector from '@/features/trajets/components/CapacitySelector.vue'
@@ -35,7 +37,7 @@ const props = withDefaults(defineProps<{
   editTripId: undefined,
 })
 
-const { form, currency, netPrice, minimumFee, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
+const { form, isBoat, currency, netPrice, minimumFee, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload } = useAnnouncementForm()
 // En zone CFA le backend ne garde que le mobile money et les espèces : le
 // choix « espèces » n'en est plus un, on l'affiche activé et verrouillé.
 const cardCurrency = computed(() => isStripeCurrency(currency.value))
@@ -49,6 +51,7 @@ const {
 const { fetchContentCategories } = configService()
 const tplSvc = tripTemplateService()
 
+const BOAT_TEMPLATE_HINT = "Un trajet en bateau ne s'enregistre pas comme modèle."
 const errors = ref<ValidationErrors>({})
 const isSubmitting = ref(false)
 const quickTemplates = TRIP_TEMPLATES
@@ -81,6 +84,15 @@ const submitErrorMessages: Record<string, string> = {
   'stripe-onboarding-incomplete': 'Connectez votre compte bancaire dans les paramètres pour accepter la carte, ou publiez en espèces uniquement.',
   'currency-unsupported': 'Cette devise n’est pas prise en charge. Vérifiez la devise de vos paramètres.',
   'mobile-money-payment-retired': 'Ce moyen de paiement n’existe plus. Rechargez la page et réessayez.',
+  'boat-carrier-not-verified': BOAT_NOT_VERIFIED_MESSAGE,
+  'transport-mode-disabled': "Ce mode de transport n'est pas encore ouvert.",
+  'boat-price-required': 'Un trajet en bateau se vend au m³ : renseignez un volume et un prix au m³.',
+  'boat-volume-required': 'Volume proposé requis pour un trajet au m³.',
+  'boat-volume-unit-invalid': 'Un trajet au m³ ne peut pas être au kilo libre.',
+  'arrival-range-invalid': "Vérifiez l'arrivée estimée : au plus tôt, puis au plus tard.",
+  'boat-template-unsupported': "Un trajet en bateau ne s'enregistre pas comme modèle.",
+  'pricing-unit-locked': "Ce trajet porte déjà des colis : son unité de prix ne peut plus changer.",
+  'modification-impossible': 'Ce trajet porte un colis en cours : il ne peut plus être modifié.',
 }
 
 const today = new Date()
@@ -107,7 +119,18 @@ const maxArrivalDate = computed(() =>
 const { getFlags } = useTransportModes()
 const transportFlags = ref<TransportModesFlags>({ road: false, boat: false })
 const loadedMode = ref<TransportMode | null>(null)
-const transportModes = computed(() => chipModes(transportFlags.value, loadedMode.value))
+const auth = useAuthStore()
+const carrierProfile = computed(() => auth.carrierProfile ?? null)
+// Bateau visible mais éteint pour un transporteur non vérifié : la raison s'affiche sous les puces.
+const boatDisabledReason = computed(() => {
+  if (!transportFlags.value.boat || !PRO_BOAT_TRIP_CREATION_READY || loadedMode.value === 'BOAT') return null
+  return boatBlockedReason(transportFlags.value, carrierProfile.value)
+})
+const disabledModes = computed<TransportMode[]>(() => (boatDisabledReason.value ? ['BOAT'] : []))
+const transportModes = computed(() => {
+  const modes = chipModes(transportFlags.value, loadedMode.value, carrierProfile.value)
+  return boatDisabledReason.value && !modes.includes('BOAT') ? [...modes, 'BOAT' as TransportMode] : modes
+})
 
 onMounted(async () => {
   getFlags().then((flags) => {
@@ -173,7 +196,7 @@ async function onDeleteMyTemplate(t: UserTripTemplate) {
   }
 }
 
-const canSaveTemplate = computed(() => !!form.departureCity && !!form.arrivalCity && !!form.transportMode)
+const canSaveTemplate = computed(() => !!form.departureCity && !!form.arrivalCity && !!form.transportMode && form.transportMode !== 'BOAT')
 
 async function onSaveTemplate() {
   const label = newTemplateLabel.value.trim()
@@ -204,8 +227,14 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
     emit('submitted', trip)
   } catch (e) {
     const { code, detail } = extractProblem(e)
-    errors.value.global =
-      (code && submitErrorMessages[code]) || detail || 'Une erreur est survenue. Réessayez.'
+    if (code === 'arrival-too-far') {
+      errors.value.global = detail
+        || arrivalRangeError(form.departureDate, form.arrivalDate, form.arrivalDateMax, 'BOAT')
+        || "L'arrivée estimée est trop éloignée du départ."
+    } else {
+      errors.value.global =
+        (code && submitErrorMessages[code]) || detail || 'Une erreur est survenue. Réessayez.'
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -228,6 +257,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
           data-test="open-save-template"
           class="flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
           :disabled="!canSaveTemplate"
+          :title="form.transportMode === 'BOAT' ? BOAT_TEMPLATE_HINT : undefined"
           @click="showSaveTemplate = !showSaveTemplate"
         >
           <BookmarkPlus class="w-3.5 h-3.5" />
@@ -356,7 +386,13 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <label class="block text-sm font-medium text-text mb-1.5">
           Mode de transport <span class="text-danger">*</span>
         </label>
-        <TransportModeChips v-model="form.transportMode" :modes="transportModes" :error="errors.transportMode" />
+        <TransportModeChips
+          v-model="form.transportMode"
+          :modes="transportModes"
+          :disabled-modes="disabledModes"
+          :disabled-reason="boatDisabledReason"
+          :error="errors.transportMode"
+        />
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -418,7 +454,45 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
         <p v-if="errors.departureDate" class="mt-1 text-xs text-danger">{{ errors.departureDate }}</p>
       </div>
 
-      <div>
+      <div v-if="isBoat" class="grid grid-cols-1 sm:grid-cols-2 gap-4" data-test="boat-arrival-range">
+        <div>
+          <label class="block text-sm font-medium text-text mb-1.5">
+            Arrivée estimée, au plus tôt <span class="text-danger">*</span>
+          </label>
+          <input
+            v-model="form.arrivalDate"
+            type="date"
+            :min="form.departureDate || minDate"
+            :max="maxArrivalDate"
+            data-test="arrival-date-min"
+            :class="[
+              'flex h-10 w-full rounded-input border bg-surface px-3 py-1 text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]',
+              errors.arrivalDateMax ? 'border-danger' : 'border-border-strong',
+            ]"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-text mb-1.5">
+            Arrivée estimée, au plus tard <span class="text-danger">*</span>
+          </label>
+          <input
+            v-model="form.arrivalDateMax"
+            type="date"
+            :min="form.arrivalDate || form.departureDate || minDate"
+            :max="maxArrivalDate"
+            data-test="arrival-date-max"
+            :class="[
+              'flex h-10 w-full rounded-input border bg-surface px-3 py-1 text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-[border-color,box-shadow]',
+              errors.arrivalDateMax ? 'border-danger' : 'border-border-strong',
+            ]"
+          />
+        </div>
+        <p v-if="errors.arrivalDateMax" class="sm:col-span-2 -mt-2 text-xs text-danger">{{ errors.arrivalDateMax }}</p>
+        <p v-else class="sm:col-span-2 -mt-2 text-xs text-text-muted">
+          La traversée est annoncée en fourchette : les expéditeurs voient les deux dates.
+        </p>
+      </div>
+      <div v-else>
         <label class="block text-sm font-medium text-text mb-1.5">Date d'arrivée</label>
         <input
           v-model="form.arrivalDate"
@@ -484,6 +558,14 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
     <!-- Section Capacité & Prix -->
     <section class="space-y-5">
       <h2 class="font-display text-lg font-semibold text-text border-b border-border pb-2">Capacité & Prix</h2>
+      <BoatCapacityPrice
+        v-if="isBoat"
+        v-model:volume="form.volumeCapacityM3"
+        v-model:price="form.pricePerM3"
+        :currency="currency"
+        :errors="{ volume: errors.volumeCapacityM3, price: errors.pricePerM3 }"
+      />
+      <template v-else>
       <CapacitySelector v-model="form.capacityUnit" />
       <WeightSlider v-model="form.availableWeightKg" :min="1" :max="23" />
       <div>
@@ -571,6 +653,7 @@ async function handleSubmit(status: 'DRAFT' | 'PUBLISHED') {
             (minimum <span class="font-mono tabular-nums" data-test="minimum-fee">{{ formatMoney(minimumFee, currency) }}</span>)</template>
         </p>
       </div>
+      </template>
 
       <div
         class="flex items-start sm:items-center justify-between gap-4 p-4 rounded-el border border-border bg-surface-el"

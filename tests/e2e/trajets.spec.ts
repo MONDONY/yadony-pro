@@ -192,3 +192,34 @@ test.describe('Nouvelle annonce — Formulaire', () => {
     await expect(page.locator('[data-test="announcement-price-grid-row-telephone"]')).toContainText('Téléphone')
   })
 })
+
+test.describe('Nouvelle annonce — Bateau', () => {
+  test.beforeEach(async ({ page }) => {
+    await blockFirebaseAuthCalls(page)
+    await fakeLogin(page)
+    await mockApi(page)
+    await page.route('**/config/transport-modes', async (route) => {
+      await route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ road: true, boat: true }),
+      })
+    })
+  })
+
+  test('un compte PRO choisit Bateau : volume, prix au m³ et fourchette d’arrivée', async ({ page }) => {
+    await gotoNouvelleAnnonce(page)
+    await expect(page.locator('[data-test="boat-volume"]')).toHaveCount(0)
+    await page.locator('[data-test="transport-BOAT"]').click()
+    await expect(page.locator('[data-test="transport-BOAT"]')).toHaveClass(/border-primary/)
+    await expect(page.locator('[data-test="boat-volume"]')).toBeVisible()
+    await expect(page.locator('[data-test="boat-price-m3"]')).toBeVisible()
+    await expect(page.locator('[data-test="pricing-mode-MIXED"]')).toHaveCount(0)
+    await expect(page.locator('[data-test="arrival-date-min"]')).toBeVisible()
+    await expect(page.locator('[data-test="arrival-date-max"]')).toBeVisible()
+    await page.locator('[data-test="boat-volume"]').fill('12')
+    await page.locator('[data-test="boat-price-m3"]').fill('600')
+    await expect(page.locator('[data-test="boat-net-price"]')).toContainText('600')
+    await expect(page.locator('[data-test="open-save-template"]')).toBeDisabled()
+  })
+})
+

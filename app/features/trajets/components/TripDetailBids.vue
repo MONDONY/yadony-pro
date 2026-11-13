@@ -14,6 +14,7 @@ const props = defineProps<{
   bids: TripBid[]
   isLoading: boolean
   loadingBidId?: string | null
+  transportMode?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -464,6 +465,7 @@ const negotiationCount = computed(() => props.bids.filter((b) => b.status === 'N
   <TripBidDetailPanel
     :bid="detailBid"
     :loading-bid-id="loadingBidId"
+    :transport-mode="transportMode"
     @close="detailBid = null"
     @accept="(id) => forwardAndClose(() => emit('accept', id))"
     @reject="(id) => forwardAndClose(() => emit('reject', id))"

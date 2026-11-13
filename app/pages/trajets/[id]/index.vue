@@ -9,7 +9,8 @@ import TripDetailBids from '@/features/trajets/components/TripDetailBids.vue'
 import TripDetailRevenue from '@/features/trajets/components/TripDetailRevenue.vue'
 import DeleteTripModal from '@/features/trajets/components/DeleteTripModal.vue'
 import RescheduleTripModal from '@/features/trajets/components/RescheduleTripModal.vue'
-import type { RescheduleTripPayload, RescheduleTripResult } from '@/features/trajets/types/index'
+import AnnounceDelayModal from '@/features/trajets/components/AnnounceDelayModal.vue'
+import type { AnnounceDelayPayload, RescheduleTripPayload, RescheduleTripResult } from '@/features/trajets/types/index'
 
 definePageMeta({
   middleware: ['pro-only'],
@@ -29,13 +30,15 @@ const tripId = route.params.id as string
 const activeTab = ref<Tab>((route.query.tab as Tab) || 'overview')
 const showDeleteModal = ref(false)
 const showRescheduleModal = ref(false)
+const showDelayModal = ref(false)
+const delayAnnounced = ref(false)
 const rescheduleResult = ref<RescheduleTripResult | null>(null)
 const loadingBidId = ref<string | null>(null)
 
 const {
   trip, bids, insights, isLoading, bidsLoading, error,
-  deleteLoading, rescheduleLoading, rescheduleError, recipientChatError, publishLoading, publishError, publishErrorCode, kpis,
-  fetchTrip, fetchBids, fetchInsights, deleteTrip, publishTrip, rescheduleTrip, openRecipientChat, acceptBid, rejectBid, confirmDelivery,
+  deleteLoading, rescheduleLoading, rescheduleError, delayLoading, delayError, recipientChatError, publishLoading, publishError, publishErrorCode, kpis,
+  fetchTrip, fetchBids, fetchInsights, deleteTrip, publishTrip, rescheduleTrip, announceDelay, openRecipientChat, acceptBid, rejectBid, confirmDelivery,
   acceptBidNegotiation, rejectBidNegotiation, counterBidNegotiation,
   confirmPresence, refuseParcel, cancelBid, markTrackingEvent,
   reportNoShow, cancelAfterHandover, confirmReturn, exportBidsCsv,
@@ -57,6 +60,14 @@ onMounted(async () => {
 
 async function onDeleteConfirm() {
   await deleteTrip()
+}
+
+async function onDelaySubmit(payload: AnnounceDelayPayload) {
+  const delay = await announceDelay(payload)
+  if (delay) {
+    delayAnnounced.value = true
+    showDelayModal.value = false
+  }
 }
 
 async function onRescheduleSubmit(payload: RescheduleTripPayload) {
@@ -176,11 +187,25 @@ function onExportCsv() {
         :trip="trip"
         @delete="showDeleteModal = true"
         @reschedule="rescheduleError = null; showRescheduleModal = true"
+        @announce-delay="delayError = null; showDelayModal = true"
       />
 
       <p v-if="recipientChatError" class="rounded-card border border-danger/40 bg-danger/10 p-3 text-sm text-danger" data-test="recipient-chat-error">
         {{ recipientChatError }}
       </p>
+
+      <!-- Bilan de l'annonce de retard : une seule bannière, un rejeu renvoie le même retard -->
+      <div
+        v-if="delayAnnounced"
+        data-test="delay-result"
+        class="rounded-card border border-success/40 bg-success/10 p-4 flex items-start justify-between gap-4"
+      >
+        <p class="text-sm text-text">
+          <span class="font-medium">Retard annoncé.</span>
+          <span class="text-text-muted">Les expéditeurs concernés ont été prévenus.</span>
+        </p>
+        <button class="text-xs text-text-muted hover:text-text" @click="delayAnnounced = false">Fermer</button>
+      </div>
 
       <!-- Bilan du report -->
       <div
@@ -259,6 +284,7 @@ function onExportCsv() {
         :bids="bids"
         :is-loading="bidsLoading"
         :loading-bid-id="loadingBidId"
+        :transport-mode="trip.transportMode"
         @accept="onAcceptBid"
         @reject="onRejectBid"
         @accept-negotiation="onAcceptBidNegotiation"
@@ -290,6 +316,15 @@ function onExportCsv() {
       :error="rescheduleError"
       @submit="onRescheduleSubmit"
       @cancel="showRescheduleModal = false"
+    />
+
+    <AnnounceDelayModal
+      v-if="showDelayModal && trip"
+      :trip="trip"
+      :is-loading="delayLoading"
+      :error="delayError"
+      @submit="onDelaySubmit"
+      @cancel="showDelayModal = false"
     />
 
     <!-- Delete modal -->

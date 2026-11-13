@@ -3,11 +3,25 @@ import type { Component } from 'vue'
 import type { TransportMode } from '@/features/trajets/types/index'
 
 /**
- * La création et l'édition de trajets bateau dans Yadony Pro arrivent avec le lot 5
- * (m³, fourchette d'arrivée, paiement au dépôt). Tant que ce drapeau est faux, le bateau
- * n'est jamais proposé, même interrupteur serveur allumé.
+ * La création et l'édition de trajets bateau dans Yadony Pro (m³, fourchette d'arrivée,
+ * paiement au dépôt) sont livrées au lot 5. Le bateau n'apparaît toutefois que si
+ * l'interrupteur serveur est allumé (`/config/transport-modes`) et le transporteur vérifié.
  */
-export const PRO_BOAT_TRIP_CREATION_READY = false
+export const PRO_BOAT_TRIP_CREATION_READY = true
+
+export const BOAT_NOT_VERIFIED_MESSAGE =
+  'Le bateau est réservé aux entreprises et aux transporteurs vérifiés.'
+
+/** Profil du transporteur tel que lu sur `/auth/me`. */
+export interface CarrierProfile {
+  gpPro: boolean
+  proAccount: boolean
+}
+
+/** Transporteur vérifié = badge GP Pro ou compte PRO (même règle que le back). */
+export function isVerifiedCarrier(profile: CarrierProfile | null | undefined): boolean {
+  return !!profile && (profile.gpPro === true || profile.proAccount === true)
+}
 
 export interface TransportModesFlags {
   road: boolean
@@ -55,17 +69,31 @@ export function isRoad(mode: string | null | undefined): boolean {
   return mode === 'CAR' || mode === 'BUS'
 }
 
-/** Modes que l'on peut choisir à la création. Avion toujours, Route si ouverte, Bateau jamais tant que le lot 5 n'est pas là. */
-export function proposableModes(flags: TransportModesFlags): TransportMode[] {
+/** Pourquoi le bateau ne peut pas être choisi, ou null s'il le peut. */
+export function boatBlockedReason(
+  flags: TransportModesFlags,
+  profile: CarrierProfile | null | undefined,
+): string | null {
+  if (!flags.boat) return "Le mode Bateau n'est pas encore ouvert."
+  if (!isVerifiedCarrier(profile)) return BOAT_NOT_VERIFIED_MESSAGE
+  return null
+}
+
+/** Modes que l'on peut choisir à la création. Avion toujours, Route si ouverte, Bateau si ouvert et transporteur vérifié. */
+export function proposableModes(flags: TransportModesFlags, profile?: CarrierProfile | null): TransportMode[] {
   const modes: TransportMode[] = ['PLANE']
   if (flags.road) modes.push('CAR')
-  if (flags.boat && PRO_BOAT_TRIP_CREATION_READY) modes.push('BOAT')
+  if (flags.boat && PRO_BOAT_TRIP_CREATION_READY && isVerifiedCarrier(profile)) modes.push('BOAT')
   return sortModes(modes)
 }
 
 /** Modes proposables plus le mode courant d'un trajet existant, afin qu'il reste affiché et renvoyé tel quel. */
-export function chipModes(flags: TransportModesFlags, current: TransportMode | null): TransportMode[] {
-  const modes = proposableModes(flags)
+export function chipModes(
+  flags: TransportModesFlags,
+  current: TransportMode | null,
+  profile?: CarrierProfile | null,
+): TransportMode[] {
+  const modes = proposableModes(flags, profile)
   if (current && !modes.includes(current)) modes.push(current)
   return sortModes(modes)
 }

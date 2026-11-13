@@ -4,6 +4,8 @@ import { computed } from 'vue'
 import { MapPin, Calendar, Clock, Package, CreditCard, FileText, Eye } from 'lucide-vue-next'
 import { SectionLabel } from '@/components/ui/section-label'
 import type { Trip, TripInsights } from '@/features/trajets/types/index'
+import { payoutMomentLabel } from '@/features/trajets/lib/payout'
+import { delayReasonLabel } from '@/features/trajets/lib/delayReasons'
 import { capacityView, isVolumeTrip, priceLabel } from '@/features/trajets/lib/tripCapacity'
 
 const props = defineProps<{
@@ -33,6 +35,21 @@ const formattedArrivalMax = computed(() =>
     ? new Date(props.trip.arrivalDateMax).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     : null,
 )
+
+function formatDay(date: string): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+const latestDelay = computed(() => {
+  const d = props.trip.latestTripDelay
+  if (!d) return null
+  return {
+    reason: delayReasonLabel(d.reason),
+    from: formatDay(d.arrivalDate),
+    to: formatDay(d.arrivalDateMax),
+    message: d.message,
+  }
+})
 
 const barColor = computed(() =>
   fillPct.value >= 80 ? 'bg-success' : fillPct.value >= 40 ? 'bg-warning' : 'bg-danger'
@@ -87,6 +104,17 @@ const pricingModeLabel = computed(() => {
             <p class="text-sm text-text font-medium capitalize">
               {{ formattedArrivalMax ? `du ${formattedArrivalDate} au ${formattedArrivalMax}` : formattedArrivalDate }}
             </p>
+          </div>
+        </div>
+
+        <div v-if="latestDelay" class="flex items-start gap-3" data-test="trip-latest-delay">
+          <Clock class="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
+          <div>
+            <p class="text-xs text-text-muted">Retard annoncé</p>
+            <p class="text-sm text-text font-medium">
+              {{ latestDelay.reason }}. Nouvelle arrivée estimée : du {{ latestDelay.from }} au {{ latestDelay.to }}.
+            </p>
+            <p v-if="latestDelay.message" class="mt-0.5 text-xs text-text-muted" data-test="trip-latest-delay-message">{{ latestDelay.message }}</p>
           </div>
         </div>
 
@@ -224,6 +252,7 @@ const pricingModeLabel = computed(() => {
         <div>
           <p class="text-xs text-text-muted">Méthodes acceptées</p>
           <p class="text-sm text-text font-medium">{{ paymentMethods.join(', ') }}</p>
+          <p class="mt-1 text-xs text-text-muted" data-test="payout-moment">{{ payoutMomentLabel(trip) }}</p>
         </div>
       </div>
 

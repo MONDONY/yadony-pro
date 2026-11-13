@@ -1,7 +1,7 @@
 <!-- app/features/trajets/components/TripDetailHeader.vue -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowLeft, Pencil, Trash2, CalendarClock } from 'lucide-vue-next'
+import { ArrowLeft, Pencil, Trash2, CalendarClock, Clock } from 'lucide-vue-next'
 import { Badge, type BadgeVariants } from '@/components/ui/badge'
 import type { Trip } from '@/features/trajets/types/index'
 import { transportModeIcon } from '@/lib/transportModes'
@@ -13,6 +13,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'delete': []
   'reschedule': []
+  'announce-delay': []
 }>()
 
 // Un trajet publié et pas terminé se reporte, tant qu'il reste des reports (2 au plus).
@@ -21,6 +22,9 @@ const canReschedule = computed(
     ['ACTIVE', 'FULL', 'IN_PROGRESS'].includes(props.trip.status)
     && props.trip.remainingReschedules !== 0,
 )
+
+// Un trajet parti peut annoncer un retard, quel que soit son mode.
+const canAnnounceDelay = computed(() => props.trip.status === 'IN_PROGRESS')
 
 const statusLabel: Record<string, string> = {
   DRAFT: 'Brouillon', ACTIVE: 'Actif', FULL: 'Complet', IN_PROGRESS: 'En cours',
@@ -75,6 +79,15 @@ const statusVariant: Record<string, BadgeVariants['variant']> = {
       >
         <CalendarClock class="w-3.5 h-3.5" />
         Reporter
+      </button>
+      <button
+        v-if="canAnnounceDelay"
+        data-test="btn-announce-delay"
+        class="flex items-center gap-1.5 h-9 px-3 rounded-btn border border-border-strong text-sm text-text-muted hover:text-text hover:bg-surface-el transition-colors whitespace-nowrap"
+        @click="emit('announce-delay')"
+      >
+        <Clock class="w-3.5 h-3.5" />
+        Annoncer un retard
       </button>
       <button
         data-test="btn-delete-trip"

@@ -5,9 +5,9 @@ import { tripsService } from '@/features/trajets/services/tripsService'
 import { conversationsService } from '@/features/messagerie/services/conversationsService'
 import { cancellationService } from '@/features/cancellation/services/cancellationService'
 import { extractProblem, TECHNICAL_ERROR_PATTERN } from '@/lib/apiError'
-import { maxArrivalDaysAfterDeparture } from '@/lib/dates'
+import { arrivalRangeError, maxArrivalDaysAfterDeparture } from '@/lib/dates'
 import { capacityView } from '@/features/trajets/lib/tripCapacity'
-import type { RescheduleTripPayload, RescheduleTripResult, Trip, TripBid, TripInsights, TripKpis } from '@/features/trajets/types/index'
+import type { AnnounceDelayPayload, RescheduleTripPayload, RescheduleTripResult, Trip, TripBid, TripDelay, TripInsights, TripKpis } from '@/features/trajets/types/index'
 
 const publishErrorMessages: Record<string, string> = {
   'kyc-not-verified': 'Vérifiez votre identité avant de publier ce trajet.',
@@ -28,6 +28,14 @@ const rescheduleErrorMessages: Record<string, string> = {
   'arrival-time-before-departure': 'Le même jour, l’heure d’arrivée doit suivre l’heure de départ.',
 }
 
+const delayErrorMessages: Record<string, string> = {
+  'trip-delay-not-allowed': 'Seul un trajet en cours peut porter une annonce de retard.',
+  'trip-delay-too-frequent': '5 retards au plus par 24 heures. Réessayez plus tard.',
+  'trip-delay-reason-invalid': 'Ce motif ne vaut que pour un trajet en bateau.',
+  'arrival-range-invalid': 'Vérifiez la nouvelle arrivée estimée : au plus tôt, puis au plus tard.',
+  forbidden: 'Ce trajet ne vous appartient pas.',
+}
+
 export function useTripDetail(tripId: string) {
   const trip = ref<Trip | null>(null)
   const bids = ref<TripBid[]>([])
@@ -42,6 +50,8 @@ export function useTripDetail(tripId: string) {
   const recipientChatError = ref<string | null>(null)
   const rescheduleLoading = ref(false)
   const rescheduleError = ref<string | null>(null)
+  const delayLoading = ref(false)
+  const delayError = ref<string | null>(null)
 
   const svc = tripsService()
   const cancellationSvc = cancellationService()
@@ -136,6 +146,31 @@ export function useTripDetail(tripId: string) {
       return null
     } finally {
       rescheduleLoading.value = false
+    }
+  }
+
+  /** Annonce un retard aux expéditeurs ; retourne le retard enregistré ou null en cas d'échec. */
+  async function announceDelay(payload: AnnounceDelayPayload): Promise<TripDelay | null> {
+    delayLoading.value = true
+    delayError.value = null
+    try {
+      const delay = await svc.announceDelay(tripId, payload)
+      await Promise.all([fetchTrip(), fetchBids()])
+      return delay
+    } catch (e) {
+      const { code, detail } = extractProblem(e)
+      if (code === 'arrival-too-far') {
+        delayError.value =
+          (detail && !TECHNICAL_ERROR_PATTERN.test(detail) ? detail : null)
+          || arrivalRangeError(trip.value?.departureDate ?? '', payload.arrivalDate, payload.arrivalDateMax)
+          || "L'arrivée estimée est trop éloignée du départ."
+        return null
+      }
+      delayError.value =
+        (code && delayErrorMessages[code]) || detail || "Impossible d'annoncer ce retard."
+      return null
+    } finally {
+      delayLoading.value = false
     }
   }
 
@@ -298,6 +333,8 @@ export function useTripDetail(tripId: string) {
     publishErrorCode,
     rescheduleLoading,
     rescheduleError,
+    delayLoading,
+    delayError,
     recipientChatError,
     kpis,
     fetchTrip,
@@ -306,6 +343,7 @@ export function useTripDetail(tripId: string) {
     deleteTrip,
     publishTrip,
     rescheduleTrip,
+    announceDelay,
     openRecipientChat,
     acceptBid,
     rejectBid,

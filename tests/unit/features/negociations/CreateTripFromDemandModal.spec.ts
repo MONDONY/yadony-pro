@@ -22,6 +22,11 @@ vi.mock('@/composables/useTransportModes', () => ({
 
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
+let mockProfile: { gpPro: boolean; proAccount: boolean } = { gpPro: false, proAccount: false }
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: () => ({ carrierProfile: mockProfile }),
+}))
+
 async function importModal() {
   const { default: Modal } = await import('@/features/demandes/components/CreateTripFromDemandModal.vue')
   return Modal
@@ -52,6 +57,7 @@ describe('CreateTripFromDemandModal', () => {
     mockCreateAnnouncement.mockReset()
     mockStartNegotiation.mockReset()
     mockFlags = { road: false, boat: false }
+    mockProfile = { gpPro: false, proAccount: false }
   })
 
   it('extracts departureCity and arrivalCity from tripCorridor', async () => {
@@ -237,12 +243,69 @@ describe('CreateTripFromDemandModal', () => {
       expect(w.get('[data-test="create-trip-blocked"]').text()).toContain('Route')
     })
 
-    it('demande Bateau : bouton désactivé avec la raison, même interrupteur allumé', async () => {
+    it('demande bateau, transporteur vérifié : mode figé sur Bateau et champs m³', async () => {
+      mockProfile = { gpPro: true, proAccount: false }
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'BOAT' }, { road: true, boat: true })
+      expect(modeLabels(w)).toEqual(['Bateau'])
+      expect(w.find('[data-test="create-trip-volume"]').exists()).toBe(true)
+      expect(w.find('[data-test="create-trip-price-m3"]').exists()).toBe(true)
+      expect(w.find('[data-test="create-trip-kg"]').exists()).toBe(false)
+      expect(w.find('[data-test="create-trip-blocked"]').exists()).toBe(false)
+    })
+
+    it('demande bateau, transporteur non vérifié : bouton désactivé avec la raison', async () => {
       const w = await mountWith({ ...fakeRequest, requestTransportMode: 'BOAT' }, { road: true, boat: true })
       await w.find('[data-test="create-trip-date"]').setValue('2026-06-20')
       await fillPlaces(w)
       expect(w.get('[data-test="create-trip-submit"]').attributes('disabled')).toBeDefined()
-      expect(w.get('[data-test="create-trip-blocked"]').text()).toContain('bateau')
+      expect(w.get('[data-test="create-trip-blocked"]').text()).toContain('transporteurs vérifiés')
+    })
+
+    it('demande bateau, interrupteur éteint : raison « pas encore ouvert »', async () => {
+      mockProfile = { gpPro: true, proAccount: true }
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'BOAT' }, { road: true, boat: false })
+      expect(w.get('[data-test="create-trip-blocked"]').text()).toContain("n'est pas encore ouvert")
+    })
+
+    async function fillBoat(w: Awaited<ReturnType<typeof mountWith>>, v: { volume: number | string; price: number | string; min: string; max: string }) {
+      await w.find('[data-test="create-trip-date"]').setValue('2026-12-01')
+      await fillPlaces(w)
+      await w.find('[data-test="create-trip-volume"]').setValue(v.volume)
+      await w.find('[data-test="create-trip-price-m3"]').setValue(v.price)
+      await w.find('[data-test="create-trip-arrival-min"]').setValue(v.min)
+      await w.find('[data-test="create-trip-arrival-max"]').setValue(v.max)
+    }
+
+    it('soumission bateau : payload au m³ avec la fourchette', async () => {
+      mockProfile = { gpPro: true, proAccount: false }
+      mockCreateAnnouncement.mockResolvedValue({ id: 'ann-boat', status: 'ACTIVE' })
+      mockStartNegotiation.mockResolvedValue({ id: 'thread-boat' })
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'BOAT' }, { road: true, boat: true })
+      await fillBoat(w, { volume: 12, price: 600, min: '2027-01-10', max: '2027-01-25' })
+      await w.find('[data-test="create-trip-submit"]').trigger('click')
+      await new Promise((r) => setTimeout(r, 0))
+      expect(mockCreateAnnouncement).toHaveBeenCalledWith(expect.objectContaining({
+        transportMode: 'BOAT', availableKg: null, pricePerKg: null, capacityUnit: 'KG_EXACT',
+        volumeCapacityM3: 12, pricePerM3: 600, arrivalDate: '2027-01-10', arrivalDateMax: '2027-01-25',
+      }))
+      expect(mockStartNegotiation).toHaveBeenCalledWith(expect.objectContaining({
+        travelerAnnouncementId: 'ann-boat', travelerAvailableKg: 5,
+      }))
+    })
+
+    it('fourchette incohérente : soumission bloquée avec le message', async () => {
+      mockProfile = { gpPro: true, proAccount: false }
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'BOAT' }, { road: true, boat: true })
+      await fillBoat(w, { volume: 12, price: 600, min: '2027-01-25', max: '2027-01-10' })
+      expect(w.get('[data-test="create-trip-submit"]').attributes('disabled')).toBeDefined()
+      expect(w.get('[data-test="create-trip-arrival-error"]').text()).toContain('au plus tard')
+    })
+
+    it('volume ou prix manquant : soumission bloquée', async () => {
+      mockProfile = { gpPro: true, proAccount: false }
+      const w = await mountWith({ ...fakeRequest, requestTransportMode: 'BOAT' }, { road: true, boat: true })
+      await fillBoat(w, { volume: '', price: 600, min: '2027-01-10', max: '2027-01-25' })
+      expect(w.get('[data-test="create-trip-submit"]').attributes('disabled')).toBeDefined()
     })
 
     it('demande peu importe (null) : avion et route proposés, avion par défaut', async () => {

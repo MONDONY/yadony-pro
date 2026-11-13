@@ -121,6 +121,42 @@ describe('tripsService', () => {
     expect(result.availableWeightKg).toBe(15)
   })
 
+  it('createAnnouncement et updateAnnouncement transmettent les champs bateau tels quels', async () => {
+    const boatPayload = {
+      ...payload, transportMode: 'BOAT' as const, availableKg: null, pricePerKg: null,
+      capacityUnit: 'KG_EXACT' as const, volumeCapacityM3: 12, pricePerM3: 600,
+      arrivalDate: '2026-07-10', arrivalDateMax: '2026-07-25',
+    }
+    mockApiFn.mockResolvedValue({ ...fakeTrip, transportMode: 'BOAT', availableKg: null, pricePerKg: null, volumeCapacityM3: 12, pricePerM3: 600 })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    const created = await svc.createAnnouncement(boatPayload)
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements', { method: 'POST', body: boatPayload })
+    expect(created.volumeCapacityM3).toBe(12)
+    await svc.updateAnnouncement('trip-1', boatPayload)
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/trip-1', { method: 'PUT', body: boatPayload })
+  })
+
+  it('annonce de retard : POST sur /delays', async () => {
+    const body = { reason: 'WEATHER' as const, arrivalDate: '2027-01-10', arrivalDateMax: '2027-01-25', message: null }
+    mockApiFn.mockResolvedValue({ id: 'd1', ...body, announcedAt: '2027-01-02T10:00:00Z' })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    const delay = await svc.announceDelay('a1', body)
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/a1/delays', { method: 'POST', body })
+    expect(delay.id).toBe('d1')
+  })
+
+  it('latestTripDelay lu du détail, nul chez un ancien back', async () => {
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    mockApiFn.mockResolvedValue(fakeTrip)
+    expect((await svc.getAnnouncement('a1')).latestTripDelay).toBeNull()
+    const latest = { id: 'd1', reason: 'WEATHER', arrivalDate: '2027-01-10', arrivalDateMax: '2027-01-25', message: null, announcedAt: 'x' }
+    mockApiFn.mockResolvedValue({ ...fakeTrip, latestTripDelay: latest })
+    expect((await svc.getAnnouncement('a1')).latestTripDelay).toEqual(latest)
+  })
+
   it('createAnnouncement transmet saveAsDraft: true dans le body en mode brouillon', async () => {
     mockApiFn.mockResolvedValue({ ...fakeTrip, status: 'DRAFT' })
     const { tripsService } = await import('@/features/trajets/services/tripsService')

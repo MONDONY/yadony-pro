@@ -141,6 +141,25 @@ export interface TripInsights {
   shareViewCount: number
 }
 
+/** Motif d'un retard annoncé aux expéditeurs ; `PORT_CONGESTION` ne vaut que pour le bateau. */
+export type TripDelayReason = 'PORT_CONGESTION' | 'WEATHER' | 'EXTENDED_STOPOVER' | 'TRANSPORT_DISRUPTION' | 'OTHER'
+
+export interface TripDelay {
+  id: string
+  reason: TripDelayReason
+  arrivalDate: string
+  arrivalDateMax: string
+  message: string | null
+  announcedAt: string
+}
+
+export interface AnnounceDelayPayload {
+  reason: TripDelayReason
+  arrivalDate: string
+  arrivalDateMax: string
+  message: string | null
+}
+
 export type RescheduleReason = 'FLIGHT_CANCELLED' | 'TRANSPORT_CANCELLED' | 'POSTPONED' | 'OTHER'
 
 export interface RescheduleTripPayload {
@@ -181,6 +200,8 @@ export interface Trip {
   usedWeightKg: number | null
   /** Bateau : fin de la fourchette d'arrivée estimée (`arrivalDate` = début) ; absent ou nul hors bateau. */
   arrivalDateMax?: string | null
+  /** Dernier retard annoncé aux expéditeurs ; absent ou nul sans retard ou sur un ancien back. */
+  latestTripDelay?: TripDelay | null
   /** Bateau : volume proposé et volume restant en m³, prix net voyageur au m³. */
   volumeCapacityM3?: number | null
   availableVolumeM3?: number | null
@@ -216,10 +237,15 @@ export interface AnnouncementFormData {
   arrivalCity: SelectedPlace | null
   arrivalTime: string
   arrivalDate: string
+  /** Trajet au m³ : fin de la fourchette d'arrivée (`arrivalDate` en est le début). */
+  arrivalDateMax: string
   departureDate: string
   transportMode: TransportMode | null
   pickupPlace: SelectedPlace | null
   dropoffPlace: SelectedPlace | null
+  /** Trajet au m³ : volume proposé et prix net voyageur au m³. */
+  volumeCapacityM3: number | null
+  pricePerM3: number | null
   availableWeightKg: number
   capacityUnit: CapacityUnit
   pricingMode: PricingMode
@@ -243,12 +269,18 @@ export interface CreateAnnouncementPayload {
   transportMode: TransportMode
   pickupAddress: { label: string; lat: number; lng: number }
   deliveryAddress: { label: string; lat: number; lng: number }
-  availableKg: number
+  /** Nul pour un trajet au m³. */
+  availableKg: number | null
   capacityUnit: CapacityUnit
   pricingMode: PricingMode
   negotiable: boolean
   currency: string
-  pricePerKg: number
+  /** Nul pour un trajet au m³. */
+  pricePerKg: number | null
+  /** Trajet au m³ seulement : absents des autres modes (à la modification, `null` n'efface rien). */
+  arrivalDateMax?: string
+  volumeCapacityM3?: number
+  pricePerM3?: number
   description: string | null
   acceptedContentTypes: string[]
   refusedTypes: string[]
@@ -261,6 +293,9 @@ export interface ValidationErrors {
   arrivalCity?: string
   departureDate?: string
   arrivalDate?: string
+  arrivalDateMax?: string
+  volumeCapacityM3?: string
+  pricePerM3?: string
   transportMode?: string
   pickupPlace?: string
   dropoffPlace?: string

@@ -3,7 +3,7 @@ import { tripsService } from '@/features/trajets/services/tripsService'
 import { useCommissionGrid } from '@/composables/useCommissionGrid'
 import { minimumFor, type CommissionGrid } from '@/lib/commissionGrid'
 import { usePreferencesStore } from '@/stores/preferences'
-import { addDaysToDateInput, arrivalDateError, daysBetweenDateInputs, deadlineToIso, MAX_TEMPLATE_ARRIVAL_OFFSET_DAYS } from '@/lib/dates'
+import { addDaysToDateInput, arrivalDateError, arrivalRangeError, daysBetweenDateInputs, deadlineToIso, MAX_TEMPLATE_ARRIVAL_OFFSET_DAYS } from '@/lib/dates'
 import { defaultPricePerKg, normalizeCurrency, paymentMethodsFor, roundToCurrency } from '@/lib/money'
 import type {
   AnnouncementFormData,
@@ -37,10 +37,13 @@ export function useAnnouncementForm() {
     arrivalCity: null,
     arrivalTime: '',
     arrivalDate: '',
+    arrivalDateMax: '',
     departureDate: '',
     transportMode: null,
     pickupPlace: null,
     dropoffPlace: null,
+    volumeCapacityM3: null,
+    pricePerM3: null,
     availableWeightKg: 15,
     capacityUnit: 'SUITCASE_23KG' as CapacityUnit,
     pricingMode: 'KG',
@@ -74,6 +77,16 @@ export function useAnnouncementForm() {
 
   const currency = computed(() => form.currency)
 
+  // Trajet bateau d'avant le lot 3 (au kilo, sans fourchette ni volume) : il reste modifiable
+  // en kilos et la modification n'envoie aucun champ bateau, le back le laisse alors tel quel.
+  const legacyBoat = ref(false)
+  watch(() => form.transportMode, (mode) => {
+    if (mode !== 'BOAT') legacyBoat.value = false
+  }, { flush: 'sync' })
+  const isLegacyBoatTrip = computed(() => form.transportMode === 'BOAT' && legacyBoat.value)
+  /** Trajet vendu au m³ : bateau, hors trajet bateau d'avant le lot 3. */
+  const isBoat = computed(() => form.transportMode === 'BOAT' && !legacyBoat.value)
+
   // Le prix au kilo saisi EST le net du voyageur : le backend le stocke tel quel et
   // les frais de service s'ajoutent côté expéditeur. Aucune conversion à faire ici.
   const netPrice = computed(() => roundToCurrency(form.pricePerKg, form.currency))
@@ -106,8 +119,21 @@ export function useAnnouncementForm() {
     if (!form.departureCity) errors.departureCity = 'Ville de départ requise'
     if (!form.arrivalCity) errors.arrivalCity = "Ville d'arrivée requise"
     if (!form.departureDate) errors.departureDate = 'Date de départ requise'
-    const arrivalError = arrivalDateError(form.departureDate, form.departureTime, form.arrivalDate, form.arrivalTime, form.transportMode)
-    if (arrivalError) errors.arrivalDate = arrivalError
+    if (isBoat.value) {
+      const rangeError = arrivalRangeError(form.departureDate, form.arrivalDate, form.arrivalDateMax, 'BOAT')
+      if (rangeError) errors.arrivalDateMax = rangeError
+      const volume = form.volumeCapacityM3
+      if (volume === null || !Number.isFinite(volume) || volume < 0.1 || volume > 9999) {
+        errors.volumeCapacityM3 = 'Volume requis, entre 0,1 et 9 999 m³'
+      }
+      const price = form.pricePerM3
+      if (price === null || !Number.isFinite(price) || price < 0.01) {
+        errors.pricePerM3 = 'Prix au m³ requis'
+      }
+    } else {
+      const arrivalError = arrivalDateError(form.departureDate, form.departureTime, form.arrivalDate, form.arrivalTime, form.transportMode)
+      if (arrivalError) errors.arrivalDate = arrivalError
+    }
     if (!form.transportMode) errors.transportMode = 'Mode de transport requis'
     if (!form.pickupPlace) errors.pickupPlace = 'Lieu de remise requis'
     if (!form.dropoffPlace) errors.dropoffPlace = 'Lieu de récupération requis'
@@ -128,7 +154,8 @@ export function useAnnouncementForm() {
     // en zone CFA ; le backend refuse la carte en francs CFA et n'accepte plus
     // les anciens rails Wave et Orange Money.
     const paymentMethods = paymentMethodsFor(form.currency, { cash: form.cashAccepted })
-    return {
+    const boat = isBoat.value
+    const payload: CreateAnnouncementPayload = {
       departureCity: form.departureCity!.label,
       arrivalCity: form.arrivalCity!.label,
       departureDate: form.departureDate,
@@ -138,12 +165,13 @@ export function useAnnouncementForm() {
       transportMode: form.transportMode!,
       pickupAddress: { label: pickup.label, lat: pickup.lat, lng: pickup.lng },
       deliveryAddress: { label: dropoff.label, lat: dropoff.lat, lng: dropoff.lng },
-      availableKg: form.availableWeightKg,
-      capacityUnit: form.capacityUnit,
-      pricingMode: form.pricingMode,
+      availableKg: boat ? null : form.availableWeightKg,
+      // Au m³, l'unité de capacité est « kilo exact » : « kilo libre » est refusé avec un prix au m³.
+      capacityUnit: boat ? 'KG_EXACT' : form.capacityUnit,
+      pricingMode: boat ? 'KG' : form.pricingMode,
       negotiable: form.negotiable,
       currency: form.currency,
-      pricePerKg: form.pricePerKg,
+      pricePerKg: boat ? null : form.pricePerKg,
       description: form.senderNote || null,
       acceptedContentTypes: form.acceptedCategories,
       refusedTypes: form.refusedCategories,
@@ -154,6 +182,12 @@ export function useAnnouncementForm() {
         form.departureTime,
       ),
     }
+    if (boat) {
+      payload.arrivalDateMax = form.arrivalDateMax
+      payload.volumeCapacityM3 = form.volumeCapacityM3!
+      payload.pricePerM3 = form.pricePerM3!
+    }
+    return payload
   }
 
   async function submit(status: 'DRAFT' | 'PUBLISHED'): Promise<Trip> {
@@ -184,24 +218,35 @@ export function useAnnouncementForm() {
     form.arrivalTime = trip.arrivalTime ?? ''
     // La date de départ est ressaisie : on garde le décalage de l'arrivée pour la recaler.
     form.arrivalDate = ''
+    form.arrivalDateMax = ''
     pendingArrivalOffset = trip.arrivalDate
       ? Math.max(0, daysBetweenDateInputs(trip.departureDate, trip.arrivalDate))
       : 0
     form.transportMode = trip.transportMode
+    legacyBoat.value = trip.transportMode === 'BOAT'
+      && trip.arrivalDateMax == null && trip.volumeCapacityM3 == null && trip.pricePerM3 == null
+    form.volumeCapacityM3 = trip.volumeCapacityM3 ?? null
+    form.pricePerM3 = trip.pricePerM3 ?? null
     form.pickupPlace = trip.pickupPlace
     form.dropoffPlace = trip.dropoffPlace
-    form.availableWeightKg = trip.availableWeightKg
+    form.availableWeightKg = trip.availableWeightKg ?? form.availableWeightKg
     form.capacityUnit = trip.capacityUnit ?? 'SUITCASE_23KG'
     form.pricingMode = trip.pricingMode ?? 'KG'
     form.negotiable = trip.negotiable ?? false
     form.currency = normalizeCurrency(trip.currency)
     currencyPinned = true
-    form.pricePerKg = trip.pricePerKg
+    form.pricePerKg = trip.pricePerKg ?? form.pricePerKg
     form.acceptedCategories = [...trip.acceptedCategories]
     form.refusedCategories = [...trip.refusedCategories]
     form.senderNote = trip.senderNote ?? ''
     form.cashAccepted = trip.cashAccepted
     form.handoverDeadline = isoToDateInput(trip.handoverDeadline)
+    // Trajet au m³ : la fourchette d'arrivée se recopie telle quelle (décalage de jours des modèles inutilisé).
+    if (trip.arrivalDateMax) {
+      form.arrivalDate = trip.arrivalDate ?? ''
+      form.arrivalDateMax = trip.arrivalDateMax
+      pendingArrivalOffset = 0
+    }
   }
 
   /**
@@ -266,5 +311,5 @@ export function useAnnouncementForm() {
     }
   }
 
-  return { form, currency, netPrice, minimumFee, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
+  return { form, isBoat, isLegacyBoatTrip, currency, netPrice, minimumFee, validate, submit, submitEdit, applyTemplate, applyQuickTemplate, buildTemplatePayload }
 }

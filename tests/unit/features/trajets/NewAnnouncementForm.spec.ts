@@ -82,7 +82,7 @@ vi.mock('@/features/trajets/components/GooglePlacesInput.vue', () => ({
   default: { template: '<div />', props: ['modelValue', 'placeholder', 'label', 'error'] },
 }))
 vi.mock('@/features/trajets/components/TransportModeChips.vue', () => ({
-  default: { template: '<div />', props: ['modelValue', 'modes', 'error'] },
+  default: { template: '<div />', props: ['modelValue', 'modes', 'error', 'disabledModes', 'disabledReason'] },
 }))
 vi.mock('@/features/trajets/components/WeightSlider.vue', () => ({
   default: { template: '<div />', props: ['modelValue', 'min', 'max'] },
@@ -460,13 +460,16 @@ describe('NewAnnouncementForm — devise du trajet', () => {
     wrapper.unmount()
   })
 
-  it('route allumée : avion et route, jamais le bateau', async () => {
+  it('route et bateau allumés, transporteur non vérifié : bateau visible mais désactivé', async () => {
     mockFlags = { road: true, boat: true }
     const wrapper = await mountForm()
     const { default: TransportModeChips } = await import(
       '@/features/trajets/components/TransportModeChips.vue'
     )
-    expect(wrapper.findComponent(TransportModeChips).props('modes')).toEqual(['PLANE', 'CAR'])
+    const chips = wrapper.findComponent(TransportModeChips)
+    expect(chips.props('modes')).toEqual(['PLANE', 'CAR', 'BOAT'])
+    expect(chips.props('disabledModes')).toEqual(['BOAT'])
+    expect(chips.props('disabledReason')).toContain('transporteurs vérifiés')
     wrapper.unmount()
   })
 
