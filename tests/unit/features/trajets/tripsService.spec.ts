@@ -121,6 +121,22 @@ describe('tripsService', () => {
     expect(result.availableWeightKg).toBe(15)
   })
 
+  it('createAnnouncement et updateAnnouncement transmettent les champs bateau tels quels', async () => {
+    const boatPayload = {
+      ...payload, transportMode: 'BOAT' as const, availableKg: null, pricePerKg: null,
+      capacityUnit: 'KG_EXACT' as const, volumeCapacityM3: 12, pricePerM3: 600,
+      arrivalDate: '2026-07-10', arrivalDateMax: '2026-07-25',
+    }
+    mockApiFn.mockResolvedValue({ ...fakeTrip, transportMode: 'BOAT', availableKg: null, pricePerKg: null, volumeCapacityM3: 12, pricePerM3: 600 })
+    const { tripsService } = await import('@/features/trajets/services/tripsService')
+    const svc = tripsService()
+    const created = await svc.createAnnouncement(boatPayload)
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements', { method: 'POST', body: boatPayload })
+    expect(created.volumeCapacityM3).toBe(12)
+    await svc.updateAnnouncement('trip-1', boatPayload)
+    expect(mockApiFn).toHaveBeenCalledWith('/announcements/trip-1', { method: 'PUT', body: boatPayload })
+  })
+
   it('createAnnouncement transmet saveAsDraft: true dans le body en mode brouillon', async () => {
     mockApiFn.mockResolvedValue({ ...fakeTrip, status: 'DRAFT' })
     const { tripsService } = await import('@/features/trajets/services/tripsService')

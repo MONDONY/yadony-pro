@@ -216,10 +216,15 @@ export interface AnnouncementFormData {
   arrivalCity: SelectedPlace | null
   arrivalTime: string
   arrivalDate: string
+  /** Trajet au m³ : fin de la fourchette d'arrivée (`arrivalDate` en est le début). */
+  arrivalDateMax: string
   departureDate: string
   transportMode: TransportMode | null
   pickupPlace: SelectedPlace | null
   dropoffPlace: SelectedPlace | null
+  /** Trajet au m³ : volume proposé et prix net voyageur au m³. */
+  volumeCapacityM3: number | null
+  pricePerM3: number | null
   availableWeightKg: number
   capacityUnit: CapacityUnit
   pricingMode: PricingMode
@@ -243,12 +248,18 @@ export interface CreateAnnouncementPayload {
   transportMode: TransportMode
   pickupAddress: { label: string; lat: number; lng: number }
   deliveryAddress: { label: string; lat: number; lng: number }
-  availableKg: number
+  /** Nul pour un trajet au m³. */
+  availableKg: number | null
   capacityUnit: CapacityUnit
   pricingMode: PricingMode
   negotiable: boolean
   currency: string
-  pricePerKg: number
+  /** Nul pour un trajet au m³. */
+  pricePerKg: number | null
+  /** Trajet au m³ seulement : absents des autres modes (à la modification, `null` n'efface rien). */
+  arrivalDateMax?: string
+  volumeCapacityM3?: number
+  pricePerM3?: number
   description: string | null
   acceptedContentTypes: string[]
   refusedTypes: string[]
@@ -261,6 +272,9 @@ export interface ValidationErrors {
   arrivalCity?: string
   departureDate?: string
   arrivalDate?: string
+  arrivalDateMax?: string
+  volumeCapacityM3?: string
+  pricePerM3?: string
   transportMode?: string
   pickupPlace?: string
   dropoffPlace?: string

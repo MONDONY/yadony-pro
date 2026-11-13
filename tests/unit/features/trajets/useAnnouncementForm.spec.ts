@@ -756,3 +756,147 @@ describe('useAnnouncementForm : modes de transport', () => {
     expect(buildTemplatePayload('x').transportMode).toBe('CAR')
   })
 })
+
+describe('useAnnouncementForm : bateau au m³', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.resetModules()
+    mockGrid = null
+    mockActiveCurrency = 'EUR'
+    setActivePinia(createPinia())
+  })
+
+  async function boatForm() {
+    const useAnnouncementForm = await importUseAnnouncementForm()
+    const api = useAnnouncementForm()
+    const { form } = api
+    form.departureCity = validPlace
+    form.arrivalCity = validPlace2
+    form.departureDate = '2026-12-01'
+    form.pickupPlace = validPlace
+    form.dropoffPlace = validPlace2
+    form.handoverDeadline = '2026-11-28'
+    form.transportMode = 'BOAT'
+    form.volumeCapacityM3 = 12
+    form.pricePerM3 = 600
+    form.arrivalDate = '2027-01-10'
+    form.arrivalDateMax = '2027-01-25'
+    return api
+  }
+
+  const boatTrip = {
+    id: 't-boat',
+    status: 'ACTIVE' as const,
+    departureCity: validPlace,
+    arrivalCity: validPlace2,
+    departureDate: '2026-12-01',
+    departureTime: null,
+    arrivalTime: null,
+    arrivalDate: '2027-01-10',
+    transportMode: 'BOAT' as const,
+    pickupPlace: validPlace,
+    dropoffPlace: validPlace2,
+    availableWeightKg: null,
+    usedWeightKg: null,
+    pricePerKg: null,
+    acceptedCategories: [],
+    refusedCategories: [],
+    senderNote: null,
+    cashAccepted: false,
+    handoverDeadline: '2026-11-28',
+    confirmedParcelCount: 0,
+    pendingBidCount: 0,
+    reservedRevenueEuros: 0,
+    createdAt: '2026-11-01T00:00:00Z',
+  }
+
+  it('bateau : payload au m³ via submit', async () => {
+    mockCreate.mockResolvedValue({ id: 'b1', status: 'ACTIVE' })
+    const { submit } = await boatForm()
+    await submit('PUBLISHED')
+    const payload = mockCreate.mock.calls[0][0]
+    expect(payload).toMatchObject({
+      availableKg: null, pricePerKg: null, capacityUnit: 'KG_EXACT', pricingMode: 'KG',
+      volumeCapacityM3: 12, pricePerM3: 600, arrivalDate: '2027-01-10', arrivalDateMax: '2027-01-25',
+    })
+  })
+
+  it('hors bateau : aucun champ bateau dans le payload', async () => {
+    mockCreate.mockResolvedValue({ id: 'c1', status: 'ACTIVE' })
+    const { form, submit } = await boatForm()
+    form.transportMode = 'CAR'
+    form.arrivalDate = '2026-12-05'
+    await submit('PUBLISHED')
+    const payload = mockCreate.mock.calls[0][0]
+    expect(payload).not.toHaveProperty('volumeCapacityM3')
+    expect(payload).not.toHaveProperty('pricePerM3')
+    expect(payload).not.toHaveProperty('arrivalDateMax')
+    expect(payload.availableKg).toBe(15)
+  })
+
+  it('bateau : volume hors bornes refusé localement', async () => {
+    const { form, validate } = await boatForm()
+    form.volumeCapacityM3 = 0.05
+    expect(validate().volumeCapacityM3).toBe('Volume requis, entre 0,1 et 9 999 m³')
+    form.volumeCapacityM3 = 10000
+    expect(validate().volumeCapacityM3).toBe('Volume requis, entre 0,1 et 9 999 m³')
+    form.volumeCapacityM3 = null
+    expect(validate().volumeCapacityM3).toBe('Volume requis, entre 0,1 et 9 999 m³')
+  })
+
+  it('bateau : prix au m³ requis, sans borne haute', async () => {
+    const { form, validate } = await boatForm()
+    form.pricePerM3 = null
+    expect(validate().pricePerM3).toBe('Prix au m³ requis')
+    form.pricePerM3 = 0
+    expect(validate().pricePerM3).toBe('Prix au m³ requis')
+    form.pricePerM3 = 5_000_000
+    expect(validate().pricePerM3).toBeUndefined()
+  })
+
+  it('bateau : la capacité en kilos n’est plus exigée et la fourchette est contrôlée', async () => {
+    const { form, validate } = await boatForm()
+    expect(Object.keys(validate())).toHaveLength(0)
+    form.arrivalDateMax = '2027-06-30'
+    expect(validate().arrivalDateMax).toBe("L'arrivée doit avoir lieu au plus 120 jours après le départ")
+    form.arrivalDateMax = ''
+    expect(validate().arrivalDateMax).toBe('Arrivée estimée requise, au plus tôt et au plus tard')
+  })
+
+  it('prefill d’un trajet au m³ : volume, prix et fourchette recopiés', async () => {
+    const { form, applyTemplate, isBoat, isLegacyBoatTrip } = await boatForm()
+    applyTemplate({ ...boatTrip, volumeCapacityM3: 18, pricePerM3: 450, arrivalDateMax: '2027-01-25' })
+    expect(form.volumeCapacityM3).toBe(18)
+    expect(form.pricePerM3).toBe(450)
+    expect(form.arrivalDate).toBe('2027-01-10')
+    expect(form.arrivalDateMax).toBe('2027-01-25')
+    expect(isBoat.value).toBe(true)
+    expect(isLegacyBoatTrip.value).toBe(false)
+  })
+
+  it('bateau d’avant le lot 3 : modification en kilos, aucun champ bateau envoyé', async () => {
+    mockUpdate.mockResolvedValue({ id: 't-boat', status: 'ACTIVE' })
+    const { form, applyTemplate, submitEdit, isBoat, isLegacyBoatTrip } = await boatForm()
+    applyTemplate({ ...boatTrip, availableWeightKg: 20, pricePerKg: 8, volumeCapacityM3: null, pricePerM3: null, arrivalDateMax: null })
+    form.departureDate = '2026-12-01'
+    form.arrivalDate = ''
+    form.handoverDeadline = '2026-11-28'
+    expect(isLegacyBoatTrip.value).toBe(true)
+    expect(isBoat.value).toBe(false)
+    await submitEdit('t-boat', 'PUBLISHED')
+    const payload = mockUpdate.mock.calls[0][1]
+    expect(payload.availableKg).toBe(20)
+    expect(payload).not.toHaveProperty('volumeCapacityM3')
+    expect(payload).not.toHaveProperty('pricePerM3')
+    expect(payload).not.toHaveProperty('arrivalDateMax')
+  })
+
+  it('un trajet d’avant le lot 3 qui change de mode puis revient au bateau repart sur le m³', async () => {
+    const { form, applyTemplate, isBoat } = await boatForm()
+    applyTemplate({ ...boatTrip, availableWeightKg: 20, pricePerKg: 8 })
+    expect(isBoat.value).toBe(false)
+    form.transportMode = 'CAR'
+    form.transportMode = 'BOAT'
+    expect(isBoat.value).toBe(true)
+  })
+})
