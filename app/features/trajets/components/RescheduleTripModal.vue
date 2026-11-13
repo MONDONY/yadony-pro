@@ -3,6 +3,7 @@
 import { reactive, computed } from 'vue'
 import { CalendarClock } from 'lucide-vue-next'
 import { arrivalDateError, deadlineToIso } from '@/lib/dates'
+import { rescheduleReasons } from '@/features/trajets/lib/rescheduleReasons'
 import type { RescheduleReason, RescheduleTripPayload, Trip } from '@/features/trajets/types/index'
 
 const props = defineProps<{
@@ -16,11 +17,7 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const reasons: Array<{ value: RescheduleReason; label: string }> = [
-  { value: 'FLIGHT_CANCELLED', label: 'Vol annulé' },
-  { value: 'POSTPONED', label: 'Voyage repoussé' },
-  { value: 'OTHER', label: 'Autre raison' },
-]
+const reasons = computed(() => rescheduleReasons(props.trip.transportMode))
 
 const form = reactive({
   reason: 'POSTPONED' as RescheduleReason,
@@ -46,7 +43,7 @@ const errors = computed(() => {
   ) {
     e.departureTime = 'Choisissez une date ou une heure différente de l’actuelle'
   }
-  const arrival = arrivalDateError(form.departureDate, form.departureTime, form.arrivalDate, form.arrivalTime)
+  const arrival = arrivalDateError(form.departureDate, form.departureTime, form.arrivalDate, form.arrivalTime, props.trip.transportMode)
   if (arrival) e.arrivalDate = arrival
   if (!form.handoverDeadline) e.handoverDeadline = 'Date limite de remise requise'
   else if (form.departureDate && form.handoverDeadline > form.departureDate) {
@@ -125,7 +122,7 @@ const inputClass =
         <div>
           <label class="block text-sm font-medium text-text mb-1.5" for="rs-arr-date">Date d’arrivée</label>
           <input id="rs-arr-date" v-model="form.arrivalDate" type="date" :min="form.departureDate || today" data-test="reschedule-arrival-date" :class="inputClass" />
-          <p v-if="errors.arrivalDate" class="mt-1 text-xs text-danger">{{ errors.arrivalDate }}</p>
+          <p v-if="errors.arrivalDate" data-test="reschedule-arrival-error" class="mt-1 text-xs text-danger">{{ errors.arrivalDate }}</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-text mb-1.5" for="rs-arr-time">Heure d’arrivée</label>
